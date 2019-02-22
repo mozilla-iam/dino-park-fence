@@ -63,7 +63,8 @@ fn update_profile(update: InputProfile, cfg: &Config) -> FieldResult<Profile> {
     let user_id = "ad|Mozilla-LDAP|FMerz";
     let mut profile = get_user(&token, user_id, &GetBy::UserId, None)
         .map_err(|e| field_error("unable to get profle", e))?;
-    update.update_profile(&mut profile, &cfg.secret_store)
+    update
+        .update_profile(&mut profile, &cfg.secret_store)
         .map_err(|e| field_error("unable update/sign profle", e))?;
     let ret = update_user(&token, false, profile, &cfg.secret_store)
         .map_err(|e| field_error("unable to get profle", e))?;

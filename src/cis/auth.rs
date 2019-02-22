@@ -1,8 +1,8 @@
+use biscuit::jws;
 use chrono::DateTime;
 use chrono::TimeZone;
 use chrono::Utc;
 use reqwest::Client;
-use biscuit::jws;
 use std::fs::File;
 use std::io::prelude::*;
 use std::path::PathBuf;
@@ -37,7 +37,7 @@ impl Default for BaererBaerer {
 impl RemoteGet for BaererBaerer {
     fn get(&mut self) -> Result<(), String> {
         self.baerer_token_str = get_raw_access_token(&self.config)?;
-        self.exp = get_expiration(&self.baerer_token_str)?; 
+        self.exp = get_expiration(&self.baerer_token_str)?;
         Ok(())
     }
     fn expiry(&self) -> DateTime<Utc> {
@@ -56,9 +56,15 @@ impl BaererBaerer {
 }
 
 fn get_expiration(token: &str) -> Result<DateTime<Utc>, String> {
-    let c: jws::Compact<biscuit::ClaimsSet<Value>, biscuit::Empty> = jws::Compact::new_encoded(&token);
-    let payload = c.unverified_payload().map_err(|e| format!("unable to get payload from token: {}", e))?;
-    let exp = payload.registered.expiry.ok_or_else(|| String::from("no expiration set in token"))?;
+    let c: jws::Compact<biscuit::ClaimsSet<Value>, biscuit::Empty> =
+        jws::Compact::new_encoded(&token);
+    let payload = c
+        .unverified_payload()
+        .map_err(|e| format!("unable to get payload from token: {}", e))?;
+    let exp = payload
+        .registered
+        .expiry
+        .ok_or_else(|| String::from("no expiration set in token"))?;
     Ok(*exp)
 }
 

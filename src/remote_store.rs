@@ -95,8 +95,8 @@ impl<T: RemoteGet + Default> RemoteStore<T> {
 #[cfg(test)]
 mod test {
     use super::*;
-    use std::thread;
     use chrono::TimeZone;
+    use std::thread;
 
     struct R1 {
         pub r: usize,

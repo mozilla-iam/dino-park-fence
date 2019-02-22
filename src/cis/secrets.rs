@@ -1,5 +1,5 @@
-use std::env;
 use cis_profile::crypto::SecretStore;
+use std::env;
 
 pub fn get_store_from_ssm_via_env() -> Result<SecretStore, String> {
     if let (

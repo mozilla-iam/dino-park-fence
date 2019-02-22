@@ -1,3 +1,3 @@
-pub mod root;
-mod input;
 pub mod app;
+mod input;
+pub mod root;

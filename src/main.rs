@@ -42,15 +42,16 @@ fn main() -> Result<(), String> {
     let client_config = auth::read_client_config(".person-api.json")?;
     let bearer_store = remote_store::RemoteStore::new(auth::BaererBaerer::new(client_config));
     let secret_store = Arc::new(get_store_from_ssm_via_env()?);
-    let cfg = Config { bearer_store, secret_store };
+    let cfg = Config {
+        bearer_store,
+        secret_store,
+    };
 
     // Start http server
     server::new(move || {
-        vec![
-            graphql_app(cfg.clone())
-                .middleware(middleware::Logger::default())
-                .boxed(),
-        ]
+        vec![graphql_app(cfg.clone())
+            .middleware(middleware::Logger::default())
+            .boxed()]
     })
     .bind("127.0.0.1:8080")
     .unwrap()
