@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use actix::prelude::*;
+use actix_web::middleware::cors::Cors;
 use actix_web::{
     http, App, AsyncResponder, Error, FutureResponse, HttpRequest, HttpResponse, Json, State,
 };
@@ -73,6 +74,14 @@ pub fn graphql_app(cfg: Config) -> App<AppState> {
     App::with_state(AppState {
         executor: addr.clone(),
     })
-    .resource("/graphql", |r| r.method(http::Method::POST).with(graphql))
-    .resource("/graphiql", |r| r.method(http::Method::GET).h(graphiql))
+    .configure(|app| {
+        Cors::for_app(app)
+            .allowed_methods(vec!["GET", "POST"])
+            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+            .allowed_header(http::header::CONTENT_TYPE)
+            .max_age(3600)
+            .resource("/graphql", |r| r.method(http::Method::POST).with(graphql))
+            .resource("/graphiql", |r| r.method(http::Method::GET).h(graphiql))
+            .register()
+    })
 }
