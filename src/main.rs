@@ -3,6 +3,7 @@ extern crate actix_web;
 extern crate biscuit;
 extern crate chrono;
 extern crate cis_profile;
+extern crate config;
 extern crate env_logger;
 extern crate futures;
 extern crate percent_encoding;
@@ -20,13 +21,12 @@ extern crate serde_derive;
 extern crate serde_json;
 
 mod cis;
-mod config;
 mod graphql_api;
 mod remote_store;
+mod settings;
 
-use crate::cis::auth;
+use crate::cis::config::Config;
 use crate::cis::secrets::get_store_from_ssm_via_env;
-use crate::config::Config;
 use crate::graphql_api::app::graphql_app;
 
 use actix_web::middleware;
@@ -39,11 +39,11 @@ fn main() -> Result<(), String> {
     env_logger::init();
     info!("building the fence");
     let sys = actix::System::new("juniper-example");
-    let client_config = auth::read_client_config(".person-api.json")?;
-    let bearer_store = remote_store::RemoteStore::new(auth::BaererBaerer::new(client_config));
+    let s = settings::Settings::new().map_err(|e| format!("unable to load settings: {}", e))?;
+    let cis_client = cis::client::CisClient::from_settings(&s)?;
     let secret_store = Arc::new(get_store_from_ssm_via_env()?);
     let cfg = Config {
-        bearer_store,
+        cis_client,
         secret_store,
     };
 

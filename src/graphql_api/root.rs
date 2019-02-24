@@ -5,10 +5,10 @@ use juniper::RootNode;
 
 use cis_profile::schema::Profile;
 
+use crate::cis::config::Config;
 use crate::cis::person_api::get_user;
 use crate::cis::person_api::update_user;
 use crate::cis::person_api::GetBy;
-use crate::config::Config;
 use crate::graphql_api::input::InputProfile;
 
 pub struct Query {
@@ -23,6 +23,7 @@ fn field_error(msg: &str, e: impl std::fmt::Display) -> FieldError {
 fn get_profile(username: Option<String>, cfg: &Config) -> FieldResult<Profile> {
     let username = username.unwrap_or_else(|| String::from("fiji"));
     let b = cfg
+        .cis_client
         .bearer_store
         .get()
         .map_err(|e| field_error("unable to get token", e))?;
@@ -52,6 +53,7 @@ pub struct Mutation {
 
 fn update_profile(update: InputProfile, cfg: &Config) -> FieldResult<Profile> {
     let b = cfg
+        .cis_client
         .bearer_store
         .get()
         .map_err(|e| field_error("unable to get token", e))?;

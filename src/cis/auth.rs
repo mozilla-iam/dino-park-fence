@@ -3,35 +3,16 @@ use chrono::DateTime;
 use chrono::TimeZone;
 use chrono::Utc;
 use reqwest::Client;
-use std::fs::File;
-use std::io::prelude::*;
-use std::path::PathBuf;
 
 use serde_json::Value;
 
 use crate::remote_store::RemoteGet;
-
-#[derive(Default)]
-pub struct ClientConfig {
-    pub client_id: String,
-    pub client_secret: String,
-    pub audience: String,
-}
+use crate::settings::ClientConfig;
 
 pub struct BaererBaerer {
     pub baerer_token_str: String,
     pub exp: DateTime<Utc>,
     pub config: ClientConfig,
-}
-
-impl Default for BaererBaerer {
-    fn default() -> Self {
-        BaererBaerer {
-            baerer_token_str: String::default(),
-            exp: Utc.timestamp(0, 0),
-            config: ClientConfig::default(),
-        }
-    }
 }
 
 impl RemoteGet for BaererBaerer {
@@ -68,15 +49,6 @@ fn get_expiration(token: &str) -> Result<DateTime<Utc>, String> {
     Ok(*exp)
 }
 
-fn load_json(path: impl Into<PathBuf>) -> Result<Value, String> {
-    let mut s = String::new();
-    File::open(path.into())
-        .map_err(|e| format!("{}", e))?
-        .read_to_string(&mut s)
-        .map_err(|e| format!("{}", e))?;
-    serde_json::from_str(&s).map_err(|e| format!("{}", e))
-}
-
 pub fn get_raw_access_token(client_config: &ClientConfig) -> Result<String, String> {
     let payload = json!(
         {
@@ -102,38 +74,15 @@ pub fn get_raw_access_token(client_config: &ClientConfig) -> Result<String, Stri
         .ok_or_else(|| String::from("no token :/"))
 }
 
-pub fn read_client_config(config_file: &str) -> Result<ClientConfig, String> {
-    let config = load_json(config_file)?;
-    let client_id = if let Some(client_id) = config["client_id"].as_str() {
-        String::from(client_id)
-    } else {
-        return Err(String::from("missing client_id in config"));
-    };
-    let client_secret = if let Some(client_secret) = config["client_secret"].as_str() {
-        String::from(client_secret)
-    } else {
-        return Err(String::from("missing client_secret in config"));
-    };
-    let audience = if let Some(audience) = config["audience"].as_str() {
-        String::from(audience)
-    } else {
-        return Err(String::from("missing audience in config"));
-    };
-    Ok(ClientConfig {
-        client_id,
-        client_secret,
-        audience,
-    })
-}
-
 #[cfg(test)]
 mod test {
     use super::*;
+    use crate::settings::Settings;
 
     #[test]
     fn test_get_access_token() {
-        if let Ok(cfg) = read_client_config(".person-api.json") {
-            let r = get_raw_access_token(&cfg);
+        if let Ok(s) = Settings::new() {
+            let r = get_raw_access_token(&s.cis.client_config);
             assert!(r.is_ok());
         }
     }

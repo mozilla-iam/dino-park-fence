@@ -11,12 +11,12 @@ pub trait RemoteGet {
     fn expiry(&self) -> DateTime<Utc>;
 }
 
-pub struct RemoteStore<T: RemoteGet + Default> {
+pub struct RemoteStore<T: RemoteGet> {
     pub cached: Arc<RwLock<T>>,
     pub is_inflight: Arc<(Mutex<bool>, Condvar)>,
 }
 
-impl<T: RemoteGet + Default> Clone for RemoteStore<T> {
+impl<T: RemoteGet> Clone for RemoteStore<T> {
     fn clone(&self) -> Self {
         RemoteStore {
             cached: Arc::clone(&self.cached),
@@ -25,17 +25,7 @@ impl<T: RemoteGet + Default> Clone for RemoteStore<T> {
     }
 }
 
-impl<T: RemoteGet + Default> Default for RemoteStore<T> {
-    #[allow(clippy::mutex_atomic)]
-    fn default() -> Self {
-        RemoteStore {
-            cached: Arc::new(RwLock::new(T::default())),
-            is_inflight: Arc::new((Mutex::new(false), Condvar::new())),
-        }
-    }
-}
-
-impl<T: RemoteGet + Default> RemoteStore<T> {
+impl<T: RemoteGet> RemoteStore<T> {
     #[allow(clippy::mutex_atomic)]
     pub fn new(t: T) -> Self {
         RemoteStore {
@@ -151,7 +141,7 @@ mod test {
     #[test]
     fn test_get_from_remote() {
         let now = Utc::now();
-        let ks = Arc::new(RemoteStore::<R1>::default());
+        let ks = Arc::new(RemoteStore::<R1>::new(R1::default()));
         let ks_c = Arc::clone(&ks);
         let child = thread::spawn(move || {
             let k = ks_c.get();
@@ -179,7 +169,7 @@ mod test {
     fn test_get_from_remote_cached() {
         let now = Utc::now();
         assert!(Utc::now() + chrono::Duration::seconds(10) > now);
-        let ks = Arc::new(RemoteStore::<R2>::default());
+        let ks = Arc::new(RemoteStore::<R2>::new(R2::default()));
         let ks_c = Arc::clone(&ks);
         let child = thread::spawn(move || {
             let k = ks_c.get();

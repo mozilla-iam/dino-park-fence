@@ -9,7 +9,7 @@ use futures::future::Future;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 
-use crate::config::Config;
+use crate::cis::config::Config;
 use crate::graphql_api::root::{Mutation, Query, Schema};
 
 pub struct AppState {

@@ -1,4 +1,5 @@
 /target
 **/*.rs.bk
-.person-api.json
+.settings.json
 .vscode
+.dev.env
