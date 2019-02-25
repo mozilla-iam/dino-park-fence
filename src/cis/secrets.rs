@@ -1,31 +1,21 @@
+use crate::settings::Settings;
 use cis_profile::crypto::SecretStore;
-use std::env;
 
-pub fn get_store_from_ssm_via_env() -> Result<SecretStore, String> {
-    if let (
-        Ok(mozillians_key_ssm_name),
-        Ok(hris_key_ssm_name),
-        Ok(ldap_key_ssm_name),
-        Ok(cis_key_ssm_name),
-        Ok(access_provider_key_ssm_name),
-    ) = (
-        env::var("CIS_SSM_MOZILLIANSORG_KEY"),
-        env::var("CIS_SSM_HRIS_KEY"),
-        env::var("CIS_SSM_LDAP_KEY"),
-        env::var("CIS_SSM_CIS_KEY"),
-        env::var("CIS_SSM_ACCESS_PROVIDER_KEY"),
-    ) {
-        SecretStore::from_ssm_iter(vec![
-            (String::from("mozilliansorg"), mozillians_key_ssm_name),
-            (String::from("hris"), hris_key_ssm_name),
-            (String::from("ldap"), ldap_key_ssm_name),
-            (String::from("cis"), cis_key_ssm_name),
-            (
-                String::from("access_provider"),
-                access_provider_key_ssm_name,
-            ),
-        ])
-    } else {
-        Err(String::from("missing CIS_SSM_XXX environment variables"))
-    }
+pub fn get_store_from_ssm(settings: &Settings) -> Result<SecretStore, String> {
+    let keys = vec![
+        (
+            String::from("mozilliansorg"),
+            Some(settings.cis.keys.mozilliansorg_key.clone()),
+        ),
+        (String::from("hris"), settings.cis.keys.hris_key.clone()),
+        (String::from("ldap"), settings.cis.keys.ldap_key.clone()),
+        (String::from("cis"), settings.cis.keys.cis_key.clone()),
+        (
+            String::from("access_provider"),
+            settings.cis.keys.access_provider_key.clone(),
+        ),
+    ]
+    .into_iter()
+    .filter_map(|(k, v)| v.map(|v| (k, v)));
+    SecretStore::from_ssm_iter(keys)
 }

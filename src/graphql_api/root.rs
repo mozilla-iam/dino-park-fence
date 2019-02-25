@@ -5,14 +5,12 @@ use juniper::RootNode;
 
 use cis_profile::schema::Profile;
 
-use crate::cis::config::Config;
-use crate::cis::person_api::get_user;
-use crate::cis::person_api::update_user;
-use crate::cis::person_api::GetBy;
+use crate::cis::client::CisClient;
+use crate::cis::client::GetBy;
 use crate::graphql_api::input::InputProfile;
 
 pub struct Query {
-    pub cfg: Config,
+    pub cis_client: CisClient,
 }
 
 fn field_error(msg: &str, e: impl std::fmt::Display) -> FieldError {
@@ -20,70 +18,43 @@ fn field_error(msg: &str, e: impl std::fmt::Display) -> FieldError {
     FieldError::new(msg, graphql_value!({ "internal_error": error }))
 }
 
-fn get_profile(username: Option<String>, cfg: &Config) -> FieldResult<Profile> {
+fn get_profile(username: Option<String>, cis_client: &CisClient) -> FieldResult<Profile> {
     let username = username.unwrap_or_else(|| String::from("fiji"));
-    let b = cfg
-        .cis_client
-        .bearer_store
-        .get()
-        .map_err(|e| field_error("unable to get token", e))?;
-    let b1 = b
-        .read()
-        .map_err(|e| field_error("unable to read token", e))?;
-    let token = &*b1.baerer_token_str;
-    let profile = get_user(token, &username, &GetBy::PrimaryUsername, None)
-        .map_err(|e| field_error("unable to get profile", e))?;
+    let profile = cis_client.get_user_by(&username, &GetBy::PrimaryUsername, None)?;
     Ok(profile)
 }
 
 graphql_object!(Query: () |&self| {
-
     field apiVersion() -> &str {
         "1.0"
     }
-
     field profile(&executor, username: Option<String>) -> FieldResult<Profile> {
-        get_profile(username, &self.cfg)
+        get_profile(username, &self.cis_client)
     }
 });
 
 pub struct Mutation {
-    pub cfg: Config,
+    pub cis_client: CisClient,
 }
 
-fn update_profile(update: InputProfile, cfg: &Config) -> FieldResult<Profile> {
-    let b = cfg
-        .cis_client
-        .bearer_store
-        .get()
-        .map_err(|e| field_error("unable to get token", e))?;
-    let b1 = b
-        .read()
-        .map_err(|e| field_error("unable to read token", e))?;
-    let token = &*b1.baerer_token_str;
-
+fn update_profile(update: InputProfile, cis_client: &CisClient) -> FieldResult<Profile> {
     let user_id = "ad|Mozilla-LDAP|FMerz";
-    let mut profile = get_user(&token, user_id, &GetBy::UserId, None)
-        .map_err(|e| field_error("unable to get profle", e))?;
+    let mut profile = cis_client.get_user_by(user_id, &GetBy::UserId, None)?;
     update
-        .update_profile(&mut profile, &cfg.secret_store)
+        .update_profile(&mut profile, &cis_client.get_secret_store())
         .map_err(|e| field_error("unable update/sign profle", e))?;
-    let ret = update_user(&token, false, profile, &cfg.secret_store)
-        .map_err(|e| field_error("unable to get profle", e))?;
+    let ret = cis_client.update_user(profile)?;
     info!("update returned: {}", ret);
-    let updated_profile = get_user(&token, user_id, &GetBy::UserId, None)
-        .map_err(|e| field_error("unable to get updated profle", e))?;
+    let updated_profile = cis_client.get_user_by(user_id, &GetBy::UserId, None)?;
     Ok(updated_profile)
 }
 
 graphql_object!(Mutation: () |&self| {
-
     field apiVersion() -> &str {
         "1.0"
     }
-
     field profile(&executor, update: InputProfile) -> FieldResult<Profile> {
-        update_profile(update, &self.cfg)
+        update_profile(update, &self.cis_client)
     }
 });
 

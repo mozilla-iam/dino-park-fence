@@ -9,7 +9,7 @@ use futures::future::Future;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 
-use crate::cis::config::Config;
+use crate::cis::client::CisClient;
 use crate::graphql_api::root::{Mutation, Query, Schema};
 
 pub struct AppState {
@@ -67,8 +67,13 @@ fn graphql((st, data): (State<AppState>, Json<GraphQLData>)) -> FutureResponse<H
         .responder()
 }
 
-pub fn graphql_app(cfg: Config) -> App<AppState> {
-    let schema = Arc::new(Schema::new(Query { cfg: cfg.clone() }, Mutation { cfg }));
+pub fn graphql_app(cis_client: CisClient) -> App<AppState> {
+    let schema = Arc::new(Schema::new(
+        Query {
+            cis_client: cis_client.clone(),
+        },
+        Mutation { cis_client },
+    ));
     let addr = SyncArbiter::start(3, move || GraphQLExecutor::new(schema.clone()));
 
     App::with_state(AppState {
