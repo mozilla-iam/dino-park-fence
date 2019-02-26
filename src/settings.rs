@@ -9,6 +9,7 @@ pub struct ClientConfig {
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Keys {
+    pub source: String,
     pub mozilliansorg_key: String,
     pub hris_key: Option<String>,
     pub ldap_key: Option<String>,
