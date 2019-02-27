@@ -1,0 +1,6 @@
+.dev.env
+.settings.json
+secret.yaml
+.git/
+.vscode/
+target/

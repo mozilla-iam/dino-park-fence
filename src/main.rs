@@ -44,11 +44,11 @@ fn main() -> Result<(), String> {
             .middleware(middleware::Logger::default())
             .boxed()]
     })
-    .bind("127.0.0.1:8080")
+    .bind("0.0.0.0:8080")
     .unwrap()
     .start();
 
-    info!("Started http server: 127.0.0.1:8080");
+    info!("Started http server");
     let _ = sys.run();
     Ok(())
 }

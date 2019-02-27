@@ -1,0 +1,32 @@
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: dino-park-ingress
+  namespace: {{ .Values.namespace }}
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    certmanager.k8s.io/cluster-issuer: letsencrypt-production
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/enable-cors: "true"
+    nginx.ingress.kubernetes.io/enable-modsecurity: "true"
+    nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+            more_set_headers "X-Frame-Options: DENY" "X-XSS-Protection: 1" "X-Content-Type-Options: nosniff" "Strict-Transport-Security: max-age=63072000" "Content-Security-Policy: default-src 'self'; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'";
+spec:
+  tls:
+  - hosts:
+    - {{ .Values.domain_name }}
+    secretName: dino-park-secret
+  rules:
+  - host: {{ .Values.domain_name }}
+    http:
+      paths:
+      - path: /
+        backend:
+          {{ if .Values.oidc -}}
+          serviceName: oidc-proxy
+          {{- else -}}
+          serviceName: internal-router
+          {{- end }}
+          servicePort: 80

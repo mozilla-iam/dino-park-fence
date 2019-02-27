@@ -1,0 +1,3 @@
+env: dev
+namespace: dinopark-dev
+domain_name: dinopark.k8s.dev.sso.allizom.org
