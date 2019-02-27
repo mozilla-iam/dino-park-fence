@@ -10,15 +10,24 @@ use juniper::GraphQLInputObject;
 macro_rules! update_simple_field {
     ($field:ident, $p:ident, $s:ident, $store:ident, $now:ident) => {
         if let Some(x) = &$s.$field {
-            if let Some(value) = &x.value {
-                $p.$field.value = Some(value.clone());
+            let mut sign = false;
+            if x.value != $p.$field.value {
+                if let Some(value) = &x.value {
+                    $p.$field.value = Some(value.clone());
+                    sign = true;
+                }
             }
-            if let Some(display) = &x.display {
-                $p.$field.metadata.display = Some(display.clone());
+            if x.display != $p.$field.metadata.display {
+                if let Some(display) = &x.display {
+                    $p.$field.metadata.display = Some(display.clone());
+                    sign = true;
+                }
             }
-            $p.$field.metadata.last_modified = $now.clone();
-            $p.$field.signature.publisher.name = PublisherAuthority::Mozilliansorg;
-            sign_attribute(&mut $p.$field, $store)?;
+            if sign {
+                $p.$field.metadata.last_modified = $now.clone();
+                $p.$field.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+                sign_attribute(&mut $p.$field, $store)?;
+            }
         }
     };
 }
