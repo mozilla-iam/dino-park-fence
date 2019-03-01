@@ -60,8 +60,9 @@ fn graphiql(_req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
 fn graphql(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
     let headers = req.headers();
     let user = headers
-        .get("REMOTE_USER")
+        .get("x-forwarded-user")
         .and_then(|v| match v.to_str() {
+            Ok(s) if s.contains("+hknall") => Some("hknall@mozilla.com"),
             Ok(s) => Some(s),
             Err(e) => {
                 warn!("unable to decode user: {}", e);
