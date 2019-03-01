@@ -13,6 +13,7 @@ use url::Url;
 
 pub enum GetBy {
     UserId,
+    PrimaryEmail,
     PrimaryUsername,
 }
 
@@ -20,6 +21,7 @@ impl GetBy {
     pub fn as_str(self: &GetBy) -> &'static str {
         match self {
             GetBy::UserId => "user_id/",
+            GetBy::PrimaryEmail => "primary_email/",
             GetBy::PrimaryUsername => "primary_username/",
         }
     }

@@ -17,7 +17,7 @@ spec:
       containers:
         - image: mozillaparsys/mozilla.oidc.proxy:latest
           imagePullPolicy: Always
-          name: oidc-porxy
+          name: oidc-proxy
           ports:
             - containerPort: 80
           env:

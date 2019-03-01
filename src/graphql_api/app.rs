@@ -3,7 +3,7 @@ use std::sync::Arc;
 use actix::prelude::*;
 use actix_web::middleware::cors::Cors;
 use actix_web::{
-    http, App, AsyncResponder, Error, FutureResponse, HttpRequest, HttpResponse, Json, State,
+    http, App, AsyncResponder, Error, FutureResponse, HttpMessage, HttpRequest, HttpResponse,
 };
 use futures::future::Future;
 use juniper::http::graphiql::graphiql_source;
@@ -17,7 +17,10 @@ pub struct AppState {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct GraphQLData(GraphQLRequest);
+pub struct GraphQLData {
+    data: GraphQLRequest,
+    user: Option<String>,
+}
 
 impl Message for GraphQLData {
     type Result = Result<String, Error>;
@@ -41,7 +44,7 @@ impl Handler<GraphQLData> for GraphQLExecutor {
     type Result = Result<String, Error>;
 
     fn handle(&mut self, msg: GraphQLData, _: &mut Self::Context) -> Self::Result {
-        let res = msg.0.execute(&self.schema, &());
+        let res = msg.data.execute(&self.schema, &msg.user);
         let res_text = serde_json::to_string(&res)?;
         Ok(res_text)
     }
@@ -54,15 +57,31 @@ fn graphiql(_req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
         .body(html))
 }
 
-fn graphql((st, data): (State<AppState>, Json<GraphQLData>)) -> FutureResponse<HttpResponse> {
-    st.executor
-        .send(data.0)
+fn graphql(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
+    let headers = req.headers();
+    let user = headers
+        .get("REMOTE_USER")
+        .and_then(|v| match v.to_str() {
+            Ok(s) => Some(s),
+            Err(e) => {
+                warn!("unable to decode user: {}", e);
+                None
+            }
+        })
+        .map(String::from);
+    req.json::<GraphQLRequest>()
         .from_err()
-        .and_then(|res| match res {
-            Ok(user) => Ok(HttpResponse::Ok()
-                .content_type("application/json")
-                .body(user)),
-            Err(_) => Ok(HttpResponse::InternalServerError().into()),
+        .and_then(move |q| {
+            req.state()
+                .executor
+                .send(GraphQLData { data: q, user })
+                .from_err()
+                .and_then(|res| match res {
+                    Ok(user) => Ok(HttpResponse::Ok()
+                        .content_type("application/json")
+                        .body(user)),
+                    Err(_) => Ok(HttpResponse::InternalServerError().into()),
+                })
         })
         .responder()
 }
