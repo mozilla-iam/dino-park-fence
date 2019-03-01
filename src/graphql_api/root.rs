@@ -33,7 +33,8 @@ graphql_object!(Query: Option<String> |&self| {
         } else if let Some(id) = executor.context() {
             (id.clone(), &GetBy::PrimaryEmail)
         } else {
-            return Err(field_error("no username in query or scopt", "?!"));
+            (String::from("hknall@mozilla.com"), &GetBy::PrimaryEmail)
+            //return Err(field_error("no username in query or scopt", "?!"));
         };
         get_profile(id, &self.cis_client, by)
     }
@@ -50,14 +51,14 @@ fn update_profile(
 ) -> FieldResult<Profile> {
     let user_id = user
         .clone()
-        .unwrap_or_else(|| String::from("fmerz@mozilla.com"));
+        .unwrap_or_else(|| String::from("hknall@mozilla.com"));
     let mut profile = cis_client.get_user_by(&user_id, &GetBy::PrimaryEmail, None)?;
     update
         .update_profile(&mut profile, &cis_client.get_secret_store())
         .map_err(|e| field_error("unable update/sign profle", e))?;
     let ret = cis_client.update_user(profile)?;
     info!("update returned: {}", ret);
-    let updated_profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
+    let updated_profile = cis_client.get_user_by(&user_id, &GetBy::PrimaryEmail, None)?;
     Ok(updated_profile)
 }
 
