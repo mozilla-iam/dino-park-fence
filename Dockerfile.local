@@ -1,0 +1,5 @@
+FROM alpine:latest  
+
+WORKDIR /root/
+COPY target/x86_64-unknown-linux-musl/release/dino-park-fence .
+CMD ["./dino-park-fence"]  
