@@ -1,16 +1,23 @@
-use juniper::graphql_object;
-use juniper::FieldError;
-use juniper::FieldResult;
-use juniper::RootNode;
-
-use cis_profile::schema::Profile;
-
-use crate::cis::client::CisClient;
+use crate::cis::client::CisClientTrait;
 use crate::cis::client::GetBy;
 use crate::graphql_api::input::InputProfile;
+use cis_profile::schema::Profile;
+use juniper::meta::MetaType;
+use juniper::Arguments;
+use juniper::DefaultScalarValue;
+use juniper::ExecutionResult;
+use juniper::Executor;
+use juniper::FieldError;
+use juniper::FieldResult;
+use juniper::GraphQLType;
+use juniper::IntoResolvable;
+use juniper::Registry;
+use juniper::RootNode;
+use juniper::ScalarRefValue;
+use juniper::Value;
 
-pub struct Query {
-    pub cis_client: CisClient,
+pub struct Query<T: CisClientTrait + Clone> {
+    pub cis_client: T,
 }
 
 fn field_error(msg: &str, e: impl std::fmt::Display) -> FieldError {
@@ -18,34 +25,18 @@ fn field_error(msg: &str, e: impl std::fmt::Display) -> FieldError {
     FieldError::new(msg, graphql_value!({ "internal_error": error }))
 }
 
-fn get_profile(id: String, cis_client: &CisClient, by: &GetBy) -> FieldResult<Profile> {
+fn get_profile(id: String, cis_client: &impl CisClientTrait, by: &GetBy) -> FieldResult<Profile> {
     let profile = cis_client.get_user_by(&id, by, None)?;
     Ok(profile)
 }
 
-graphql_object!(Query: Option<String> |&self| {
-    field apiVersion() -> &str {
-        "1.0"
-    }
-    field profile(&executor, username: Option<String>) -> FieldResult<Profile> {
-        let (id, by) = if let Some(username) = username {
-            (username, &GetBy::PrimaryUsername)
-        } else if let Some(id) = executor.context() {
-            (id.clone(), &GetBy::PrimaryEmail)
-        } else {
-            return Err(field_error("no username in query or scopt", "?!"));
-        };
-        get_profile(id, &self.cis_client, by)
-    }
-});
-
-pub struct Mutation {
-    pub cis_client: CisClient,
+pub struct Mutation<T: CisClientTrait + Clone> {
+    pub cis_client: T,
 }
 
 fn update_profile(
     update: InputProfile,
-    cis_client: &CisClient,
+    cis_client: &impl CisClientTrait,
     user: &Option<String>,
 ) -> FieldResult<Profile> {
     let user_id = user
@@ -61,13 +52,157 @@ fn update_profile(
     Ok(updated_profile)
 }
 
-graphql_object!(Mutation: Option<String> |&self| {
-    field apiVersion() -> &str {
-        "1.0"
+// generated via graphql_object!
+impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Query<T> {
+    type Context = Option<String>;
+    type TypeInfo = ();
+    fn name(_: &Self::TypeInfo) -> Option<&str> {
+        Some("Query")
     }
-    field profile(&executor, update: InputProfile,) -> FieldResult<Profile> {
-        update_profile(update, &self.cis_client, executor.context())
+    fn meta<'r>(
+        info: &Self::TypeInfo,
+        registry: &mut Registry<'r, DefaultScalarValue>,
+    ) -> MetaType<'r, DefaultScalarValue>
+    where
+        for<'__b> &'__b DefaultScalarValue: ScalarRefValue<'__b>,
+        DefaultScalarValue: 'r,
+    {
+        let fields = &[
+            registry
+                .field_convert::<&str, _, Self::Context>("apiVersion", info)
+                .push_docstring(&[]),
+            registry
+                .field_convert::<FieldResult<Profile>, _, Self::Context>("profile", info)
+                .push_docstring(&[])
+                .argument(
+                    registry
+                        .arg::<Option<String>>("username", info)
+                        .push_docstring(&[]),
+                ),
+        ];
+        registry
+            .build_object_type::<Query<T>>(info, fields)
+            .into_meta()
     }
-});
 
-pub type Schema = RootNode<'static, Query, Mutation>;
+    fn concrete_type_name(&self, _: &Self::Context, _: &Self::TypeInfo) -> String {
+        "Query".to_owned()
+    }
+
+    fn resolve_field(
+        &self,
+        _: &Self::TypeInfo,
+        field: &str,
+        args: &Arguments<DefaultScalarValue>,
+        executor: &Executor<Self::Context, DefaultScalarValue>,
+    ) -> ExecutionResult<DefaultScalarValue> {
+        if field == "apiVersion" {
+            let result: &str = "1.0";
+            return IntoResolvable::into(result, executor.context()).and_then(|res| match res {
+                Some((ctx, r)) => executor.replaced_context(ctx).resolve_with_ctx(&(), &r),
+                None => Ok(Value::null()),
+            });
+        }
+        if field == "profile" {
+            let result: FieldResult<Profile> = {
+                let username: Option<String> = args
+                    .get("username")
+                    .expect("Argument username missing - validation must have failed");
+                let executor = &executor;
+                {
+                    let (id, by) = if let Some(username) = username {
+                        (username, &GetBy::PrimaryUsername)
+                    } else if let Some(id) = executor.context() {
+                        (id.clone(), &GetBy::PrimaryEmail)
+                    } else {
+                        return Err(field_error("no username in query or scopt", "?!"));
+                    };
+                    get_profile(id, &self.cis_client, by)
+                }
+            };
+            return IntoResolvable::into(result, executor.context()).and_then(|res| match res {
+                Some((ctx, r)) => executor.replaced_context(ctx).resolve_with_ctx(&(), &r),
+                None => Ok(Value::null()),
+            });
+        }
+        Err(field_error(
+            "error",
+            format!("Field {} not found on type Query", field),
+        ))
+    }
+}
+
+// generated via graphql_object!
+impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Mutation<T> {
+    type Context = Option<String>;
+    type TypeInfo = ();
+    fn name(_: &Self::TypeInfo) -> Option<&str> {
+        Some("Mutation")
+    }
+    fn meta<'r>(
+        info: &Self::TypeInfo,
+        registry: &mut Registry<'r, DefaultScalarValue>,
+    ) -> MetaType<'r, DefaultScalarValue>
+    where
+        for<'__b> &'__b DefaultScalarValue: ScalarRefValue<'__b>,
+        DefaultScalarValue: 'r,
+    {
+        let fields = &[
+            registry
+                .field_convert::<&str, _, Self::Context>("apiVersion", info)
+                .push_docstring(&[]),
+            registry
+                .field_convert::<FieldResult<Profile>, _, Self::Context>("profile", info)
+                .push_docstring(&[])
+                .argument(
+                    registry
+                        .arg::<Option<String>>("username", info)
+                        .push_docstring(&[]),
+                ),
+        ];
+        registry
+            .build_object_type::<Mutation<T>>(info, fields)
+            .into_meta()
+    }
+
+    fn concrete_type_name(&self, _: &Self::Context, _: &Self::TypeInfo) -> String {
+        "Mutation".to_owned()
+    }
+
+    fn resolve_field(
+        &self,
+        _: &Self::TypeInfo,
+        field: &str,
+        args: &Arguments<DefaultScalarValue>,
+        executor: &Executor<Self::Context, DefaultScalarValue>,
+    ) -> ExecutionResult<DefaultScalarValue> {
+        if field == "apiVersion" {
+            let result: &str = "1.0";
+            return IntoResolvable::into(result, executor.context()).and_then(|res| match res {
+                Some((ctx, r)) => executor.replaced_context(ctx).resolve_with_ctx(&(), &r),
+                None => Ok(Value::null()),
+            });
+        }
+        if field == "profile" {
+            let result: FieldResult<Profile> = {
+                let update: InputProfile = args
+                    .get("update")
+                    .expect("Argument update missing - validation must have failed");
+                let executor = &executor;
+                {
+                    update_profile(update, &self.cis_client, executor.context())
+                }
+            };
+            return IntoResolvable::into(result, executor.context()).and_then(|res| match res {
+                Some((ctx, r)) => executor.replaced_context(ctx).resolve_with_ctx(&(), &r),
+                None => Ok(Value::null()),
+            });
+        }
+        Err(field_error(
+            "error",
+            format!("Field {} not found on type Mutation", field),
+        ))
+    }
+}
+
+pub type Schema<T> = RootNode<'static, Query<T>, Mutation<T>>;

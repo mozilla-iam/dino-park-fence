@@ -9,11 +9,11 @@ use futures::future::Future;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 
-use crate::cis::client::CisClient;
+use crate::cis::client::CisClientTrait;
 use crate::graphql_api::root::{Mutation, Query, Schema};
 
-pub struct AppState {
-    executor: Addr<GraphQLExecutor>,
+pub struct AppState<T: CisClientTrait + Clone + 'static> {
+    executor: Addr<GraphQLExecutor<T>>,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -26,21 +26,21 @@ impl Message for GraphQLData {
     type Result = Result<String, Error>;
 }
 
-pub struct GraphQLExecutor {
-    schema: Arc<Schema>,
+pub struct GraphQLExecutor<T: CisClientTrait + Clone> {
+    schema: Arc<Schema<T>>,
 }
 
-impl GraphQLExecutor {
-    fn new(schema: Arc<Schema>) -> GraphQLExecutor {
+impl<T: CisClientTrait + Clone> GraphQLExecutor<T> {
+    fn new(schema: Arc<Schema<T>>) -> GraphQLExecutor<T> {
         GraphQLExecutor { schema }
     }
 }
 
-impl Actor for GraphQLExecutor {
+impl<T: CisClientTrait + Clone + 'static> Actor for GraphQLExecutor<T> {
     type Context = SyncContext<Self>;
 }
 
-impl Handler<GraphQLData> for GraphQLExecutor {
+impl<T: CisClientTrait + Clone + 'static> Handler<GraphQLData> for GraphQLExecutor<T> {
     type Result = Result<String, Error>;
 
     fn handle(&mut self, msg: GraphQLData, _: &mut Self::Context) -> Self::Result {
@@ -50,14 +50,18 @@ impl Handler<GraphQLData> for GraphQLExecutor {
     }
 }
 
-fn graphiql(_req: &HttpRequest<AppState>) -> Result<HttpResponse, Error> {
+fn graphiql<T: CisClientTrait + Clone>(
+    _req: &HttpRequest<AppState<T>>,
+) -> Result<HttpResponse, Error> {
     let html = graphiql_source("/graphql");
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(html))
 }
 
-fn graphql(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
+fn graphql<T: CisClientTrait + Clone + 'static>(
+    req: HttpRequest<AppState<T>>,
+) -> FutureResponse<HttpResponse> {
     let headers = req.headers();
     let user = headers
         .get("x-forwarded-user")
@@ -87,7 +91,9 @@ fn graphql(req: HttpRequest<AppState>) -> FutureResponse<HttpResponse> {
         .responder()
 }
 
-pub fn graphql_app(cis_client: CisClient) -> App<AppState> {
+pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
+    cis_client: T,
+) -> App<AppState<T>> {
     let schema = Arc::new(Schema::new(
         Query {
             cis_client: cis_client.clone(),

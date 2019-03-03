@@ -30,6 +30,12 @@ impl GetBy {
     }
 }
 
+pub trait CisClientTrait {
+    fn get_user_by(&self, id: &str, by: &GetBy, filter: Option<&str>) -> Result<Profile, String>;
+    fn update_user(&self, profile: Profile) -> Result<Value, String>;
+    fn get_secret_store(&self) -> &SecretStore;
+}
+
 #[derive(Clone)]
 pub struct CisClient {
     pub bearer_store: CondvarStore<BaererBaerer>,
@@ -51,13 +57,8 @@ impl CisClient {
     }
 }
 
-impl CisClient {
-    pub fn get_user_by(
-        &self,
-        id: &str,
-        by: &GetBy,
-        filter: Option<&str>,
-    ) -> Result<Profile, String> {
+impl CisClientTrait for CisClient {
+    fn get_user_by(&self, id: &str, by: &GetBy, filter: Option<&str>) -> Result<Profile, String> {
         let safe_id = utf8_percent_encode(id, USERINFO_ENCODE_SET).to_string();
         let base = Url::parse("https://person.api.dev.sso.allizom.org/v2/user/")
             .map_err(|e| format!("{}", e))?;
@@ -89,7 +90,7 @@ impl CisClient {
         }
     }
 
-    pub fn update_user(&self, profile: Profile) -> Result<Value, String> {
+    fn update_user(&self, profile: Profile) -> Result<Value, String> {
         let b = self
             .bearer_store
             .get()
@@ -107,7 +108,7 @@ impl CisClient {
             .map_err(|e| format!("change.api → json: {} ({:?})", e, res))
     }
 
-    pub fn get_secret_store(&self) -> &SecretStore {
+    fn get_secret_store(&self) -> &SecretStore {
         &self.secret_store
     }
 }
