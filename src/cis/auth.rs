@@ -6,8 +6,8 @@ use reqwest::Client;
 
 use serde_json::Value;
 
-use condvar_store::GetExpiry;
 use crate::settings::ClientConfig;
+use condvar_store::GetExpiry;
 
 pub struct BaererBaerer {
     pub baerer_token_str: String,
