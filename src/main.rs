@@ -3,6 +3,7 @@ extern crate actix_web;
 extern crate biscuit;
 extern crate chrono;
 extern crate cis_profile;
+extern crate condvar_store;
 extern crate config;
 extern crate env_logger;
 extern crate futures;
@@ -22,7 +23,6 @@ extern crate serde_json;
 
 mod cis;
 mod graphql_api;
-mod remote_store;
 mod settings;
 
 use crate::graphql_api::app::graphql_app;

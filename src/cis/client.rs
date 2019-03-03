@@ -1,9 +1,9 @@
 use crate::cis::auth::BaererBaerer;
 use crate::cis::secrets::get_store_from_settings;
-use crate::remote_store::RemoteStore;
 use crate::settings::Settings;
 use cis_profile::crypto::SecretStore;
 use cis_profile::schema::Profile;
+use condvar_store::CondvarStore;
 use percent_encoding::utf8_percent_encode;
 use percent_encoding::USERINFO_ENCODE_SET;
 use reqwest::Client;
@@ -32,7 +32,7 @@ impl GetBy {
 
 #[derive(Clone)]
 pub struct CisClient {
-    pub bearer_store: RemoteStore<BaererBaerer>,
+    pub bearer_store: CondvarStore<BaererBaerer>,
     pub person_api_user_endpoint: String,
     pub change_api_user_endpoint: String,
     pub secret_store: Arc<SecretStore>,
@@ -40,7 +40,7 @@ pub struct CisClient {
 
 impl CisClient {
     pub fn from_settings(settings: &Settings) -> Result<Self, String> {
-        let bearer_store = RemoteStore::new(BaererBaerer::new(settings.cis.client_config.clone()));
+        let bearer_store = CondvarStore::new(BaererBaerer::new(settings.cis.client_config.clone()));
         let secret_store = get_store_from_settings(settings)?;
         Ok(CisClient {
             bearer_store,

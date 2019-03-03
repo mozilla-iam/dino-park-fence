@@ -5,6 +5,7 @@ authors = ["Florian Merz <flomerz@gmail.com>"]
 edition = "2018"
 
 [dependencies]
+condvar_store = { git = "https://github.com/fiji-flo/condvar_store" }
 cis_profile = { git = "https://github.com/fiji-flo/cis_profile-rust", features = ["graphql", "aws", "vendored"] }
 actix = "0.7"
 actix-web = "0.7"

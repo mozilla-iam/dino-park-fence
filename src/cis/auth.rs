@@ -6,7 +6,7 @@ use reqwest::Client;
 
 use serde_json::Value;
 
-use crate::remote_store::RemoteGet;
+use condvar_store::GetExpiry;
 use crate::settings::ClientConfig;
 
 pub struct BaererBaerer {
@@ -15,7 +15,7 @@ pub struct BaererBaerer {
     pub config: ClientConfig,
 }
 
-impl RemoteGet for BaererBaerer {
+impl GetExpiry for BaererBaerer {
     fn get(&mut self) -> Result<(), String> {
         self.baerer_token_str = get_raw_access_token(&self.config)?;
         self.exp = get_expiration(&self.baerer_token_str)?;
