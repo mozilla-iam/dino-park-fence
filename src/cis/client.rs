@@ -7,9 +7,9 @@ use condvar_store::CondvarStore;
 use percent_encoding::utf8_percent_encode;
 use percent_encoding::USERINFO_ENCODE_SET;
 use reqwest::Client;
+use reqwest::Url;
 use serde_json::Value;
 use std::sync::Arc;
-use url::Url;
 
 #[allow(dead_code)]
 pub enum GetBy {
@@ -32,7 +32,7 @@ impl GetBy {
 
 pub trait CisClientTrait {
     fn get_user_by(&self, id: &str, by: &GetBy, filter: Option<&str>) -> Result<Profile, String>;
-    fn update_user(&self, profile: Profile) -> Result<Value, String>;
+    fn update_user(&self, id: &str, profile: Profile) -> Result<Value, String>;
     fn get_secret_store(&self) -> &SecretStore;
 }
 
@@ -60,8 +60,7 @@ impl CisClient {
 impl CisClientTrait for CisClient {
     fn get_user_by(&self, id: &str, by: &GetBy, filter: Option<&str>) -> Result<Profile, String> {
         let safe_id = utf8_percent_encode(id, USERINFO_ENCODE_SET).to_string();
-        let base = Url::parse("https://person.api.dev.sso.allizom.org/v2/user/")
-            .map_err(|e| format!("{}", e))?;
+        let base = Url::parse(&self.person_api_user_endpoint).map_err(|e| format!("{}", e))?;
         let url = base
             .join(by.as_str())
             .and_then(|u| u.join(&safe_id))
@@ -90,7 +89,7 @@ impl CisClientTrait for CisClient {
         }
     }
 
-    fn update_user(&self, profile: Profile) -> Result<Value, String> {
+    fn update_user(&self, id: &str, profile: Profile) -> Result<Value, String> {
         let b = self
             .bearer_store
             .get()
@@ -99,10 +98,9 @@ impl CisClientTrait for CisClient {
             .read()
             .map_err(|e| format!("{}: {}", "unable to read token", e))?;
         let token = &*b1.baerer_token_str;
-        let client = Client::new()
-            .post("https://change.api.dev.sso.allizom.org/v2/user")
-            .json(&profile)
-            .bearer_auth(token);
+        let mut url = Url::parse(&self.change_api_user_endpoint).map_err(|e| format!("{}", e))?;
+        url.set_query(Some(&format!("user_id={}", id)));
+        let client = Client::new().post(url).json(&profile).bearer_auth(token);
         let mut res: reqwest::Response = client.send().map_err(|e| format!("change.api: {}", e))?;
         res.json()
             .map_err(|e| format!("change.api → json: {} ({:?})", e, res))

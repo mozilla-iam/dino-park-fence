@@ -15,7 +15,7 @@ spec:
         name: oidc-proxy
     spec:
       containers:
-        - image: mozillaparsys/mozilla.oidc.proxy:latest
+        - image: {{ .Values.docker_registry }}/mozilla.oidc.accessproxy:berlin
           imagePullPolicy: Always
           name: oidc-proxy
           ports:

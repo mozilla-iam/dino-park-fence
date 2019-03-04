@@ -10,7 +10,6 @@ extern crate futures;
 extern crate percent_encoding;
 extern crate reqwest;
 extern crate serde;
-extern crate url;
 
 #[macro_use]
 extern crate juniper;

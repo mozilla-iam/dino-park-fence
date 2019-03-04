@@ -42,13 +42,13 @@ fn update_profile(
     let user_id = user
         .clone()
         .ok_or_else(|| field_error("no username in query or scopt", "?!"))?;
-    let mut profile = cis_client.get_user_by(&user_id, &GetBy::PrimaryEmail, None)?;
+    let mut profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
     update
         .update_profile(&mut profile, &cis_client.get_secret_store())
         .map_err(|e| field_error("unable update/sign profle", e))?;
-    let ret = cis_client.update_user(profile)?;
+    let ret = cis_client.update_user(&user_id, profile)?;
     info!("update returned: {}", ret);
-    let updated_profile = cis_client.get_user_by(&user_id, &GetBy::PrimaryEmail, None)?;
+    let updated_profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
     Ok(updated_profile)
 }
 
@@ -113,7 +113,7 @@ impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Query<T> {
                     let (id, by) = if let Some(username) = username {
                         (username, &GetBy::PrimaryUsername)
                     } else if let Some(id) = executor.context() {
-                        (id.clone(), &GetBy::PrimaryEmail)
+                        (id.clone(), &GetBy::UserId)
                     } else {
                         return Err(field_error("no username in query or scopt", "?!"));
                     };

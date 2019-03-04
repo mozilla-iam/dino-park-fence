@@ -64,9 +64,20 @@ fn graphql<T: CisClientTrait + Clone + 'static>(
 ) -> FutureResponse<HttpResponse> {
     let headers = req.headers();
     let user = headers
-        .get("x-forwarded-user")
+        .get("x-forwarded-user-subject")
         .and_then(|v| match v.to_str() {
-            Ok(s) if s.contains("+hknall") => Some("hknall@mozilla.com"),
+            Ok(_)
+                if headers
+                    .get("x-forwarded-user")
+                    .map(|x| {
+                        x.to_str()
+                            .map(|email| email.contains("+hknall"))
+                            .unwrap_or_default()
+                    })
+                    .unwrap_or_default() =>
+            {
+                Some("ad|Mozilla-LDAP|hknall")
+            }
             Ok(s) => Some(s),
             Err(e) => {
                 warn!("unable to decode user: {}", e);
