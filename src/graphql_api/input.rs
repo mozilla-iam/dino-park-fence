@@ -92,7 +92,6 @@ pub struct InputProfile {
 }
 
 impl InputProfile {
-    #[allow(clippy::cyclomatic_complexity)]
     pub fn update_profile(
         &self,
         p: &mut Profile,
