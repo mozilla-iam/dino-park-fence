@@ -44,7 +44,7 @@ fn update_profile(
         .ok_or_else(|| field_error("no username in query or scopt", "?!"))?;
     let mut profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
     update
-        .update_profile(&mut profile, &cis_client.get_secret_store())
+        .update_profile(&mut profile, cis_client.get_secret_store())
         .map_err(|e| field_error("unable update/sign profle", e))?;
     let ret = cis_client.update_user(&user_id, profile)?;
     info!("update returned: {}", ret);
@@ -156,7 +156,7 @@ impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Mutation<T> 
                 .push_docstring(&[])
                 .argument(
                     registry
-                        .arg::<Option<String>>("username", info)
+                        .arg::<InputProfile>("update", info)
                         .push_docstring(&[]),
                 ),
         ];

@@ -1,7 +1,6 @@
 use chrono::SecondsFormat;
 use chrono::Utc;
-use cis_profile::crypto::sign_attribute;
-use cis_profile::crypto::SecretStore;
+use cis_profile::crypto::Signer;
 use cis_profile::schema::Display;
 use cis_profile::schema::Profile;
 use cis_profile::schema::PublisherAuthority;
@@ -12,7 +11,7 @@ fn update_string(
     s: &Option<StringWithDisplay>,
     p: &mut StandardAttributeString,
     now: &str,
-    store: &SecretStore,
+    store: &impl Signer,
 ) -> Result<(), String> {
     if let Some(x) = s {
         let mut sign = false;
@@ -31,7 +30,7 @@ fn update_string(
         if sign {
             p.metadata.last_modified = now.to_owned();
             p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
-            sign_attribute(p, store)?;
+            store.sign_attribute(p)?;
         }
     }
     Ok(())
@@ -95,7 +94,7 @@ impl InputProfile {
     pub fn update_profile(
         &self,
         p: &mut Profile,
-        secret_store: &SecretStore,
+        secret_store: &impl Signer,
     ) -> Result<(), String> {
         let now = &Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true);
         update_string(
@@ -132,13 +131,14 @@ impl InputProfile {
 mod test {
     use super::*;
     use cis_profile::schema::Profile;
+    use cis_profile::crypto::SecretStore;
 
     fn get_fake_secret_store() -> SecretStore {
         let v = vec![(
             String::from("mozilliansorg"),
             String::from(include_str!("../../tests/data/fake_key.json")),
         )];
-        SecretStore::from_inline_iter(v).unwrap()
+        SecretStore::default().with_sign_keys_from_inline_iter(v).unwrap()
     }
 
     #[test]

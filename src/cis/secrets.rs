@@ -28,7 +28,7 @@ pub fn get_store_from_ssm(settings: &Settings) -> Result<SecretStore, String> {
     ]
     .into_iter()
     .filter_map(|(k, v)| v.map(|v| (k, v)));
-    SecretStore::from_ssm_iter(keys)
+    SecretStore::default().with_sign_keys_from_ssm_iter(keys)
 }
 
 pub fn get_store_from_files(settings: &Settings) -> Result<SecretStore, String> {
@@ -49,7 +49,7 @@ pub fn get_store_from_files(settings: &Settings) -> Result<SecretStore, String> 
     .filter_map(|(k, v)| v.map(|v| (k, v)))
     .map(|(k, v)| read_file(&v).map(|content| (k, content)))
     .collect::<Result<Vec<(String, String)>, String>>()?;
-    SecretStore::from_inline_iter(keys)
+    SecretStore::default().with_sign_keys_from_inline_iter(keys)
 }
 
 fn read_file(file_name: &str) -> Result<String, String> {
