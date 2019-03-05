@@ -32,6 +32,10 @@ data:
         location /api/v3 {
           proxy_pass http://dino-park-free-pass-service:80;
         }
+        location /events/update {
+          default_type "application/json";
+          return 200 "{}";
+        }
         location / {
           proxy_pass http://dino-park-front-end-service:80;
         }

@@ -130,15 +130,17 @@ impl InputProfile {
 #[cfg(test)]
 mod test {
     use super::*;
-    use cis_profile::schema::Profile;
     use cis_profile::crypto::SecretStore;
+    use cis_profile::schema::Profile;
 
     fn get_fake_secret_store() -> SecretStore {
         let v = vec![(
             String::from("mozilliansorg"),
             String::from(include_str!("../../tests/data/fake_key.json")),
         )];
-        SecretStore::default().with_sign_keys_from_inline_iter(v).unwrap()
+        SecretStore::default()
+            .with_sign_keys_from_inline_iter(v)
+            .unwrap()
     }
 
     #[test]
