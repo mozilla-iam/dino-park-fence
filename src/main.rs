@@ -2,6 +2,7 @@ extern crate actix;
 extern crate actix_web;
 extern crate biscuit;
 extern crate chrono;
+extern crate cis_client;
 extern crate cis_profile;
 extern crate condvar_store;
 extern crate config;
@@ -17,10 +18,7 @@ extern crate juniper;
 extern crate log;
 #[macro_use]
 extern crate serde_derive;
-#[macro_use]
-extern crate serde_json;
 
-mod cis;
 mod graphql_api;
 mod settings;
 
@@ -28,6 +26,7 @@ use crate::graphql_api::app::graphql_app;
 
 use actix_web::middleware;
 use actix_web::server;
+use cis_client::client::CisClient;
 
 fn main() -> Result<(), String> {
     ::std::env::set_var("RUST_LOG", "actix_web=info,dino_park_fence=info");
@@ -35,7 +34,7 @@ fn main() -> Result<(), String> {
     info!("building the fence");
     let sys = actix::System::new("juniper-example");
     let s = settings::Settings::new().map_err(|e| format!("unable to load settings: {}", e))?;
-    let cis_client = cis::client::CisClient::from_settings(&s)?;
+    let cis_client = CisClient::from_settings(&s.cis)?;
 
     // Start http server
     server::new(move || {

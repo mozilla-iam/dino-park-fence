@@ -1,6 +1,6 @@
-use crate::cis::client::CisClientTrait;
-use crate::cis::client::GetBy;
 use crate::graphql_api::input::InputProfile;
+use cis_client::client::CisClientTrait;
+use cis_client::client::GetBy;
 use cis_profile::schema::Profile;
 use juniper::meta::MetaType;
 use juniper::Arguments;

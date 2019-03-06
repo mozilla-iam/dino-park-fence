@@ -9,8 +9,8 @@ use futures::future::Future;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 
-use crate::cis::client::CisClientTrait;
 use crate::graphql_api::root::{Mutation, Query, Schema};
+use cis_client::client::CisClientTrait;
 
 pub struct AppState<T: CisClientTrait + Clone + 'static> {
     executor: Addr<GraphQLExecutor<T>>,
