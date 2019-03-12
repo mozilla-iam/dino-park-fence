@@ -29,12 +29,14 @@ data:
         location /graphql {
           proxy_pass http://dino-park-fence-service:80;
         }
+        location /graphiql {
+          proxy_pass http://dino-park-fence-service:80;
+        }
         location /api/v3 {
           proxy_pass http://dino-park-free-pass-service:80;
         }
         location /events/update {
-          default_type "application/json";
-          return 200 "{}";
+          proxy_pass http://dino-park-lookout-service:80;
         }
         location / {
           proxy_pass http://dino-park-front-end-service:80;
@@ -69,7 +71,7 @@ spec:
           containerPort: 80
         env:
         - name: force_update
-          value: "1"
+          value: "3"
         volumeMounts:
         - name: nginx-router
           mountPath: /etc/nginx/
