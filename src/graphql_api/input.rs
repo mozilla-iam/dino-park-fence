@@ -2,10 +2,13 @@ use chrono::SecondsFormat;
 use chrono::Utc;
 use cis_profile::crypto::Signer;
 use cis_profile::schema::Display;
+use cis_profile::schema::KeyValue;
 use cis_profile::schema::Profile;
 use cis_profile::schema::PublisherAuthority;
 use cis_profile::schema::StandardAttributeString;
+use cis_profile::schema::StandardAttributeValues;
 use juniper::GraphQLInputObject;
+use std::collections::BTreeMap;
 
 fn update_string(
     s: &Option<StringWithDisplay>,
@@ -36,6 +39,38 @@ fn update_string(
     Ok(())
 }
 
+fn update_key_values(
+    s: &Option<KeyValuesWithDisplay>,
+    p: &mut StandardAttributeValues,
+    now: &str,
+    store: &impl Signer,
+) -> Result<(), String> {
+    if let Some(x) = s {
+        let mut sign = false;
+        if let Some(values) = &x.values {
+            let values: BTreeMap<String, Option<String>> =
+                values.iter().map(|e| (e.k.clone(), e.v.clone())).collect();
+            let kv = Some(KeyValue(values));
+            if kv != p.values {
+                p.values = kv;
+            }
+            sign = true;
+        }
+        if x.display != p.metadata.display {
+            if let Some(display) = &x.display {
+                p.metadata.display = Some(display.clone());
+                sign = true;
+            }
+        }
+        if sign {
+            p.metadata.last_modified = now.to_owned();
+            p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+            store.sign_attribute(p)?;
+        }
+    }
+    Ok(())
+}
+
 #[derive(GraphQLInputObject, Default)]
 pub struct BoolWithDisplay {
     display: Option<Display>,
@@ -50,14 +85,14 @@ pub struct StringWithDisplay {
 
 #[derive(GraphQLInputObject, Default)]
 pub struct KeyValueInput {
-    key: String,
-    value: Option<String>,
+    k: String,
+    v: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Default)]
 pub struct KeyValuesWithDisplay {
     display: Option<Display>,
-    value: Option<Vec<KeyValueInput>>,
+    values: Option<Vec<KeyValueInput>>,
 }
 
 #[derive(GraphQLInputObject, Default)]
@@ -87,7 +122,6 @@ pub struct InputProfile {
     pub uris: Option<KeyValuesWithDisplay>,
     pub user_id: Option<StringWithDisplay>,
     pub usernames: Option<KeyValuesWithDisplay>,
-    pub uuid: Option<StringWithDisplay>,
 }
 
 impl InputProfile {
@@ -122,7 +156,12 @@ impl InputProfile {
         update_string(&self.pronouns, &mut p.pronouns, now, secret_store)?;
         update_string(&self.timezone, &mut p.timezone, now, secret_store)?;
         update_string(&self.user_id, &mut p.user_id, now, secret_store)?;
-        update_string(&self.uuid, &mut p.uuid, now, secret_store)?;
+
+        update_key_values(&self.languages, &mut p.languages, now, secret_store)?;
+        update_key_values(&self.phone_numbers, &mut p.phone_numbers, now, secret_store)?;
+        update_key_values(&self.tags, &mut p.tags, now, secret_store)?;
+        update_key_values(&self.usernames, &mut p.usernames, now, secret_store)?;
+        update_key_values(&self.uris, &mut p.uris, now, secret_store)?;
         Ok(())
     }
 }

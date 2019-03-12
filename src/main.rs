@@ -32,7 +32,7 @@ fn main() -> Result<(), String> {
     ::std::env::set_var("RUST_LOG", "actix_web=info,dino_park_fence=info");
     env_logger::init();
     info!("building the fence");
-    let sys = actix::System::new("juniper-example");
+    let sys = actix::System::new("dino-park-fence");
     let s = settings::Settings::new().map_err(|e| format!("unable to load settings: {}", e))?;
     let cis_client = CisClient::from_settings(&s.cis)?;
 
