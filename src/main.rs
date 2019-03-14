@@ -20,9 +20,13 @@ extern crate log;
 extern crate serde_derive;
 
 mod graphql_api;
+mod orgchart;
+mod search;
 mod settings;
 
 use crate::graphql_api::app::graphql_app;
+use crate::orgchart::app::orgchart_app;
+use crate::search::app::search_app;
 
 use actix_web::middleware;
 use actix_web::server;
@@ -35,14 +39,23 @@ fn main() -> Result<(), String> {
     let sys = actix::System::new("dino-park-fence");
     let s = settings::Settings::new().map_err(|e| format!("unable to load settings: {}", e))?;
     let cis_client = CisClient::from_settings(&s.cis)?;
+    let dino_park_settings = s.dino_park.clone();
 
     // Start http server
     server::new(move || {
-        vec![graphql_app(cis_client.clone())
-            .middleware(middleware::Logger::default())
-            .boxed()]
+        vec![
+            search_app(&dino_park_settings.search)
+                .middleware(middleware::Logger::default())
+                .boxed(),
+            orgchart_app(&dino_park_settings.orgchart)
+                .middleware(middleware::Logger::default())
+                .boxed(),
+            graphql_app(cis_client.clone())
+                .middleware(middleware::Logger::default())
+                .boxed(),
+        ]
     })
-    .bind("0.0.0.0:8080")
+    .bind("0.0.0.0:8081")
     .unwrap()
     .start();
 

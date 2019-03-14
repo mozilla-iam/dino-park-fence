@@ -26,7 +26,7 @@ spec:
             limits:
               memory: 512Gi
           ports:
-            - containerPort: 8080
+            - containerPort: 8081
           env:
             - name: FORCE_UPDATE
               value: "{{ .Values.force_update | default 0 }}"

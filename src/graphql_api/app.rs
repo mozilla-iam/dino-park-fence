@@ -116,13 +116,14 @@ pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
     App::with_state(AppState {
         executor: addr.clone(),
     })
+    .prefix("/api/v4/graphql")
     .configure(|app| {
         Cors::for_app(app)
             .allowed_methods(vec!["GET", "POST"])
             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
             .allowed_header(http::header::CONTENT_TYPE)
             .max_age(3600)
-            .resource("/graphql", |r| r.method(http::Method::POST).with(graphql))
+            .resource("", |r| r.method(http::Method::POST).with(graphql))
             .resource("/graphiql", |r| r.method(http::Method::GET).h(graphiql))
             .register()
     })
