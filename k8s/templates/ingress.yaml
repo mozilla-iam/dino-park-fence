@@ -30,3 +30,7 @@ spec:
           serviceName: internal-router
           {{- end }}
           servicePort: 80
+      - path: /events/update
+        backend:
+          serviceName: internal-router
+          servicePort: 80

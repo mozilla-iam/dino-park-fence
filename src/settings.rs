@@ -2,9 +2,28 @@ use cis_client::settings::CisSettings;
 use config::{Config, ConfigError, Environment, File};
 use std::env;
 
+#[derive(Debug, Deserialize, Clone)]
+pub struct Orgchart {
+    pub related_endpoint: String,
+    pub full_endpoint: String,
+    pub trace_endpoint: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct Search {
+    pub simple_endpoint: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
+pub struct DinoParkServices {
+    pub orgchart: Orgchart,
+    pub search: Search,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct Settings {
     pub cis: CisSettings,
+    pub dino_park: DinoParkServices,
 }
 
 impl Settings {
