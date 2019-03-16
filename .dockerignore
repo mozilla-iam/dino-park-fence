@@ -1,6 +1,6 @@
 .dev.env
 .settings.json
-secret.yaml
+secret-*.yaml
 .git/
 .vscode/
 target/
