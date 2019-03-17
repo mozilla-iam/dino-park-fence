@@ -26,15 +26,6 @@ data:
 
       server {
         listen 80;
-        location /graphql {
-          proxy_pass http://dino-park-fence-service:80/api/v4/graphql;
-        }
-        location /graphiql {
-          proxy_pass http://dino-park-fence-service:80/api/v4/graphql/graphiql;
-        }
-        location /api/v3 {
-          proxy_pass http://dino-park-free-pass-service:80;
-        }
         location /api/v4 {
           proxy_pass http://dino-park-fence-service:80;
         }
