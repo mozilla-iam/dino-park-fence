@@ -41,7 +41,7 @@ fn update_profile(
 ) -> FieldResult<Profile> {
     let user_id = user
         .clone()
-        .ok_or_else(|| field_error("no username in query or scopt", "?!"))?;
+        .ok_or_else(|| field_error("no username in query or scope", "?!"))?;
     let mut profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
     update
         .update_profile(&mut profile, cis_client.get_secret_store())

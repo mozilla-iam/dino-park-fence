@@ -15,6 +15,7 @@ use serde_json::Value;
 struct FullHandler {
     full_endpoint: String,
 }
+
 impl FullHandler {
     pub fn new(full_endpoint: &str) -> Self {
         FullHandler {

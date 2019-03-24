@@ -7,6 +7,7 @@ use cis_profile::schema::Profile;
 use cis_profile::schema::PublisherAuthority;
 use cis_profile::schema::StandardAttributeString;
 use cis_profile::schema::StandardAttributeValues;
+use failure::Error;
 use juniper::GraphQLInputObject;
 use std::collections::BTreeMap;
 
@@ -15,7 +16,7 @@ fn update_string(
     p: &mut StandardAttributeString,
     now: &str,
     store: &impl Signer,
-) -> Result<(), String> {
+) -> Result<(), Error> {
     if let Some(x) = s {
         let mut sign = false;
         if x.value != p.value {
@@ -44,7 +45,7 @@ fn update_key_values(
     p: &mut StandardAttributeValues,
     now: &str,
     store: &impl Signer,
-) -> Result<(), String> {
+) -> Result<(), Error> {
     if let Some(x) = s {
         let mut sign = false;
         if let Some(values) = &x.values {
@@ -125,11 +126,7 @@ pub struct InputProfile {
 }
 
 impl InputProfile {
-    pub fn update_profile(
-        &self,
-        p: &mut Profile,
-        secret_store: &impl Signer,
-    ) -> Result<(), String> {
+    pub fn update_profile(&self, p: &mut Profile, secret_store: &impl Signer) -> Result<(), Error> {
         let now = &Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true);
         update_string(
             &self.alternative_name,
@@ -183,7 +180,7 @@ mod test {
     }
 
     #[test]
-    fn test_simple_update() -> Result<(), String> {
+    fn test_simple_update() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
         let mut p = Profile::default();
         let mut update = InputProfile::default();
