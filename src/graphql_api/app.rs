@@ -53,7 +53,7 @@ impl<T: CisClientTrait + Clone + 'static> Handler<GraphQLData> for GraphQLExecut
 fn graphiql<T: CisClientTrait + Clone>(
     _req: &HttpRequest<AppState<T>>,
 ) -> Result<HttpResponse, Error> {
-    let html = graphiql_source("/graphql");
+    let html = graphiql_source("/api/v4/graphql");
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(html))

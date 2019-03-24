@@ -7,6 +7,7 @@ extern crate cis_profile;
 extern crate condvar_store;
 extern crate config;
 extern crate env_logger;
+extern crate failure;
 extern crate futures;
 extern crate percent_encoding;
 extern crate reqwest;
@@ -38,7 +39,8 @@ fn main() -> Result<(), String> {
     info!("building the fence");
     let sys = actix::System::new("dino-park-fence");
     let s = settings::Settings::new().map_err(|e| format!("unable to load settings: {}", e))?;
-    let cis_client = CisClient::from_settings(&s.cis)?;
+    let cis_client = CisClient::from_settings(&s.cis)
+        .map_err(|e| format!("unable to create cis_client: {}", e))?;
     let dino_park_settings = s.dino_park.clone();
 
     // Start http server

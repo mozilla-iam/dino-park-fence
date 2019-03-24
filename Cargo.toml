@@ -5,9 +5,9 @@ authors = ["Florian Merz <flomerz@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-condvar_store = { git = "https://github.com/fiji-flo/condvar_store" }
-cis_profile = { git = "https://github.com/fiji-flo/cis_profile-rust", features = ["graphql", "aws", "vendored"] }
-cis_client = { git = "https://github.com/fiji-flo/cis_client-rust" }
+condvar_store = { git = "https://github.com/fiji-flo/condvar_store", version = "0.0.2" }
+cis_profile = { git = "https://github.com/fiji-flo/cis_profile-rust", version = "0.0.2", features = ["graphql", "aws", "vendored"] }
+cis_client = { git = "https://github.com/fiji-flo/cis_client-rust", version = "0.0.2" }
 actix = "0.7"
 actix-web = "0.7"
 juniper = "0.11.1"
@@ -22,3 +22,4 @@ chrono = "0.4"
 biscuit = "0.1.0"
 percent-encoding = "1.0"
 config = "0.9"
+failure = "0.1.5"
