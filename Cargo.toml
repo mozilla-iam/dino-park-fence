@@ -1,8 +1,12 @@
 [package]
 name = "dino-park-fence"
-version = "0.1.0"
+version = "0.0.2"
 authors = ["Florian Merz <flomerz@gmail.com>"]
 edition = "2018"
+
+[features]
+default = []
+nouid = []
 
 [dependencies]
 condvar_store = { git = "https://github.com/fiji-flo/condvar_store", version = "0.0.2" }

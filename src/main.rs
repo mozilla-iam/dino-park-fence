@@ -22,6 +22,7 @@ extern crate serde_derive;
 
 mod graphql_api;
 mod orgchart;
+mod permissions;
 mod search;
 mod settings;
 
