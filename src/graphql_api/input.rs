@@ -1,3 +1,5 @@
+use crate::graphql_api::avatar::upload_picture;
+use crate::settings::Fossil;
 use chrono::SecondsFormat;
 use chrono::Utc;
 use cis_profile::crypto::Signer;
@@ -10,19 +12,40 @@ use cis_profile::schema::StandardAttributeValues;
 use failure::Error;
 use juniper::GraphQLInputObject;
 use std::collections::BTreeMap;
-use crate::graphql_api::avatar::upload_picture;
 
 fn update_picture(
     s: &Option<StringWithDisplay>,
     p: &mut StandardAttributeString,
-    uuid: &str,
+    uuid: &StandardAttributeString,
     now: &str,
     store: &impl Signer,
+    fossil_settings: &Fossil,
 ) -> Result<(), Error> {
     if let Some(picture) = s {
         let mut sign = false;
         if let Some(value) = &picture.value {
-            upload_picture(&value, uuid, "")?;
+            let uuid = uuid
+                .value
+                .as_ref()
+                .ok_or_else(|| failure::err_msg("no uuid in profile"))?;
+            let url = upload_picture(&value, uuid, &fossil_settings.upload_endpoint)?;
+            p.value = Some(url);
+            sign = true;
+        }
+        if picture.display != p.metadata.display {
+            if let Some(display) = &picture.display {
+                // if display changed but field is null change it to empty string
+                if p.value.is_none() {
+                    p.value = Some(String::default());
+                }
+                p.metadata.display = Some(display.clone());
+                sign = true;
+            }
+        }
+        if sign {
+            p.metadata.last_modified = now.to_owned();
+            p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+            store.sign_attribute(p)?;
         }
     }
     Ok(())
@@ -151,7 +174,12 @@ pub struct InputProfile {
 }
 
 impl InputProfile {
-    pub fn update_profile(&self, p: &mut Profile, secret_store: &impl Signer) -> Result<(), Error> {
+    pub fn update_profile(
+        &self,
+        p: &mut Profile,
+        secret_store: &impl Signer,
+        fossil_settings: &Fossil,
+    ) -> Result<(), Error> {
         let now = &Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true);
         update_string(
             &self.alternative_name,
@@ -167,7 +195,14 @@ impl InputProfile {
         update_string(&self.last_name, &mut p.last_name, now, secret_store)?;
         update_string(&self.location, &mut p.location, now, secret_store)?;
         update_string(&self.login_method, &mut p.login_method, now, secret_store)?;
-        update_string(&self.picture, &mut p.picture, now, secret_store)?;
+        update_picture(
+            &self.picture,
+            &mut p.picture,
+            &p.uuid,
+            now,
+            secret_store,
+            &fossil_settings,
+        )?;
         update_string(&self.primary_email, &mut p.primary_email, now, secret_store)?;
         update_string(
             &self.primary_username,
@@ -207,6 +242,7 @@ mod test {
     #[test]
     fn test_simple_update() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
+        let fossil_settings = Fossil { upload_endpoint: String::default() };
         let mut p = Profile::default();
         let mut update = InputProfile::default();
         update.fun_title = Some(StringWithDisplay {
@@ -214,7 +250,7 @@ mod test {
             display: None,
         });
         assert_eq!(p.fun_title.value, None);
-        update.update_profile(&mut p, &secret_store)?;
+        update.update_profile(&mut p, &secret_store, &fossil_settings)?;
         assert_eq!(p.fun_title.value, update.fun_title.unwrap().value);
         Ok(())
     }
@@ -222,6 +258,7 @@ mod test {
     #[test]
     fn test_update_display_only_with_null_value_string() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
+        let fossil_settings = Fossil { upload_endpoint: String::default() };
         let mut p = Profile::default();
         let mut update = InputProfile::default();
         update.fun_title = Some(StringWithDisplay {
@@ -231,7 +268,7 @@ mod test {
         assert_eq!(p.pronouns.value, None);
         assert_eq!(p.fun_title.value, None);
         assert_ne!(p.fun_title.metadata.display, Some(Display::Vouched));
-        update.update_profile(&mut p, &secret_store)?;
+        update.update_profile(&mut p, &secret_store, &fossil_settings)?;
         assert_eq!(p.pronouns.value, None);
         assert_eq!(p.fun_title.value, Some(String::default()));
         assert_eq!(p.fun_title.metadata.display, Some(Display::Vouched));
@@ -241,6 +278,7 @@ mod test {
     #[test]
     fn test_update_display_only_with_null_value_kv() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
+        let fossil_settings = Fossil { upload_endpoint: String::default() };
         let mut p = Profile::default();
         let mut update = InputProfile::default();
         update.languages = Some(KeyValuesWithDisplay {
@@ -250,7 +288,7 @@ mod test {
         assert_eq!(p.tags.values, None);
         assert_eq!(p.languages.values, None);
         assert_ne!(p.languages.metadata.display, Some(Display::Vouched));
-        update.update_profile(&mut p, &secret_store)?;
+        update.update_profile(&mut p, &secret_store, &fossil_settings)?;
         assert_eq!(p.tags.values, None);
         assert_eq!(p.languages.values, Some(Default::default()));
         assert_eq!(p.languages.metadata.display, Some(Display::Vouched));
