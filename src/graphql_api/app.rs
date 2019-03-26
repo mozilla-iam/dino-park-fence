@@ -70,7 +70,11 @@ pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
             .allowed_header(http::header::CONTENT_TYPE)
             .max_age(3600)
-            .resource("", |r| r.method(http::Method::POST).with(graphql))
+            .resource("", |r| {
+                r.method(http::Method::POST).with_config(graphql, |cfg| {
+                    cfg.0.limit(1_048_576);
+                })
+            })
             .resource("/graphiql", |r| r.method(http::Method::GET).with(graphiql))
             .register()
     })
