@@ -27,6 +27,10 @@ fn update_string(
         }
         if x.display != p.metadata.display {
             if let Some(display) = &x.display {
+                // if display changed but field is null change it to empty string
+                if p.value.is_none() {
+                    p.value = Some(String::default());
+                }
                 p.metadata.display = Some(display.clone());
                 sign = true;
             }
@@ -59,6 +63,10 @@ fn update_key_values(
         }
         if x.display != p.metadata.display {
             if let Some(display) = &x.display {
+                // if display changed but field is null change it to empty dict
+                if p.values.is_none() {
+                    p.values = Some(KeyValue(BTreeMap::default()));
+                }
                 p.metadata.display = Some(display.clone());
                 sign = true;
             }
@@ -188,9 +196,47 @@ mod test {
             value: Some(String::from("Pope")),
             display: None,
         });
-        assert!(p.fun_title.value.is_none());
+        assert_eq!(p.fun_title.value, None);
         update.update_profile(&mut p, &secret_store)?;
         assert_eq!(p.fun_title.value, update.fun_title.unwrap().value);
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_display_only_with_null_value_string() -> Result<(), Error> {
+        let secret_store = get_fake_secret_store();
+        let mut p = Profile::default();
+        let mut update = InputProfile::default();
+        update.fun_title = Some(StringWithDisplay {
+            value: None,
+            display: Some(Display::Vouched),
+        });
+        assert_eq!(p.pronouns.value, None);
+        assert_eq!(p.fun_title.value, None);
+        assert_ne!(p.fun_title.metadata.display, Some(Display::Vouched));
+        update.update_profile(&mut p, &secret_store)?;
+        assert_eq!(p.pronouns.value, None);
+        assert_eq!(p.fun_title.value, Some(String::default()));
+        assert_eq!(p.fun_title.metadata.display, Some(Display::Vouched));
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_display_only_with_null_value_kv() -> Result<(), Error> {
+        let secret_store = get_fake_secret_store();
+        let mut p = Profile::default();
+        let mut update = InputProfile::default();
+        update.languages = Some(KeyValuesWithDisplay {
+            values: None,
+            display: Some(Display::Vouched),
+        });
+        assert_eq!(p.tags.values, None);
+        assert_eq!(p.languages.values, None);
+        assert_ne!(p.languages.metadata.display, Some(Display::Vouched));
+        update.update_profile(&mut p, &secret_store)?;
+        assert_eq!(p.tags.values, None);
+        assert_eq!(p.languages.values, Some(Default::default()));
+        assert_eq!(p.languages.metadata.display, Some(Display::Vouched));
         Ok(())
     }
 }
