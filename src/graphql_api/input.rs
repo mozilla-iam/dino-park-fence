@@ -10,6 +10,23 @@ use cis_profile::schema::StandardAttributeValues;
 use failure::Error;
 use juniper::GraphQLInputObject;
 use std::collections::BTreeMap;
+use crate::graphql_api::avatar::upload_picture;
+
+fn update_picture(
+    s: &Option<StringWithDisplay>,
+    p: &mut StandardAttributeString,
+    uuid: &str,
+    now: &str,
+    store: &impl Signer,
+) -> Result<(), Error> {
+    if let Some(picture) = s {
+        let mut sign = false;
+        if let Some(value) = &picture.value {
+            upload_picture(&value, uuid, "")?;
+        }
+    }
+    Ok(())
+}
 
 fn update_string(
     s: &Option<StringWithDisplay>,
