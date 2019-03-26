@@ -12,7 +12,7 @@ pub fn upload_picture(
     uuid: &str,
     fossil_send_endpoint: &str,
 ) -> Result<String, Error> {
-    let payload = json!({ data_uri: data_uri });
+    let payload = json!({ "data_uri": data_uri });
     let UploadResponse { url } = Client::new()
         .post(&format!("{}{}", fossil_send_endpoint, uuid))
         .json(&payload)
