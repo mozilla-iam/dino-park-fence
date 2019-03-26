@@ -23,14 +23,16 @@ fn update_picture(
 ) -> Result<(), Error> {
     if let Some(picture) = s {
         let mut sign = false;
-        if let Some(value) = &picture.value {
-            let uuid = uuid
-                .value
-                .as_ref()
-                .ok_or_else(|| failure::err_msg("no uuid in profile"))?;
-            let url = upload_picture(&value, uuid, &fossil_settings.upload_endpoint)?;
-            p.value = Some(url);
-            sign = true;
+        if picture.value != p.value {
+            if let Some(value) = &picture.value {
+                let uuid = uuid
+                    .value
+                    .as_ref()
+                    .ok_or_else(|| failure::err_msg("no uuid in profile"))?;
+                let url = upload_picture(&value, uuid, &fossil_settings.upload_endpoint)?;
+                p.value = Some(url);
+                sign = true;
+            }
         }
         if picture.display != p.metadata.display {
             if let Some(display) = &picture.display {
