@@ -56,7 +56,7 @@ pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
         },
         Mutation {
             cis_client,
-            fossil_settings: fossil_settings.clone()
+            fossil_settings: fossil_settings.clone(),
         },
     );
 

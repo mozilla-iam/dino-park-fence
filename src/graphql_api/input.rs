@@ -242,7 +242,9 @@ mod test {
     #[test]
     fn test_simple_update() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
-        let fossil_settings = Fossil { upload_endpoint: String::default() };
+        let fossil_settings = Fossil {
+            upload_endpoint: String::default(),
+        };
         let mut p = Profile::default();
         let mut update = InputProfile::default();
         update.fun_title = Some(StringWithDisplay {
@@ -258,7 +260,9 @@ mod test {
     #[test]
     fn test_update_display_only_with_null_value_string() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
-        let fossil_settings = Fossil { upload_endpoint: String::default() };
+        let fossil_settings = Fossil {
+            upload_endpoint: String::default(),
+        };
         let mut p = Profile::default();
         let mut update = InputProfile::default();
         update.fun_title = Some(StringWithDisplay {
@@ -278,7 +282,9 @@ mod test {
     #[test]
     fn test_update_display_only_with_null_value_kv() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
-        let fossil_settings = Fossil { upload_endpoint: String::default() };
+        let fossil_settings = Fossil {
+            upload_endpoint: String::default(),
+        };
         let mut p = Profile::default();
         let mut update = InputProfile::default();
         update.languages = Some(KeyValuesWithDisplay {

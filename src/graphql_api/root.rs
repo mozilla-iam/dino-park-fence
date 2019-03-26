@@ -194,7 +194,12 @@ impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Mutation<T> 
                     .expect("Argument update missing - validation must have failed");
                 let executor = &executor;
                 {
-                    update_profile(update, &self.cis_client, &self.fossil_settings, executor.context())
+                    update_profile(
+                        update,
+                        &self.cis_client,
+                        &self.fossil_settings,
+                        executor.context(),
+                    )
                 }
             };
             return IntoResolvable::into(result, executor.context()).and_then(|res| match res {
