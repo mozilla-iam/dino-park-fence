@@ -12,4 +12,4 @@ FROM alpine:latest
 
 WORKDIR /root/
 COPY --from=0 /usr/src/app/target/x86_64-unknown-linux-musl/release/dino-park-fence .
-CMD ["./dino-park-fence"]  
+CMD ["./dino-park-fence"]

@@ -1,0 +1,28 @@
+project: dino-park-fence
+env:
+  docker_registry: 320464205386.dkr.ecr.us-west-2.amazonaws.com
+  name: dino-park-fence
+  rev: latest
+tasks:
+  run-dev:
+    cmd: cargo run
+  compile-release:
+    cmd: cargo build --target x86_64-unknown-linux-musl --release
+  package-local:
+    cmd: |
+      $myke compile-release
+      $myke docker-local
+  package:
+    cmd: $myke build
+  docker-local:
+    cmd:
+      docker build -t {{ .docker_registry }}/{{ .name }}:{{ .rev }} -f Dockerfile.local .
+  docker:
+    cmd: docker build -t {{ .docker_registry }}/{{ .name }}:{{ .rev }} -f Dockerfile .
+  push-image:
+    cmd: docker push {{ .docker_registry }}/{{ .name }}:{{ .rev }}
+  deploy:
+    cmd: |
+      helm template -f k8s/values.yaml -f k8s/values/{{ .deploy_env | required }}.yaml \
+        --set docker_registry={{ .docker_registry }},rev={{ .rev }} k8s/ | \
+        kubectl apply -f -

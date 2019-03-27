@@ -1,0 +1,25 @@
+version: 0.2
+
+env:
+  variables:
+    IMAGE_NAME: custom-code-build-dino-park-builder-rust
+    DOCKER_REGISTRY: 320464205386.dkr.ecr.us-west-2.amazonaws.com
+
+phases:
+  pre_build:
+    commands:
+      - export COMMIT_SHA=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - export DEPLOY_ENV=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e 's/tag\/.*-\(.*\)/\1/' | sed -e 's/branch\/master/dev/')
+      - export MASTER=$(if [ "$CODEBUILD_WEBHOOK_TRIGGER" = "branch/master" ]; then echo 1; fi)
+      - export CLUSTER=$(if [ "$DEPLOY_ENV" = "dev" ]; then echo "kubernetes-stage-us-west-2"; else echo "kubernetes-prod-us-west-2"; fi)
+      - echo "running for ${COMMIT_SHA} in ${DEPLOY_ENV}"
+      - aws eks update-kubeconfig --name $CLUSTER
+      - aws ecr get-login --region us-west-2 --no-include-email | bash
+  build:
+    commands:
+      - '[ -n "$MASTER" ] && myke package-local --rev=$COMMIT_SHA push-image --rev=$COMMIT_SHA'
+  post_build:
+    commands:
+      - echo "Environment is ${DEPLOY_ENV}"
+      - myke deploy --deploy_env=$DEPLOY_ENV --rev=$COMMIT_SHA
+#      - helm template -f k8s/values.yaml -f k8s/values/$DEPLOY_ENV.yaml --set docker_registry=$DOCKER_REGISTRY,namespace=dinopark-$DEPLOY_ENV,rev=$COMMIT_SHA k8s/ | kubectl --token $DEPLOY_TOKEN apply -f -

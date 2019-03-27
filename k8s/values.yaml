@@ -1,2 +1,3 @@
 name: dino-park-fence
 rev: latest
+oidc: true
