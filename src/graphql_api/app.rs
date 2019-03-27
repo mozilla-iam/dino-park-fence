@@ -1,3 +1,7 @@
+use crate::graphql_api::root::{Mutation, Query, Schema};
+use crate::permissions::Scope;
+use crate::permissions::UserId;
+use crate::settings::Fossil;
 use actix_web::http;
 use actix_web::middleware::cors::Cors;
 use actix_web::App;
@@ -5,14 +9,10 @@ use actix_web::HttpResponse;
 use actix_web::Json;
 use actix_web::Result;
 use actix_web::State;
+use cis_client::client::CisClientTrait;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 use std::sync::Arc;
-
-use crate::graphql_api::root::{Mutation, Query, Schema};
-use crate::permissions::Scope;
-use crate::permissions::UserId;
-use cis_client::client::CisClientTrait;
 
 #[derive(Clone)]
 pub struct GraphQlState<T: CisClientTrait + Clone + 'static> {
@@ -47,12 +47,17 @@ fn graphql<T: CisClientTrait + Clone>(
 
 pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
     cis_client: T,
+    fossil_settings: &Fossil,
 ) -> App<GraphQlState<T>> {
     let schema = Schema::new(
         Query {
             cis_client: cis_client.clone(),
+            fossil_settings: fossil_settings.clone(),
         },
-        Mutation { cis_client },
+        Mutation {
+            cis_client,
+            fossil_settings: fossil_settings.clone(),
+        },
     );
 
     App::with_state(GraphQlState {
@@ -65,7 +70,11 @@ pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
             .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
             .allowed_header(http::header::CONTENT_TYPE)
             .max_age(3600)
-            .resource("", |r| r.method(http::Method::POST).with(graphql))
+            .resource("", |r| {
+                r.method(http::Method::POST).with_config(graphql, |cfg| {
+                    cfg.0.limit(1_048_576);
+                })
+            })
             .resource("/graphiql", |r| r.method(http::Method::GET).with(graphiql))
             .register()
     })

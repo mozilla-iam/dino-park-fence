@@ -1,4 +1,5 @@
 use crate::graphql_api::input::InputProfile;
+use crate::settings::Fossil;
 use cis_client::client::CisClientTrait;
 use cis_client::client::GetBy;
 use cis_profile::schema::Profile;
@@ -18,6 +19,7 @@ use juniper::Value;
 
 pub struct Query<T: CisClientTrait + Clone> {
     pub cis_client: T,
+    pub fossil_settings: Fossil,
 }
 
 fn field_error(msg: &str, e: impl std::fmt::Display) -> FieldError {
@@ -32,11 +34,13 @@ fn get_profile(id: String, cis_client: &impl CisClientTrait, by: &GetBy) -> Fiel
 
 pub struct Mutation<T: CisClientTrait + Clone> {
     pub cis_client: T,
+    pub fossil_settings: Fossil,
 }
 
 fn update_profile(
     update: InputProfile,
     cis_client: &impl CisClientTrait,
+    fossil_settings: &Fossil,
     user: &Option<String>,
 ) -> FieldResult<Profile> {
     let user_id = user
@@ -44,7 +48,7 @@ fn update_profile(
         .ok_or_else(|| field_error("no username in query or scope", "?!"))?;
     let mut profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
     update
-        .update_profile(&mut profile, cis_client.get_secret_store())
+        .update_profile(&mut profile, cis_client.get_secret_store(), fossil_settings)
         .map_err(|e| field_error("unable update/sign profle", e))?;
     let ret = cis_client.update_user(&user_id, profile)?;
     info!("update returned: {}", ret);
@@ -190,7 +194,12 @@ impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Mutation<T> 
                     .expect("Argument update missing - validation must have failed");
                 let executor = &executor;
                 {
-                    update_profile(update, &self.cis_client, executor.context())
+                    update_profile(
+                        update,
+                        &self.cis_client,
+                        &self.fossil_settings,
+                        executor.context(),
+                    )
                 }
             };
             return IntoResolvable::into(result, executor.context()).and_then(|res| match res {

@@ -15,9 +15,15 @@ pub struct Search {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct Fossil {
+    pub upload_endpoint: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct DinoParkServices {
     pub orgchart: Orgchart,
     pub search: Search,
+    pub fossil: Fossil,
 }
 
 #[derive(Debug, Deserialize)]

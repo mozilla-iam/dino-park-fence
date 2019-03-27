@@ -53,7 +53,7 @@ fn main() -> Result<(), String> {
             orgchart_app(&dino_park_settings.orgchart)
                 .middleware(middleware::Logger::default())
                 .boxed(),
-            graphql_app(cis_client.clone())
+            graphql_app(cis_client.clone(), &dino_park_settings.fossil)
                 .middleware(middleware::Logger::default())
                 .boxed(),
         ]
