@@ -9,6 +9,7 @@ phases:
   pre_build:
     commands:
       - export COMMIT_SHA=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - export CODEBUILD_WEBHOOK_TRIGGER=${CODEBUILD_WEBHOOK_TRIGGER:-branch/master}
       - export DEPLOY_ENV=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e 's/tag\/.*-\(.*\)/\1/' | sed -e 's/branch\/master/dev/')
       - export MASTER=$(if [ "$CODEBUILD_WEBHOOK_TRIGGER" = "branch/master" ]; then echo 1; fi)
       - export CLUSTER=$(if [ "$DEPLOY_ENV" = "dev" ]; then echo "kubernetes-stage-us-west-2"; else echo "kubernetes-prod-us-west-2"; fi)
@@ -23,3 +24,6 @@ phases:
       - echo "Environment is ${DEPLOY_ENV}"
       - myke deploy --deploy_env=$DEPLOY_ENV --rev=$COMMIT_SHA
 #      - helm template -f k8s/values.yaml -f k8s/values/$DEPLOY_ENV.yaml --set docker_registry=$DOCKER_REGISTRY,namespace=dinopark-$DEPLOY_ENV,rev=$COMMIT_SHA k8s/ | kubectl --token $DEPLOY_TOKEN apply -f -
+cache:
+  paths:
+    - $HOME/.cargo
