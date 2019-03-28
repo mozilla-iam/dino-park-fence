@@ -27,7 +27,7 @@ rustup target add x86_64-unknown-linux-musl
 apt-get update
 apt-get install -y musl-tools
 rm -rf /var/lib/apt/lists/*
-ENV K8SVERSION=v1.11.5
+K8SVERSION=v1.11.5
 curl -LO https://storage.googleapis.com/kubernetes-release/release/$K8SVERSION/bin/linux/amd64/kubectl
 chmod +x ./kubectl
 mv ./kubectl /bin/kubectl
