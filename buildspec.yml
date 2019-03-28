@@ -1,11 +1,9 @@
 version: 0.2
 
-env:
-  variables:
-    IMAGE_NAME: custom-code-build-dino-park-builder-rust
-    DOCKER_REGISTRY: 320464205386.dkr.ecr.us-west-2.amazonaws.com
-
 phases:
+  install:
+    commands:
+      - source ci/install_deps.sh
   pre_build:
     commands:
       - export COMMIT_SHA=$CODEBUILD_RESOLVED_SOURCE_VERSION
