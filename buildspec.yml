@@ -3,7 +3,7 @@ version: 0.2
 phases:
   install:
     commands:
-      - source ci/install_deps.sh
+      - ". ci/install_deps.sh"
   pre_build:
     commands:
       - export COMMIT_SHA=$CODEBUILD_RESOLVED_SOURCE_VERSION
