@@ -24,5 +24,4 @@ tasks:
   deploy:
     cmd: |
       helm template -f k8s/values.yaml -f k8s/values/{{ .deploy_env | required }}.yaml \
-        --set docker_registry={{ .docker_registry }},rev={{ .rev }} k8s/ | \
-        kubectl apply -f -
+        --set docker_registry={{ .docker_registry }},rev={{ .rev }} k8s/ | kubectl apply -f -

@@ -21,7 +21,6 @@ phases:
     commands:
       - echo "Environment is ${DEPLOY_ENV}"
       - myke deploy --deploy_env=$DEPLOY_ENV --rev=$COMMIT_SHA
-#      - helm template -f k8s/values.yaml -f k8s/values/$DEPLOY_ENV.yaml --set docker_registry=$DOCKER_REGISTRY,namespace=dinopark-$DEPLOY_ENV,rev=$COMMIT_SHA k8s/ | kubectl --token $DEPLOY_TOKEN apply -f -
 cache:
   paths:
     - $HOME/.cargo

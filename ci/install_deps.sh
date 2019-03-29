@@ -26,11 +26,6 @@ rustc --version
 rustup target add x86_64-unknown-linux-musl
 apt-get update
 apt-get install -y musl-tools
-rm -rf /var/lib/apt/lists/*
-K8SVERSION=v1.11.5
-curl -LO https://storage.googleapis.com/kubernetes-release/release/$K8SVERSION/bin/linux/amd64/kubectl
-chmod +x ./kubectl
-mv ./kubectl /bin/kubectl
 HELM_INSTALL_DIR=/bin
 curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
 curl -L -o myke https://github.com/fiji-flo/myke/releases/download/0.9.11/myke-0.9.11-x86_64-unknown-linux-musl
