@@ -2,6 +2,7 @@ extern crate actix;
 extern crate actix_web;
 extern crate biscuit;
 extern crate chrono;
+extern crate chrono_tz;
 extern crate cis_client;
 extern crate cis_profile;
 extern crate condvar_store;
@@ -25,10 +26,12 @@ mod orgchart;
 mod permissions;
 mod search;
 mod settings;
+mod timezones;
 
 use crate::graphql_api::app::graphql_app;
 use crate::orgchart::app::orgchart_app;
 use crate::search::app::search_app;
+use crate::timezones::app::timezone_app;
 
 use actix_web::middleware;
 use actix_web::server;
@@ -54,6 +57,9 @@ fn main() -> Result<(), String> {
                 .middleware(middleware::Logger::default())
                 .boxed(),
             graphql_app(cis_client.clone(), &dino_park_settings.fossil)
+                .middleware(middleware::Logger::default())
+                .boxed(),
+            timezone_app()
                 .middleware(middleware::Logger::default())
                 .boxed(),
         ]
