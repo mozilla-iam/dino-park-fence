@@ -15,10 +15,8 @@ spec:
     metadata:
       labels:
         app: {{ .Values.name }}
-      {{- if eq .Values.env "dev" }}
       annotations:
         iam.amazonaws.com/role: {{ .Values.assume_role }}
-      {{- end }}
     spec:
       containers:
         - name: {{ .Values.name }}

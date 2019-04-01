@@ -24,11 +24,7 @@ spec:
       paths:
       - path: /
         backend:
-          {{ if .Values.oidc -}}
           serviceName: oidc-proxy
-          {{- else -}}
-          serviceName: internal-router
-          {{- end }}
           servicePort: 80
       - path: /events/update
         backend:

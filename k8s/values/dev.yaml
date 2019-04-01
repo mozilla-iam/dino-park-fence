@@ -2,4 +2,3 @@ env: dev
 namespace: dinopark-dev
 domain_name: dinopark.k8s.dev.sso.allizom.org
 assume_role: arn:aws:iam::320464205386:role/dinopark-fence-role-dev-us-west-2
-aws_region: us-west-2
