@@ -1,3 +1,4 @@
+use crate::graphql_api::avatar::change_picture_display;
 use crate::graphql_api::avatar::upload_picture;
 use crate::settings::Fossil;
 use chrono::SecondsFormat;
@@ -21,30 +22,55 @@ fn update_picture(
     store: &impl Signer,
     fossil_settings: &Fossil,
 ) -> Result<(), Error> {
-    if let Some(picture) = s {
-        let mut sign = false;
-        if picture.value != p.value {
-            if let Some(value) = &picture.value {
-                let uuid = uuid
-                    .value
-                    .as_ref()
-                    .ok_or_else(|| failure::err_msg("no uuid in profile"))?;
-                let url = upload_picture(&value, uuid, &fossil_settings.upload_endpoint)?;
-                p.value = Some(url);
-                sign = true;
-            }
-        }
-        if picture.display != p.metadata.display {
-            if let Some(display) = &picture.display {
+    if let Some(new_picture) = s {
+        let mut changed = false;
+        if new_picture.display != p.metadata.display {
+            if let Some(display) = &new_picture.display {
                 // if display changed but field is null change it to empty string
                 if p.value.is_none() {
                     p.value = Some(String::default());
                 }
                 p.metadata.display = Some(display.clone());
-                sign = true;
+                changed = true;
             }
         }
-        if sign {
+        if new_picture.value != p.value {
+            if let Some(display) = &p.metadata.display {
+                if let Some(value) = &new_picture.value {
+                    let uuid = uuid
+                        .value
+                        .as_ref()
+                        .ok_or_else(|| failure::err_msg("no uuid in profile"))?;
+                    let url = upload_picture(
+                        &value,
+                        uuid,
+                        &display,
+                        p.value.as_ref().map(|s| s.as_str()),
+                        &fossil_settings.upload_endpoint,
+                    )?;
+                    p.value = Some(url);
+                    changed = true;
+                }
+            }
+        } else if changed && p.value != Some(String::default()) {
+            // if only the display level changed we have to send a display update to fossil
+            if let Some(display) = &p.metadata.display {
+                let uuid = uuid
+                    .value
+                    .as_ref()
+                    .ok_or_else(|| failure::err_msg("no uuid in profile"))?;
+                let url = change_picture_display(
+                    uuid,
+                    &display,
+                    p.value.as_ref().map(|s| s.as_str()),
+                    &fossil_settings.upload_endpoint,
+                )?;
+                p.value = Some(url);
+                changed = true;
+            }
+        }
+
+        if changed {
             p.metadata.last_modified = now.to_owned();
             p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
             store.sign_attribute(p)?;
