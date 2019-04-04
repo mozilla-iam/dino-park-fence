@@ -47,6 +47,38 @@ fn update_profile(
         .clone()
         .ok_or_else(|| field_error("no username in query or scope", "?!"))?;
     let mut profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
+    if let Some(updated_username) = update
+        .primary_username
+        .as_ref()
+        .and_then(|s| s.value.as_ref())
+    {
+        if Some(updated_username) != profile.primary_username.value.as_ref() {
+            let num_chars = updated_username.chars().count();
+            if num_chars < 2 || num_chars > 64 {
+                return Err(field_error(
+                    "username_length",
+                    "Lenght of username must be between 2 and 64!",
+                ));
+            }
+            // the primary_username changed check if it already exists
+            if cis_client
+                .get_user_by(updated_username, &GetBy::PrimaryUsername, None)
+                .is_ok()
+            {
+                return Err(field_error(
+                    "username_exists",
+                    "This username already exitst!",
+                ));
+            }
+        }
+    }
+
+    if update
+        .primary_username
+        .as_ref()
+        .and_then(|updated_username| updated_username.value.as_ref())
+        == profile.primary_username.value.as_ref()
+    {}
     update
         .update_profile(&mut profile, cis_client.get_secret_store(), fossil_settings)
         .map_err(|e| field_error("unable update/sign profle", e))?;
