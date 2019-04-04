@@ -1,4 +1,6 @@
 use crate::graphql_api::input::InputProfile;
+use crate::permissions::Scope;
+use crate::permissions::UserId;
 use crate::settings::Fossil;
 use cis_client::client::CisClientTrait;
 use cis_client::client::GetBy;
@@ -27,8 +29,13 @@ fn field_error(msg: &str, e: impl std::fmt::Display) -> FieldError {
     FieldError::new(msg, graphql_value!({ "internal_error": error }))
 }
 
-fn get_profile(id: String, cis_client: &impl CisClientTrait, by: &GetBy) -> FieldResult<Profile> {
-    let profile = cis_client.get_user_by(&id, by, None)?;
+fn get_profile(
+    id: String,
+    cis_client: &impl CisClientTrait,
+    by: &GetBy,
+    filter: &str,
+) -> FieldResult<Profile> {
+    let profile = cis_client.get_user_by(&id, by, Some(&filter))?;
     Ok(profile)
 }
 
@@ -90,7 +97,7 @@ fn update_profile(
 
 // generated via graphql_object!
 impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Query<T> {
-    type Context = Option<String>;
+    type Context = (UserId, Option<Scope>);
     type TypeInfo = ();
     fn name(_: &Self::TypeInfo) -> Option<&str> {
         Some("Query")
@@ -146,14 +153,13 @@ impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Query<T> {
                     .expect("Argument username missing - validation must have failed");
                 let executor = &executor;
                 {
-                    let (id, by) = if let Some(username) = username {
-                        (username, &GetBy::PrimaryUsername)
-                    } else if let Some(id) = executor.context() {
-                        (id.clone(), &GetBy::UserId)
+                    let (user_id, _scope) = executor.context();
+                    let (id, by, filter) = if let Some(username) = username {
+                        (username, &GetBy::PrimaryUsername, "staff")
                     } else {
-                        return Err(field_error("no username in query or scopt", "?!"));
+                        (user_id.user_id.clone(), &GetBy::UserId, "private")
                     };
-                    get_profile(id, &self.cis_client, by)
+                    get_profile(id, &self.cis_client, by, filter)
                 }
             };
             return IntoResolvable::into(result, executor.context()).and_then(|res| match res {
@@ -170,7 +176,7 @@ impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Query<T> {
 
 // generated via graphql_object!
 impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Mutation<T> {
-    type Context = Option<String>;
+    type Context = (UserId, Option<Scope>);
     type TypeInfo = ();
     fn name(_: &Self::TypeInfo) -> Option<&str> {
         Some("Mutation")
@@ -230,7 +236,7 @@ impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Mutation<T> 
                         update,
                         &self.cis_client,
                         &self.fossil_settings,
-                        executor.context(),
+                        &Some(executor.context().0.user_id.clone()),
                     )
                 }
             };
