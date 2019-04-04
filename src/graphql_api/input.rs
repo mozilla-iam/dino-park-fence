@@ -150,26 +150,26 @@ fn update_key_values(
 
 #[derive(GraphQLInputObject, Default)]
 pub struct BoolWithDisplay {
-    display: Option<Display>,
-    value: Option<bool>,
+    pub display: Option<Display>,
+    pub value: Option<bool>,
 }
 
 #[derive(GraphQLInputObject, Default)]
 pub struct StringWithDisplay {
-    display: Option<Display>,
-    value: Option<String>,
+    pub display: Option<Display>,
+    pub value: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Default)]
 pub struct KeyValueInput {
-    k: String,
-    v: Option<String>,
+    pub k: String,
+    pub v: Option<String>,
 }
 
 #[derive(GraphQLInputObject, Default)]
 pub struct KeyValuesWithDisplay {
-    display: Option<Display>,
-    values: Option<Vec<KeyValueInput>>,
+    pub display: Option<Display>,
+    pub values: Option<Vec<KeyValueInput>>,
 }
 
 #[derive(GraphQLInputObject, Default)]
