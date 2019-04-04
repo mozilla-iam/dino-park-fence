@@ -37,9 +37,7 @@ fn graphql<T: CisClientTrait + Clone>(
 ) -> Result<HttpResponse> {
     info!("graphql for {:?} → {:?}", user_id, scope);
     let graphql_data = body.0;
-    let res = graphql_data
-        .0
-        .execute(&state.schema, &Some(user_id.user_id));
+    let res = graphql_data.0.execute(&state.schema, &(user_id, scope));
     Ok(HttpResponse::Ok()
         .content_type("application/json")
         .body(serde_json::to_string(&res)?))
