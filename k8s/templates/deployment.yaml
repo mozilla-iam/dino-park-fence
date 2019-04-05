@@ -1,5 +1,4 @@
 ---
-{{- if ne .Values.env "prod" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -45,4 +44,3 @@ spec:
         - name: settings-secrets
           secret:
             secretName: dino-park-fence
-{{- end }}

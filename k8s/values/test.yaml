@@ -1,4 +1,4 @@
 env: test
 namespace: dinopark-test
 domain_name: dinopark.k8s.test.sso.allizom.org
-assume_role: arn:aws:iam::320464205386:role/dinopark-fence-role-test-us-west-2
+assume_role: arn:aws:iam::320464205386:role/dino-park-fence-role-test-us-west-2
