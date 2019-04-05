@@ -1,3 +1,4 @@
 env: prod
 namespace: dinopark-prod
 domain_name: dinopark.k8s.sso.mozilla.com
+assume_role: arn:aws:iam::320464205386:role/dino-park-fence-role-prod-us-west-2
