@@ -1,4 +1,5 @@
 ---
+{{- if ne .Values.env "prod" }}
 apiVersion: v1
 kind: Service
 metadata:
@@ -11,3 +12,4 @@ spec:
     - protocol: TCP
       port: 80
       targetPort: 8081
+{{- end }}

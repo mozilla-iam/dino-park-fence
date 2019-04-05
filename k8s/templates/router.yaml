@@ -26,6 +26,7 @@ data:
 
       server {
         listen 80;
+{{- if ne .Values.env "prod" }}
         location /api/v4 {
           proxy_pass http://dino-park-fence-service:80;
         }
@@ -35,6 +36,7 @@ data:
         location /avatar/ {
           proxy_pass http://dino-park-fossil-service:80;
         }
+{{- end }}
         location / {
           proxy_pass http://dino-park-front-end-service:80;
         }

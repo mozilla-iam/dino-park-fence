@@ -4,3 +4,4 @@
 .vscode
 .dev.env
 secret-*.yaml
+.terraform
