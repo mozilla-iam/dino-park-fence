@@ -34,7 +34,7 @@ fn update_picture(
                 changed = true;
             }
         }
-        if new_picture.value != p.value {
+        if new_picture.value != p.value && new_picture.value != Some(String::default()) {
             if let Some(display) = &p.metadata.display {
                 if let Some(value) = &new_picture.value {
                     let uuid = uuid
@@ -68,6 +68,10 @@ fn update_picture(
                 p.value = Some(url);
                 changed = true;
             }
+        } else if new_picture.value != p.value && new_picture.value == Some(String::default()) {
+            // TODO: delete picture
+            p.value = new_picture.value.clone();
+            changed = true;
         }
 
         if changed {
