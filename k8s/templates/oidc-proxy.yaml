@@ -45,11 +45,6 @@ spec:
                 secretKeyRef:
                   name: oidc-proxy-secret
                   key: backend
-            - name: redirect_uri
-              valueFrom:
-                secretKeyRef:
-                  name: oidc-proxy-secret
-                  key: redirect_uri
             {{- if ne .Values.env "dev" }}
             - name: allowed_group
               valueFrom:
