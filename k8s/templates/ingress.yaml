@@ -12,11 +12,14 @@ metadata:
     nginx.ingress.kubernetes.io/enable-modsecurity: "true"
     nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
     nginx.ingress.kubernetes.io/configuration-snippet: |
-            more_set_headers "X-Frame-Options: DENY" "X-XSS-Protection: 1" "X-Content-Type-Options: nosniff" "Strict-Transport-Security: max-age=63072000" "Content-Security-Policy: default-src 'self'; font-src https://fonts.gstatic.com; img-src 'self' data:; script-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'";
+            more_set_headers "X-Frame-Options: DENY" "X-Frame-Options: DENY" "X-XSS-Protection: 1" "X-Content-Type-Options: nosniff" "Strict-Transport-Security: max-age=63072000" "Content-Security-Policy: default-src 'self'; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; script-src 'self'; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
 spec:
   tls:
   - hosts:
     - {{ .Values.domain_name }}
+    {{- with .Values.secondary_domain_name }}
+    - {{ . }}
+    {{- end }}
     secretName: dino-park-secret
   rules:
   - host: {{ .Values.domain_name }}
@@ -30,3 +33,16 @@ spec:
         backend:
           serviceName: internal-router
           servicePort: 80
+  {{- with .Values.secondary_domain_name }}
+  - host: {{ . }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: oidc-proxy
+          servicePort: 80
+      - path: /events/update
+        backend:
+          serviceName: internal-router
+          servicePort: 80
+  {{- end }}
