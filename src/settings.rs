@@ -20,10 +20,16 @@ pub struct Fossil {
 }
 
 #[derive(Debug, Deserialize, Clone)]
+pub struct Lookout {
+    pub internal_update_endpoint: String,
+}
+
+#[derive(Debug, Deserialize, Clone)]
 pub struct DinoParkServices {
     pub orgchart: Orgchart,
     pub search: Search,
     pub fossil: Fossil,
+    pub lookout: Lookout,
 }
 
 #[derive(Debug, Deserialize)]
