@@ -30,12 +30,7 @@ data:
           proxy_pass http://dino-park-fence-service:80;
         }
         location /events/update {
-          {{- if eq .Values.env "prod" }}
-          default_type application/json;
-          return 200 '{}';
-          {{- else }}
           proxy_pass http://dino-park-lookout-service:80;
-          {{- end }}
         }
         location /avatar/ {
           proxy_pass http://dino-park-fossil-service:80;
@@ -73,7 +68,7 @@ spec:
           containerPort: 80
         env:
         - name: force_update
-          value: "2"
+          value: "1"
         volumeMounts:
         - name: nginx-router
           mountPath: /etc/nginx/

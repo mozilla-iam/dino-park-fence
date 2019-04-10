@@ -22,6 +22,7 @@ pub struct Fossil {
 #[derive(Debug, Deserialize, Clone)]
 pub struct Lookout {
     pub internal_update_endpoint: String,
+    pub internal_update_enabled: bool,
 }
 
 #[derive(Debug, Deserialize, Clone)]

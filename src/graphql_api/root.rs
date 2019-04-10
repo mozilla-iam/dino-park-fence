@@ -91,10 +91,15 @@ fn update_profile(
     let ret = cis_client.update_user(&user_id, profile)?;
     info!("update returned: {}", ret);
     let updated_profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
-    Client::new()
-        .post("http://dino-park-lookout-service:80/internal/update")
-        .json(&updated_profile)
-        .send()?;
+    if dinopark_settings.lookout.internal_update_enabled {
+        if let Err(e) = Client::new()
+            .post(&dinopark_settings.lookout.internal_update_endpoint)
+            .json(&updated_profile)
+            .send()
+        {
+            error!("unable to post to lookout: {}", e);
+        }
+    }
     Ok(updated_profile)
 }
 
