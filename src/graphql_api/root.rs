@@ -1,7 +1,7 @@
 use crate::graphql_api::input::InputProfile;
 use crate::permissions::Scope;
 use crate::permissions::UserId;
-use crate::settings::Fossil;
+use crate::settings::DinoParkServices;
 use cis_client::client::CisClientTrait;
 use cis_client::client::GetBy;
 use cis_profile::schema::Profile;
@@ -18,10 +18,11 @@ use juniper::Registry;
 use juniper::RootNode;
 use juniper::ScalarRefValue;
 use juniper::Value;
+use reqwest::Client;
 
 pub struct Query<T: CisClientTrait + Clone> {
     pub cis_client: T,
-    pub fossil_settings: Fossil,
+    pub dinopark_settings: DinoParkServices,
 }
 
 fn field_error(msg: &str, e: impl std::fmt::Display) -> FieldError {
@@ -41,13 +42,13 @@ fn get_profile(
 
 pub struct Mutation<T: CisClientTrait + Clone> {
     pub cis_client: T,
-    pub fossil_settings: Fossil,
+    pub dinopark_settings: DinoParkServices,
 }
 
 fn update_profile(
     update: InputProfile,
     cis_client: &impl CisClientTrait,
-    fossil_settings: &Fossil,
+    dinopark_settings: &DinoParkServices,
     user: &Option<String>,
 ) -> FieldResult<Profile> {
     let user_id = user
@@ -80,18 +81,20 @@ fn update_profile(
         }
     }
 
-    if update
-        .primary_username
-        .as_ref()
-        .and_then(|updated_username| updated_username.value.as_ref())
-        == profile.primary_username.value.as_ref()
-    {}
     update
-        .update_profile(&mut profile, cis_client.get_secret_store(), fossil_settings)
+        .update_profile(
+            &mut profile,
+            cis_client.get_secret_store(),
+            &dinopark_settings.fossil,
+        )
         .map_err(|e| field_error("unable update/sign profle", e))?;
     let ret = cis_client.update_user(&user_id, profile)?;
     info!("update returned: {}", ret);
     let updated_profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
+    Client::new()
+        .post("http://dino-park-lookout-service:80/internal/update")
+        .json(&updated_profile)
+        .send()?;
     Ok(updated_profile)
 }
 
@@ -235,7 +238,7 @@ impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Mutation<T> 
                     update_profile(
                         update,
                         &self.cis_client,
-                        &self.fossil_settings,
+                        &self.dinopark_settings,
                         &Some(executor.context().0.user_id.clone()),
                     )
                 }
