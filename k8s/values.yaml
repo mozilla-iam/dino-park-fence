@@ -1,3 +1,4 @@
 name: dino-park-fence
 rev: latest
 aws_region: us-west-2
+internal_updates: true

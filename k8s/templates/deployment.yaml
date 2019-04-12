@@ -36,10 +36,8 @@ spec:
               value: "/data/.settings.json"
             - name: AWS_DEFAULT_REGION
               value: "{{ .Values.aws_region | default "us-west-2" }}"
-            {{- if eq .Values.env "prod" }}
             - name: DINO_PARK__LOOKOUT__INTERNAL_UPDATE_ENABLED
-              value: "true"
-            {{- end }}
+              value: "{{ .Values.internal_updates }}"
           volumeMounts:
             - name: settings-secrets
               mountPath: "/data"
