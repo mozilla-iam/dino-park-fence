@@ -45,7 +45,7 @@ fn update_picture(
                         &value,
                         uuid,
                         &display,
-                        p.value.as_ref().map(|s| s.as_str()),
+                        p.value.as_ref().map(String::as_str),
                         &fossil_settings.upload_endpoint,
                     )?;
                     p.value = Some(url);
@@ -62,7 +62,7 @@ fn update_picture(
                 let url = change_picture_display(
                     uuid,
                     &display,
-                    p.value.as_ref().map(|s| s.as_str()),
+                    p.value.as_ref().map(String::as_str),
                     &fossil_settings.upload_endpoint,
                 )?;
                 p.value = Some(url);
