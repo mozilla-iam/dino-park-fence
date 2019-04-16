@@ -65,7 +65,16 @@ fn update_profile(
             if num_chars < 2 || num_chars > 64 {
                 return Err(field_error(
                     "username_length",
-                    "Lenght of username must be between 2 and 64!",
+                    "Lenght of username must be between 2 and 64. And only contain letters from a-z, digits from 0-9, underscore or minus.",
+                ));
+            }
+            let only_valid_chars = updated_username
+                .chars()
+                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_');
+            if !only_valid_chars {
+                return Err(field_error(
+                    "username_invalid_chars",
+                    "Lenght of username must be between 2 and 64. And only contain letters from a-z, digits from 0-9, underscore or minus.",
                 ));
             }
             // the primary_username changed check if it already exists
