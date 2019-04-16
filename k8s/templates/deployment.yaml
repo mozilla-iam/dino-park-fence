@@ -29,6 +29,10 @@ spec:
               memory: 512Gi
           ports:
             - containerPort: 8081
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8081
           env:
             - name: FORCE_UPDATE
               value: "{{ .Values.force_update | default 0 }}"
@@ -36,8 +40,10 @@ spec:
               value: "/data/.settings.json"
             - name: AWS_DEFAULT_REGION
               value: "{{ .Values.aws_region | default "us-west-2" }}"
-            - name: DINO_PARK__LOOKOUT__INTERNAL_UPDATE_ENABLED
-              value: "{{ .Values.internal_updates }}"
+            {{- range $key, $value := .Values }}{{ if hasPrefix "env_" $key }}
+            - name: {{ $key | trimPrefix "env_" }}
+              value: "{{ $value }}"
+            {{- end }}{{- end }}
           volumeMounts:
             - name: settings-secrets
               mountPath: "/data"

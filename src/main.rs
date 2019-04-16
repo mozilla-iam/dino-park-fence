@@ -21,6 +21,7 @@ extern crate log;
 extern crate serde_derive;
 
 mod graphql_api;
+mod healthz;
 mod orgchart;
 mod permissions;
 mod search;
@@ -28,6 +29,7 @@ mod settings;
 mod timezones;
 
 use crate::graphql_api::app::graphql_app;
+use crate::healthz::healthz_app;
 use crate::orgchart::app::orgchart_app;
 use crate::search::app::search_app;
 use crate::timezones::app::timezone_app;
@@ -61,6 +63,7 @@ fn main() -> Result<(), String> {
             timezone_app()
                 .middleware(middleware::Logger::default())
                 .boxed(),
+            healthz_app().boxed(),
         ]
     })
     .bind("0.0.0.0:8081")
