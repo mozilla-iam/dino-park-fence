@@ -63,7 +63,9 @@ fn main() -> Result<(), String> {
             timezone_app()
                 .middleware(middleware::Logger::default())
                 .boxed(),
-            healthz_app().boxed(),
+            healthz_app()
+                .middleware(middleware::Logger::default())
+                .boxed(),
         ]
     })
     .bind("0.0.0.0:8081")
