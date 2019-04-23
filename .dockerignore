@@ -1,5 +1,5 @@
 .dev.env
-.settings.json
+.settings*.json
 secret-*.yaml
 .git/
 .vscode/
