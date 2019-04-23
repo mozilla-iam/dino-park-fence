@@ -350,7 +350,7 @@ dependencies = [
 [[package]]
 name = "cis_client"
 version = "0.0.2"
-source = "git+https://github.com/fiji-flo/cis_client-rust#3c0fd00c9a11636dc95142843bbd210f10e1dbe6"
+source = "git+https://github.com/fiji-flo/cis_client-rust#9b087c347e90686263f2dc7ea16955eef52fa2e9"
 dependencies = [
  "biscuit 0.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.6 (registry+https://github.com/rust-lang/crates.io-index)",

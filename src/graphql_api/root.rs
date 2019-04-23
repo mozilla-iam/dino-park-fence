@@ -36,20 +36,9 @@ fn get_profile(
     by: &GetBy,
     filter: &str,
 ) -> FieldResult<Profile> {
-    let profile = cis_client.get_user_by(&id, by, Some(&filter))?;
-    if profile.active.value.unwrap_or_default()
-        || match by {
-            GetBy::UserId => true,
-            _ => false,
-        }
-    {
-        Ok(profile)
-    } else {
-        Err(field_error(
-            "unknown_profile",
-            "Profile not available in CIS.",
-        ))
-    }
+    cis_client
+        .get_user_by(&id, by, Some(&filter))
+        .map_err(Into::into)
 }
 
 pub struct Mutation<T: CisClientTrait + Clone> {
