@@ -37,7 +37,19 @@ fn get_profile(
     filter: &str,
 ) -> FieldResult<Profile> {
     let profile = cis_client.get_user_by(&id, by, Some(&filter))?;
-    Ok(profile)
+    if profile.active.value.unwrap_or_default()
+        || match by {
+            GetBy::UserId => true,
+            _ => false,
+        }
+    {
+        Ok(profile)
+    } else {
+        Err(field_error(
+            "unknown_profile",
+            "Profile not available in CIS.",
+        ))
+    }
 }
 
 pub struct Mutation<T: CisClientTrait + Clone> {
@@ -65,7 +77,7 @@ fn update_profile(
             if num_chars < 2 || num_chars > 64 {
                 return Err(field_error(
                     "username_length",
-                    "Lenght of username must be between 2 and 64. And only contain letters from a-z, digits from 0-9, underscore or minus.",
+                    "Lenght of username must be between 2 and 64. And only contain letters from a-z, digits from 0-9, underscore or hyphen.",
                 ));
             }
             let only_valid_chars = updated_username
@@ -74,7 +86,7 @@ fn update_profile(
             if !only_valid_chars {
                 return Err(field_error(
                     "username_invalid_chars",
-                    "Lenght of username must be between 2 and 64. And only contain letters from a-z, digits from 0-9, underscore or minus.",
+                    "Lenght of username must be between 2 and 64. And only contain letters from a-z, digits from 0-9, underscore or hyphen.",
                 ));
             }
             // the primary_username changed check if it already exists

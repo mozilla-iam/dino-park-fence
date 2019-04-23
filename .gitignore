@@ -1,6 +1,6 @@
 /target
 **/*.rs.bk
-.settings.json
+.settings*.json
 .vscode
 .dev.env
 secret-*.yaml
