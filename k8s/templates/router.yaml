@@ -35,7 +35,7 @@ data:
         location /events/update {
           proxy_pass http://dino-park-lookout-service:80;
         }
-        location /avatar/ {
+        location /avatar/get {
           proxy_pass http://dino-park-fossil-service:80;
         }
         location / {
