@@ -26,6 +26,9 @@ data:
 
       server {
         listen 80;
+        location /~ {
+          return 404;
+        }
         location /api/v4 {
           proxy_pass http://dino-park-fence-service:80;
         }
@@ -68,7 +71,7 @@ spec:
           containerPort: 80
         env:
         - name: force_update
-          value: "3"
+          value: "1"
         volumeMounts:
         - name: nginx-router
           mountPath: /etc/nginx/
