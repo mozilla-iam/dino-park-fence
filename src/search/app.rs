@@ -14,14 +14,17 @@ use serde_json::Value;
 struct SearchQuery {
     q: String,
     w: String,
+    a: Option<String>,
 }
 
 fn handle_simple(state: State<Search>, query: Query<SearchQuery>) -> Result<Json<Value>> {
-    let mut res = Client::new()
+    let mut client = Client::new()
         .get(&format!("{}staff/", state.simple_endpoint))
-        .query(&[("q", &query.q), ("w", &query.w)])
-        .send()
-        .map_err(error::ErrorBadRequest)?;
+        .query(&[("q", &query.q), ("w", &query.w)]);
+    if let Some(a) = &query.a {
+        client = client.query(&[("a", a)]);
+    }
+    let mut res = client.send().map_err(error::ErrorBadRequest)?;
     let json: Value = res.json().map_err(error::ErrorBadRequest)?;
     Ok(Json(json))
 }
