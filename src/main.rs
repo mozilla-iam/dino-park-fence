@@ -64,7 +64,6 @@ fn main() -> Result<(), String> {
                 .middleware(middleware::Logger::default())
                 .boxed(),
             healthz_app()
-                .middleware(middleware::Logger::default())
                 .boxed(),
         ]
     })
