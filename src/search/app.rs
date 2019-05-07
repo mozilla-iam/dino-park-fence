@@ -24,9 +24,7 @@ fn handle_simple(state: State<Search>, query: Query<SearchQuery>) -> Result<Json
     if let Some(a) = &query.a {
         client = client.query(&[("a", a)]);
     }
-    let mut res = client
-        .send()
-        .map_err(error::ErrorBadRequest)?;
+    let mut res = client.send().map_err(error::ErrorBadRequest)?;
     let json: Value = res.json().map_err(error::ErrorBadRequest)?;
     Ok(Json(json))
 }
