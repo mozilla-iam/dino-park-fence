@@ -38,6 +38,9 @@ data:
         location /avatar/get {
           proxy_pass http://dino-park-fossil-service:80;
         }
+        location /world/suggest {
+          proxy_pass http://dino-park-world-service:80;
+        }
         location / {
           proxy_pass http://dino-park-front-end-service:80;
         }
@@ -71,7 +74,7 @@ spec:
           containerPort: 80
         env:
         - name: force_update
-          value: "1"
+          value: "2"
         volumeMounts:
         - name: nginx-router
           mountPath: /etc/nginx/
