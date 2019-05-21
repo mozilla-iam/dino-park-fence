@@ -5,7 +5,11 @@ metadata:
   name: dino-park-ingress
   namespace: {{ .Values.namespace }}
   annotations:
+    {{- if eq .Values.env "dev" }}
+    kubernetes.io/ingress.class: "nginx-{{ .Values.namespace }}"
+    {{- else }}
     kubernetes.io/ingress.class: "nginx"
+    {{- end }}
     certmanager.k8s.io/cluster-issuer: letsencrypt-production
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/enable-cors: "true"
