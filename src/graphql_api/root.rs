@@ -171,9 +171,16 @@ impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Query<T> {
                     .expect("Argument username missing - validation must have failed");
                 let executor = &executor;
                 {
-                    let (user_id, _scope) = executor.context();
+                    let (user_id, scope) = executor.context();
                     let (id, by, filter) = if let Some(username) = username {
-                        (username, &GetBy::PrimaryUsername, "staff")
+                        (
+                            username,
+                            &GetBy::PrimaryUsername,
+                            scope
+                                .as_ref()
+                                .map(|s| s.scope.as_str())
+                                .unwrap_or_else(|| "public"),
+                        )
                     } else {
                         (user_id.user_id.clone(), &GetBy::UserId, "private")
                     };

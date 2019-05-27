@@ -1,0 +1,49 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    name: gatekeeper
+  name: gatekeeper
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        name: gatekeeper
+    spec:
+      containers:
+        - image: keycloak/keycloak-gatekeeper:latest
+          imagePullPolicy: Always
+          name: gatekeeper
+          ports:
+            - containerPort: 80
+          env:
+            - name: PROXY_CONFIG_FILE
+              value: "/etc/gatekeeper/secret-gatekeeper-{{ .Values.env }}.yaml"
+          volumeMounts:
+            - name: settings-secrets
+              mountPath: "/etc/gatekeeper"
+              readOnly: true
+      volumes:
+        - name: settings-secrets
+          secret:
+            secretName: gatekeeper-secret
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+  labels:
+    name: gatekeeper
+  name: gatekeeper
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  selector:
+    name: gatekeeper
