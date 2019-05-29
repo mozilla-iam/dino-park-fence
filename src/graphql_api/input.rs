@@ -251,6 +251,18 @@ impl InputProfile {
         update_key_values(&self.tags, &mut p.tags, now, secret_store)?;
         update_key_values(&self.usernames, &mut p.usernames, now, secret_store)?;
         update_key_values(&self.uris, &mut p.uris, now, secret_store)?;
+        update_key_values(
+            &self.pgp_public_keys,
+            &mut p.pgp_public_keys,
+            now,
+            secret_store,
+        )?;
+        update_key_values(
+            &self.ssh_public_keys,
+            &mut p.ssh_public_keys,
+            now,
+            secret_store,
+        )?;
         Ok(())
     }
 }
