@@ -5,6 +5,7 @@ use chrono::SecondsFormat;
 use chrono::Utc;
 use cis_profile::crypto::Signer;
 use cis_profile::schema::Display;
+use cis_profile::schema::IdentitiesAttributesValuesArray;
 use cis_profile::schema::KeyValue;
 use cis_profile::schema::Profile;
 use cis_profile::schema::PublisherAuthority;
@@ -80,6 +81,123 @@ fn update_picture(
             store.sign_attribute(p)?;
         }
     }
+    Ok(())
+}
+
+fn update_bugzilla_identity(
+    bugzilla: &IdentityWithDisplay,
+    p: &mut IdentitiesAttributesValuesArray,
+    now: &str,
+    store: &impl Signer,
+) -> Result<(), Error> {
+    let mut sign = false;
+    if bugzilla.remove {
+        p.bugzilla_mozilla_org_id.metadata.display = Some(Display::Private);
+        p.bugzilla_mozilla_org_primary_email.metadata.display = Some(Display::Private);
+
+        p.bugzilla_mozilla_org_id.value = Some(String::default());
+        p.bugzilla_mozilla_org_primary_email.value = Some(String::default());
+        sign = true;
+    } else if bugzilla.display != p.bugzilla_mozilla_org_id.metadata.display
+        || bugzilla.display != p.bugzilla_mozilla_org_primary_email.metadata.display
+    {
+        if let Some(display) = &bugzilla.display {
+            if p.bugzilla_mozilla_org_id.value.is_none() {
+                p.bugzilla_mozilla_org_id.value = Some(String::default())
+            }
+            if p.bugzilla_mozilla_org_primary_email.value.is_none() {
+                p.bugzilla_mozilla_org_primary_email.value = Some(String::default())
+            }
+
+            p.bugzilla_mozilla_org_id.metadata.display = Some(display.clone());
+            p.bugzilla_mozilla_org_primary_email.metadata.display = Some(display.clone());
+            sign = true;
+        }
+    }
+
+    if sign {
+        p.bugzilla_mozilla_org_id.metadata.last_modified = now.to_owned();
+        p.bugzilla_mozilla_org_primary_email.metadata.last_modified = now.to_owned();
+        p.bugzilla_mozilla_org_id.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+        p.bugzilla_mozilla_org_primary_email
+            .signature
+            .publisher
+            .name = PublisherAuthority::Mozilliansorg;
+        store.sign_attribute(&mut p.bugzilla_mozilla_org_id)?;
+        store.sign_attribute(&mut p.bugzilla_mozilla_org_primary_email)?;
+    }
+
+    Ok(())
+}
+
+fn update_github_identity(
+    github: &IdentityWithDisplay,
+    p: &mut IdentitiesAttributesValuesArray,
+    now: &str,
+    store: &impl Signer,
+) -> Result<(), Error> {
+    let mut sign = false;
+    if github.remove {
+        p.github_id_v3.metadata.display = Some(Display::Private);
+        p.github_id_v4.metadata.display = Some(Display::Private);
+        p.github_primary_email.metadata.display = Some(Display::Private);
+
+        p.github_id_v3.value = Some(String::default());
+        p.github_id_v4.value = Some(String::default());
+        p.github_primary_email.value = Some(String::default());
+        sign = true;
+    } else if github.display != p.github_id_v3.metadata.display
+        || github.display != p.github_id_v4.metadata.display
+        || github.display != p.github_primary_email.metadata.display
+    {
+        if let Some(display) = &github.display {
+            if p.github_id_v3.value.is_none() {
+                p.github_id_v3.value = Some(String::default())
+            }
+            if p.github_id_v4.value.is_none() {
+                p.github_id_v4.value = Some(String::default())
+            }
+            if p.github_primary_email.value.is_none() {
+                p.github_primary_email.value = Some(String::default())
+            }
+
+            p.github_id_v3.metadata.display = Some(display.clone());
+            p.github_id_v4.metadata.display = Some(display.clone());
+            p.github_primary_email.metadata.display = Some(display.clone());
+            sign = true;
+        }
+    }
+
+    if sign {
+        p.github_id_v3.metadata.last_modified = now.to_owned();
+        p.github_id_v4.metadata.last_modified = now.to_owned();
+        p.github_primary_email.metadata.last_modified = now.to_owned();
+        p.github_id_v3.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+        p.github_id_v4.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+        p.github_primary_email.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+        store.sign_attribute(&mut p.github_id_v3)?;
+        store.sign_attribute(&mut p.github_id_v4)?;
+        store.sign_attribute(&mut p.github_primary_email)?;
+    }
+
+    Ok(())
+}
+
+fn update_identities(
+    i: &Option<IdentitiesWithDisplay>,
+    p: &mut IdentitiesAttributesValuesArray,
+    now: &str,
+    store: &impl Signer,
+) -> Result<(), Error> {
+    if let Some(identities) = i {
+        if let Some(github) = &identities.github {
+            update_github_identity(github, p, now, store)?;
+        }
+        if let Some(bugzilla) = &identities.bugzilla {
+            update_bugzilla_identity(bugzilla, p, now, store)?;
+        }
+    }
+
     Ok(())
 }
 
@@ -177,6 +295,18 @@ pub struct KeyValuesWithDisplay {
 }
 
 #[derive(GraphQLInputObject, Default)]
+pub struct IdentityWithDisplay {
+    pub remove: bool,
+    pub display: Option<Display>,
+}
+
+#[derive(GraphQLInputObject, Default)]
+pub struct IdentitiesWithDisplay {
+    pub github: Option<IdentityWithDisplay>,
+    pub bugzilla: Option<IdentityWithDisplay>,
+}
+
+#[derive(GraphQLInputObject, Default)]
 pub struct InputProfile {
     pub active: Option<BoolWithDisplay>,
     pub alternative_name: Option<StringWithDisplay>,
@@ -184,7 +314,7 @@ pub struct InputProfile {
     pub description: Option<StringWithDisplay>,
     pub first_name: Option<StringWithDisplay>,
     pub fun_title: Option<StringWithDisplay>,
-    //pub identities: IdentitiesAttributesValuesArray,
+    pub identities: Option<IdentitiesWithDisplay>,
     pub languages: Option<KeyValuesWithDisplay>,
     pub last_modified: Option<StringWithDisplay>,
     pub last_name: Option<StringWithDisplay>,
@@ -197,7 +327,6 @@ pub struct InputProfile {
     pub primary_username: Option<StringWithDisplay>,
     pub pronouns: Option<StringWithDisplay>,
     pub ssh_public_keys: Option<KeyValuesWithDisplay>,
-    //pub staff_information: StaffInformationValuesArray,
     pub tags: Option<KeyValuesWithDisplay>,
     pub timezone: Option<StringWithDisplay>,
     pub uris: Option<KeyValuesWithDisplay>,
@@ -263,6 +392,7 @@ impl InputProfile {
             now,
             secret_store,
         )?;
+        update_identities(&self.identities, &mut p.identities, now, secret_store)?;
         Ok(())
     }
 }
