@@ -91,7 +91,7 @@ fn update_bugzilla_identity(
     store: &impl Signer,
 ) -> Result<(), Error> {
     let mut sign = false;
-    if bugzilla.remove {
+    if bugzilla.remove.unwrap_or_default() {
         p.bugzilla_mozilla_org_id.metadata.display = Some(Display::Private);
         p.bugzilla_mozilla_org_primary_email.metadata.display = Some(Display::Private);
 
@@ -137,7 +137,7 @@ fn update_github_identity(
     store: &impl Signer,
 ) -> Result<(), Error> {
     let mut sign = false;
-    if github.remove {
+    if github.remove.unwrap_or_default() {
         p.github_id_v3.metadata.display = Some(Display::Private);
         p.github_id_v4.metadata.display = Some(Display::Private);
         p.github_primary_email.metadata.display = Some(Display::Private);
@@ -296,7 +296,7 @@ pub struct KeyValuesWithDisplay {
 
 #[derive(GraphQLInputObject, Default)]
 pub struct IdentityWithDisplay {
-    pub remove: bool,
+    pub remove: Option<bool>,
     pub display: Option<Display>,
 }
 
