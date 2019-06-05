@@ -41,6 +41,11 @@ data:
         location /world/suggest {
           proxy_pass http://dino-park-world-service:80;
         }
+        {{- if ne .Values.env "prod" -}}
+        location /whoami/ {
+          proxy_pass http://dino-park-whoami-service:80;
+        }
+        {{- end }}
         location / {
           proxy_pass http://dino-park-front-end-service:80;
         }
@@ -74,7 +79,7 @@ spec:
           containerPort: 80
         env:
         - name: force_update
-          value: "2"
+          value: "3"
         volumeMounts:
         - name: nginx-router
           mountPath: /etc/nginx/
