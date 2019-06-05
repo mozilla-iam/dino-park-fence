@@ -6,10 +6,12 @@ use actix_web::http;
 use actix_web::middleware::cors::Cors;
 use actix_web::App;
 use actix_web::HttpResponse;
-use actix_web::Json;
+use actix_web::web::Json;
 use actix_web::Result;
-use actix_web::State;
-use cis_client::client::CisClientTrait;
+use actix_web::web::Data;
+use actix_web::dev::HttpServiceFactory;
+use actix_web::web;
+use cis_client::sync::client::CisClientTrait;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 use std::sync::Arc;
@@ -31,7 +33,7 @@ fn graphiql(_: UserId) -> Result<HttpResponse> {
 
 fn graphql<T: CisClientTrait + Clone>(
     body: Json<GraphQlData>,
-    state: State<GraphQlState<T>>,
+    state: Data<GraphQlState<T>>,
     user_id: UserId,
     scope: Option<Scope>,
 ) -> Result<HttpResponse> {
@@ -46,7 +48,7 @@ fn graphql<T: CisClientTrait + Clone>(
 pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
     cis_client: T,
     dinopark_settings: &DinoParkServices,
-) -> App<GraphQlState<T>> {
+) -> impl HttpServiceFactory {
     let schema = Schema::new(
         Query {
             cis_client: cis_client.clone(),
@@ -58,22 +60,19 @@ pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
         },
     );
 
-    App::with_state(GraphQlState {
-        schema: Arc::new(schema),
-    })
-    .prefix("/api/v4/graphql")
-    .configure(|app| {
-        Cors::for_app(app)
-            .allowed_methods(vec!["GET", "POST"])
-            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-            .allowed_header(http::header::CONTENT_TYPE)
-            .max_age(3600)
-            .resource("", |r| {
-                r.method(http::Method::POST).with_config(graphql, |cfg| {
-                    cfg.0.limit(1_048_576);
-                })
-            })
-            .resource("/graphiql", |r| r.method(http::Method::GET).with(graphiql))
-            .register()
-    })
+    web::scope("/api/v4/graphql")
+        .wrap(
+            Cors::new()
+                .allowed_methods(vec!["GET", "POST"])
+                .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+                .allowed_header(http::header::CONTENT_TYPE)
+                .max_age(3600),
+        )
+        .data(GraphQlState { schema: Arc::new(schema) })
+        .service(
+            web::resource("")
+                .data(web::JsonConfig::default().limit(1_048_576))
+                .route(web::post().to(graphiql)),
+        )
+        .service(web::resource("/graphiql").route(web::get().to(graphiql)))
 }

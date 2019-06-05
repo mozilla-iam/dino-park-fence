@@ -1,4 +1,3 @@
-extern crate actix;
 extern crate actix_web;
 extern crate biscuit;
 extern crate chrono;
@@ -35,21 +34,21 @@ use crate::search::app::search_app;
 use crate::timezones::app::timezone_app;
 
 use actix_web::middleware;
-use actix_web::server;
-use cis_client::client::CisClient;
+use actix_web::HttpServer;
+use failure::Error;
+use cis_client::CisClient;
 
-fn main() -> Result<(), String> {
+fn main() -> Result<(), Error> {
     ::std::env::set_var("RUST_LOG", "actix_web=info,dino_park_fence=info");
     env_logger::init();
     info!("building the fence");
-    let sys = actix::System::new("dino-park-fence");
     let s = settings::Settings::new().map_err(|e| format!("unable to load settings: {}", e))?;
     let cis_client = CisClient::from_settings(&s.cis)
         .map_err(|e| format!("unable to create cis_client: {}", e))?;
     let dino_park_settings = s.dino_park.clone();
 
     // Start http server
-    server::new(move || {
+    HttpServer::new(move || {
         vec![
             search_app(&dino_park_settings.search)
                 .middleware(middleware::Logger::default())
