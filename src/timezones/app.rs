@@ -1,7 +1,7 @@
+use actix_web::dev::HttpServiceFactory;
 use actix_web::http;
 use actix_web::middleware::cors::Cors;
 use actix_web::web;
-use actix_web::dev::HttpServiceFactory;
 use actix_web::HttpRequest;
 use actix_web::HttpResponse;
 use actix_web::Result;
@@ -23,9 +23,7 @@ pub fn timezone_app() -> impl HttpServiceFactory {
                 .allowed_header(http::header::CONTENT_TYPE)
                 .max_age(3600),
         )
-        .service(
-            web::resource("/list/").route(web::get().to(list)),
-        )
+        .service(web::resource("/list/").route(web::get().to(list)))
 }
 
 #[cfg(test)]

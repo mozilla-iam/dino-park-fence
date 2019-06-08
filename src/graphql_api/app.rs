@@ -2,26 +2,23 @@ use crate::graphql_api::root::{Mutation, Query, Schema};
 use crate::permissions::Scope;
 use crate::permissions::UserId;
 use crate::settings::DinoParkServices;
+use actix_web::dev::HttpServiceFactory;
 use actix_web::http;
 use actix_web::middleware::cors::Cors;
-use actix_web::HttpResponse;
-use actix_web::web::Json;
-use actix_web::Result;
-use actix_web::web::Data;
-use actix_web::dev::HttpServiceFactory;
 use actix_web::web;
-use cis_client::sync::client::CisClientTrait;
+use actix_web::web::Data;
+use actix_web::web::Json;
+use actix_web::Error;
+use actix_web::HttpResponse;
+use actix_web::Result;
+use cis_client::AsyncCisClientTrait;
+use futures::Future;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 use std::sync::Arc;
 
-#[derive(Serialize)]
-pub struct ProfileByUsername {
-    username: String,
-}
-
 #[derive(Clone)]
-pub struct GraphQlState<T: CisClientTrait + 'static> {
+pub struct GraphQlState<T: AsyncCisClientTrait + 'static> {
     schema: Arc<Schema<T>>,
 }
 
@@ -35,23 +32,27 @@ fn graphiql(_: UserId) -> Result<HttpResponse> {
         .body(html))
 }
 
-fn graphql<T: CisClientTrait>(
-    body: Json<GraphQlData>,
+fn graphql<T: AsyncCisClientTrait + Send + Sync>(
+    data: Json<GraphQLRequest>,
     state: Data<GraphQlState<T>>,
     user_id: UserId,
     scope: Option<Scope>,
-) -> Result<HttpResponse> {
+) -> Box<Future<Item = HttpResponse, Error = Error>> {
     info!("graphql for {:?} → {:?}", user_id, scope);
-    let graphql_data = body.0;
-    let query_json = serde_json::to_value(&graphql_data.0)?;
-    info!("body: {:#?}", query_json);
-    let res = graphql_data.0.execute(&state.schema, &(user_id, scope));
-    Ok(HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&res)?))
+    let schema = Arc::clone(&state.schema);
+    let res = web::block(move || {
+        let r = data.execute(&schema, &(user_id, scope));
+        Ok::<_, serde_json::error::Error>(serde_json::to_string(&r)?)
+    })
+    .map_err(Error::from);
+    Box::new(res.and_then(|res| {
+        Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(res))
+    }))
 }
 
-pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
+pub fn graphql_app<T: AsyncCisClientTrait + Clone + Send + Sync + 'static>(
     cis_client: T,
     dinopark_settings: &DinoParkServices,
 ) -> impl HttpServiceFactory {
@@ -74,10 +75,9 @@ pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
                 .allowed_header(http::header::CONTENT_TYPE)
                 .max_age(3600),
         )
-        .data(GraphQlState { schema: Arc::new(schema) })
-        .service(
-            web::resource("")
-                .route(web::post().to(graphql::<T>)),
-        )
+        .data(GraphQlState {
+            schema: Arc::new(schema),
+        })
+        .service(web::resource("").route(web::post().to(graphql::<T>)))
         .service(web::resource("/graphiql").route(web::get().to(graphiql)))
 }

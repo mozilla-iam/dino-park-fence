@@ -1,13 +1,13 @@
 use crate::settings::Search;
+use actix_web::dev::HttpServiceFactory;
 use actix_web::error;
 use actix_web::http;
 use actix_web::middleware::cors::Cors;
 use actix_web::web;
+use actix_web::web::Data;
 use actix_web::web::Json;
 use actix_web::web::Query;
 use actix_web::Result;
-use actix_web::dev::HttpServiceFactory;
-use actix_web::web::Data;
 use reqwest::Client;
 use serde_json::Value;
 
@@ -40,7 +40,5 @@ pub fn search_app(settings: &Search) -> impl HttpServiceFactory {
                 .max_age(3600),
         )
         .data(settings.clone())
-        .service(
-            web::resource("/simple").route(web::get().to(handle_simple)),
-        )
+        .service(web::resource("/simple").route(web::get().to(handle_simple)))
 }

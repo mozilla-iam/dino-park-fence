@@ -33,12 +33,12 @@ use crate::orgchart::app::orgchart_app;
 use crate::search::app::search_app;
 use crate::timezones::app::timezone_app;
 
-use actix_web::HttpServer;
 use actix_web::middleware::Logger;
-use actix_web::App;
 use actix_web::web;
-use failure::Error;
+use actix_web::App;
+use actix_web::HttpServer;
 use cis_client::CisClient;
+use failure::Error;
 
 fn main() -> Result<(), Error> {
     ::std::env::set_var("RUST_LOG", "actix_web=info,dino_park_fence=info");
@@ -57,7 +57,7 @@ fn main() -> Result<(), Error> {
                     .service(graphql_app(cis_client.clone(), &dino_park_settings))
                     .service(search_app(&dino_park_settings.search))
                     .service(orgchart_app(&dino_park_settings.orgchart))
-                    .service(timezone_app())
+                    .service(timezone_app()),
             )
             .service(healthz_app())
     })

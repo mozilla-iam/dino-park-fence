@@ -2,25 +2,16 @@ use crate::graphql_api::input::InputProfile;
 use crate::permissions::Scope;
 use crate::permissions::UserId;
 use crate::settings::DinoParkServices;
-use cis_client::sync::client::CisClientTrait;
 use cis_client::getby::GetBy;
+use cis_client::AsyncCisClientTrait;
 use cis_profile::schema::Profile;
-use juniper::meta::MetaType;
-use juniper::Arguments;
-use juniper::DefaultScalarValue;
-use juniper::ExecutionResult;
-use juniper::Executor;
 use juniper::FieldError;
 use juniper::FieldResult;
-use juniper::GraphQLType;
-use juniper::IntoResolvable;
-use juniper::Registry;
 use juniper::RootNode;
-use juniper::ScalarRefValue;
-use juniper::Value;
 use reqwest::Client;
+use actix_web::test;
 
-pub struct Query<T: CisClientTrait> {
+pub struct Query<T: AsyncCisClientTrait> {
     pub cis_client: T,
     pub dinopark_settings: DinoParkServices,
 }
@@ -32,31 +23,30 @@ fn field_error(msg: &str, e: impl std::fmt::Display) -> FieldError {
 
 fn get_profile(
     id: String,
-    cis_client: &impl CisClientTrait,
+    cis_client: &impl AsyncCisClientTrait,
     by: &GetBy,
     filter: &str,
 ) -> FieldResult<Profile> {
-    info!("getting {}", &id);
-    cis_client
-        .get_user_by(&id, by, Some(&filter))
+    test::block_on(cis_client
+        .get_user_by(&id, by, Some(&filter)))
         .map_err(Into::into)
 }
 
-pub struct Mutation<T: CisClientTrait> {
+pub struct Mutation<T: AsyncCisClientTrait> {
     pub cis_client: T,
     pub dinopark_settings: DinoParkServices,
 }
 
 fn update_profile(
     update: InputProfile,
-    cis_client: &impl CisClientTrait,
+    cis_client: &impl AsyncCisClientTrait,
     dinopark_settings: &DinoParkServices,
     user: &Option<String>,
 ) -> FieldResult<Profile> {
     let user_id = user
         .clone()
         .ok_or_else(|| field_error("no username in query or scope", "?!"))?;
-    let mut profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
+    let mut profile = test::block_on(cis_client.get_user_by(&user_id, &GetBy::UserId, None))?;
     if let Some(updated_username) = update
         .primary_username
         .as_ref()
@@ -80,8 +70,8 @@ fn update_profile(
                 ));
             }
             // the primary_username changed check if it already exists
-            if cis_client
-                .get_user_by(updated_username, &GetBy::PrimaryUsername, None)
+            if test::block_on(cis_client
+                .get_user_by(updated_username, &GetBy::PrimaryUsername, None))
                 .is_ok()
             {
                 return Err(field_error(
@@ -99,9 +89,9 @@ fn update_profile(
             &dinopark_settings.fossil,
         )
         .map_err(|e| field_error("unable update/sign profle", e))?;
-    let ret = cis_client.update_user(&user_id, profile)?;
+    let ret = test::block_on(cis_client.update_user(&user_id, profile))?;
     info!("update returned: {}", ret);
-    let updated_profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
+    let updated_profile = test::block_on(cis_client.get_user_by(&user_id, &GetBy::UserId, None))?;
     if dinopark_settings.lookout.internal_update_enabled {
         if let Err(e) = Client::new()
             .post(&dinopark_settings.lookout.internal_update_endpoint)
@@ -114,168 +104,44 @@ fn update_profile(
     Ok(updated_profile)
 }
 
-// generated via graphql_object!
-impl<T: CisClientTrait> GraphQLType<DefaultScalarValue> for Query<T> {
-    type Context = (UserId, Option<Scope>);
-    type TypeInfo = ();
-    fn name(_: &Self::TypeInfo) -> Option<&str> {
-        Some("Query")
-    }
-    fn meta<'r>(
-        info: &Self::TypeInfo,
-        registry: &mut Registry<'r, DefaultScalarValue>,
-    ) -> MetaType<'r, DefaultScalarValue>
-    where
-        for<'__b> &'__b DefaultScalarValue: ScalarRefValue<'__b>,
-        DefaultScalarValue: 'r,
-    {
-        let fields = &[
-            registry
-                .field_convert::<&str, _, Self::Context>("apiVersion", info)
-                .push_docstring(&[]),
-            registry
-                .field_convert::<FieldResult<Profile>, _, Self::Context>("profile", info)
-                .push_docstring(&[])
-                .argument(
-                    registry
-                        .arg::<Option<String>>("username", info)
-                        .push_docstring(&[]),
-                ),
-        ];
-        registry
-            .build_object_type::<Query<T>>(info, fields)
-            .into_meta()
-    }
-
-    fn concrete_type_name(&self, _: &Self::Context, _: &Self::TypeInfo) -> String {
-        "Query".to_owned()
-    }
-
-    fn resolve_field(
-        &self,
-        _: &Self::TypeInfo,
-        field: &str,
-        args: &Arguments<DefaultScalarValue>,
-        executor: &Executor<Self::Context, DefaultScalarValue>,
-    ) -> ExecutionResult<DefaultScalarValue> {
-        if field == "apiVersion" {
-            let result: &str = "1.0";
-            return IntoResolvable::into(result, executor.context()).and_then(|res| match res {
-                Some((ctx, r)) => executor.replaced_context(ctx).resolve_with_ctx(&(), &r),
-                None => Ok(Value::null()),
-            });
-        }
-        if field == "profile" {
-            let result: FieldResult<Profile> = {
-                let username: Option<String> = args
-                    .get("username")
-                    .expect("Argument username missing - validation must have failed");
-                let executor = &executor;
-                {
-                    let (user_id, scope) = executor.context();
-                    let (id, by, filter) = if let Some(username) = username {
-                        (
-                            username,
-                            &GetBy::PrimaryUsername,
-                            scope
-                                .as_ref()
-                                .map(|s| s.scope.as_str())
-                                .unwrap_or_else(|| "public"),
-                        )
-                    } else {
-                        (user_id.user_id.clone(), &GetBy::UserId, "private")
-                    };
-                    get_profile(id, &self.cis_client, by, filter)
-                }
-            };
-            info!("got profile");
-            return IntoResolvable::into(result, executor.context()).and_then(|res| match res {
-                Some((ctx, r)) => executor.replaced_context(ctx).resolve_with_ctx(&(), &r),
-                None => Ok(Value::null()),
-            });
-        }
-        Err(field_error(
-            "error",
-            format!("Field {} not found on type Query", field),
-        ))
+#[juniper::object{
+    Context = (UserId, Option<Scope>)
+}]
+impl<T: AsyncCisClientTrait> Query<T> {
+    fn profile(username: Option<String>) -> FieldResult<Profile> {
+        let executor = &executor;
+        let (user_id, scope) = executor.context();
+        let (id, by, filter) = if let Some(username) = username {
+            (
+                username,
+                &GetBy::PrimaryUsername,
+                scope
+                    .as_ref()
+                    .map(|s| s.scope.as_str())
+                    .unwrap_or_else(|| "public"),
+            )
+        } else {
+            (user_id.user_id.clone(), &GetBy::UserId, "private")
+        };
+        get_profile(id, &self.cis_client, by, filter)
     }
 }
 
-// generated via graphql_object!
-impl<T: CisClientTrait> GraphQLType<DefaultScalarValue> for Mutation<T> {
-    type Context = (UserId, Option<Scope>);
-    type TypeInfo = ();
-    fn name(_: &Self::TypeInfo) -> Option<&str> {
-        Some("Mutation")
-    }
-    fn meta<'r>(
-        info: &Self::TypeInfo,
-        registry: &mut Registry<'r, DefaultScalarValue>,
-    ) -> MetaType<'r, DefaultScalarValue>
-    where
-        for<'__b> &'__b DefaultScalarValue: ScalarRefValue<'__b>,
-        DefaultScalarValue: 'r,
-    {
-        let fields = &[
-            registry
-                .field_convert::<&str, _, Self::Context>("apiVersion", info)
-                .push_docstring(&[]),
-            registry
-                .field_convert::<FieldResult<Profile>, _, Self::Context>("profile", info)
-                .push_docstring(&[])
-                .argument(
-                    registry
-                        .arg::<InputProfile>("update", info)
-                        .push_docstring(&[]),
-                ),
-        ];
-        registry
-            .build_object_type::<Mutation<T>>(info, fields)
-            .into_meta()
-    }
-
-    fn concrete_type_name(&self, _: &Self::Context, _: &Self::TypeInfo) -> String {
-        "Mutation".to_owned()
-    }
-
-    fn resolve_field(
-        &self,
-        _: &Self::TypeInfo,
-        field: &str,
-        args: &Arguments<DefaultScalarValue>,
-        executor: &Executor<Self::Context, DefaultScalarValue>,
-    ) -> ExecutionResult<DefaultScalarValue> {
-        if field == "apiVersion" {
-            let result: &str = "1.0";
-            return IntoResolvable::into(result, executor.context()).and_then(|res| match res {
-                Some((ctx, r)) => executor.replaced_context(ctx).resolve_with_ctx(&(), &r),
-                None => Ok(Value::null()),
-            });
-        }
-        if field == "profile" {
-            let result: FieldResult<Profile> = {
-                let update: InputProfile = args
-                    .get("update")
-                    .expect("Argument update missing - validation must have failed");
-                let executor = &executor;
-                {
-                    update_profile(
-                        update,
-                        &self.cis_client,
-                        &self.dinopark_settings,
-                        &Some(executor.context().0.user_id.clone()),
-                    )
-                }
-            };
-            return IntoResolvable::into(result, executor.context()).and_then(|res| match res {
-                Some((ctx, r)) => executor.replaced_context(ctx).resolve_with_ctx(&(), &r),
-                None => Ok(Value::null()),
-            });
-        }
-        Err(field_error(
-            "error",
-            format!("Field {} not found on type Mutation", field),
-        ))
+#[juniper::object{
+    Context = (UserId, Option<Scope>)
+}]
+impl<T: AsyncCisClientTrait> Mutation<T> {
+    fn profile() -> FieldResult<Profile> {
+        let update: InputProfile = args
+            .get("update")
+            .expect("Argument update missing - validation must have failed");
+        let executor = &executor;
+        update_profile(
+            update,
+            &self.cis_client,
+            &self.dinopark_settings,
+            &Some(executor.context().0.user_id.clone()),
+        )
     }
 }
 
