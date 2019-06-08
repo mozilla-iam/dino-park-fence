@@ -2,11 +2,12 @@ use crate::settings::Search;
 use actix_web::error;
 use actix_web::http;
 use actix_web::middleware::cors::Cors;
-use actix_web::App;
-use actix_web::Json;
-use actix_web::Query;
+use actix_web::web;
+use actix_web::web::Json;
+use actix_web::web::Query;
 use actix_web::Result;
-use actix_web::State;
+use actix_web::dev::HttpServiceFactory;
+use actix_web::web::Data;
 use reqwest::Client;
 use serde_json::Value;
 
@@ -17,9 +18,9 @@ struct SearchQuery {
     a: Option<String>,
 }
 
-fn handle_simple(state: State<Search>, query: Query<SearchQuery>) -> Result<Json<Value>> {
+fn handle_simple(search: Data<Search>, query: Query<SearchQuery>) -> Result<Json<Value>> {
     let mut client = Client::new()
-        .get(&format!("{}staff/", state.simple_endpoint))
+        .get(&format!("{}staff/", search.simple_endpoint))
         .query(&[("q", &query.q), ("w", &query.w)]);
     if let Some(a) = &query.a {
         client = client.query(&[("a", a)]);
@@ -29,18 +30,17 @@ fn handle_simple(state: State<Search>, query: Query<SearchQuery>) -> Result<Json
     Ok(Json(json))
 }
 
-pub fn search_app(settings: &Search) -> App<Search> {
-    App::with_state(settings.clone())
-        .prefix("/api/v4/search")
-        .configure(|app| {
-            Cors::for_app(app)
+pub fn search_app(settings: &Search) -> impl HttpServiceFactory {
+    web::scope("/search")
+        .wrap(
+            Cors::new()
                 .allowed_methods(vec!["GET"])
                 .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
                 .allowed_header(http::header::CONTENT_TYPE)
-                .max_age(3600)
-                .resource("/simple/", move |r| {
-                    r.method(http::Method::GET).with(handle_simple)
-                })
-                .register()
-        })
+                .max_age(3600),
+        )
+        .data(settings.clone())
+        .service(
+            web::resource("/simple").route(web::get().to(handle_simple)),
+        )
 }

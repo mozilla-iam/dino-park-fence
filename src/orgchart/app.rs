@@ -2,23 +2,41 @@ use crate::settings::Orgchart;
 use actix_web::error;
 use actix_web::http;
 use actix_web::middleware::cors::Cors;
-use actix_web::App;
-use actix_web::Json;
-use actix_web::Path;
+use actix_web::Error;
+use actix_web::web;
+use actix_web::web::Json;
+use actix_web::web::Path;
 use actix_web::Result;
-use actix_web::State;
+use actix_web::web::Data;
+use actix_web::HttpResponse;
+use actix_web::dev::HttpServiceFactory;
 use percent_encoding::utf8_percent_encode;
 use percent_encoding::PATH_SEGMENT_ENCODE_SET;
 use reqwest::get;
 use serde_json::Value;
+use futures::Future;
+use futures::Stream;
+use actix_web::web::BytesMut;
+use actix_web::client::Client;
 
-fn handle_full(state: State<Orgchart>) -> Result<Json<Value>> {
-    let mut res = get(&state.full_endpoint).map_err(error::ErrorBadRequest)?;
-    let json: Value = res.json().map_err(error::ErrorBadRequest)?;
-    Ok(Json(json))
+fn handle_full(state: Data<Orgchart>, client: Data<Client>) -> impl Future<Item = HttpResponse, Error = Error> {
+   client.get(&state.full_endpoint).send()
+   .map_err(Error::from) // <- convert SendRequestError to an Error
+        .and_then(|resp| {
+            resp.from_err()
+                .fold(BytesMut::new(), |mut acc, chunk| {
+                    acc.extend_from_slice(&chunk);
+                    Ok::<_, Error>(acc)
+                })
+                .and_then(|body| {
+                    serde_json::from_slice::<Value>(&body)
+                    .map_err(error::ErrorBadRequest)
+                })
+                .map(|o| HttpResponse::Ok().json(o))
+        }).map_err(error::ErrorBadRequest)
 }
 
-fn handle_trace(state: State<Orgchart>, username: Path<String>) -> Result<Json<Value>> {
+fn handle_trace(state: Data<Orgchart>, username: Path<String>) -> Result<Json<Value>> {
     info!("getting {}", username);
     let safe_username = utf8_percent_encode(&username, PATH_SEGMENT_ENCODE_SET);
     let mut res = get(&format!("{}{}", state.trace_endpoint, safe_username))
@@ -27,7 +45,7 @@ fn handle_trace(state: State<Orgchart>, username: Path<String>) -> Result<Json<V
     Ok(Json(json))
 }
 
-fn handle_related(state: State<Orgchart>, username: Path<String>) -> Result<Json<Value>> {
+fn handle_related(state: Data<Orgchart>, username: Path<String>) -> Result<Json<Value>> {
     info!("getting {}", username);
     let safe_username = utf8_percent_encode(&username, PATH_SEGMENT_ENCODE_SET);
     let mut res = get(&format!("{}{}", state.related_endpoint, safe_username))
@@ -36,22 +54,21 @@ fn handle_related(state: State<Orgchart>, username: Path<String>) -> Result<Json
     Ok(Json(json))
 }
 
-pub fn orgchart_app(settings: &Orgchart) -> App<Orgchart> {
-    App::with_state(settings.clone())
-        .prefix("/api/v4/orgchart")
-        .configure(|app| {
-            Cors::for_app(app)
+pub fn orgchart_app(settings: &Orgchart) -> impl HttpServiceFactory {
+    let client = Client::default();
+    web::scope("/orgchart")
+        .wrap(
+            Cors::new()
                 .allowed_methods(vec!["GET"])
                 .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
                 .allowed_header(http::header::CONTENT_TYPE)
-                .max_age(3600)
-                .resource("/related/{username}", move |r| {
-                    r.method(http::Method::GET).with(handle_related)
-                })
-                .resource("/trace/{username}", move |r| {
-                    r.method(http::Method::GET).with(handle_trace)
-                })
-                .resource("", move |r| r.method(http::Method::GET).with(handle_full))
-                .register()
-        })
+                .max_age(3600),
+        )
+        .data(settings.clone())
+        .data(client)
+        .service(
+            web::resource("").route(web::get().to_async(handle_full)),
+        )
+        .service(web::resource("/related/{username}").route(web::get().to(handle_related)))
+        .service(web::resource("/trace/{username}").route(web::get().to(handle_trace)))
 }

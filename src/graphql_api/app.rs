@@ -4,7 +4,6 @@ use crate::permissions::UserId;
 use crate::settings::DinoParkServices;
 use actix_web::http;
 use actix_web::middleware::cors::Cors;
-use actix_web::App;
 use actix_web::HttpResponse;
 use actix_web::web::Json;
 use actix_web::Result;
@@ -16,8 +15,13 @@ use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 use std::sync::Arc;
 
+#[derive(Serialize)]
+pub struct ProfileByUsername {
+    username: String,
+}
+
 #[derive(Clone)]
-pub struct GraphQlState<T: CisClientTrait + Clone + 'static> {
+pub struct GraphQlState<T: CisClientTrait + 'static> {
     schema: Arc<Schema<T>>,
 }
 
@@ -31,7 +35,7 @@ fn graphiql(_: UserId) -> Result<HttpResponse> {
         .body(html))
 }
 
-fn graphql<T: CisClientTrait + Clone>(
+fn graphql<T: CisClientTrait>(
     body: Json<GraphQlData>,
     state: Data<GraphQlState<T>>,
     user_id: UserId,
@@ -39,6 +43,8 @@ fn graphql<T: CisClientTrait + Clone>(
 ) -> Result<HttpResponse> {
     info!("graphql for {:?} → {:?}", user_id, scope);
     let graphql_data = body.0;
+    let query_json = serde_json::to_value(&graphql_data.0)?;
+    info!("body: {:#?}", query_json);
     let res = graphql_data.0.execute(&state.schema, &(user_id, scope));
     Ok(HttpResponse::Ok()
         .content_type("application/json")
@@ -60,7 +66,7 @@ pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
         },
     );
 
-    web::scope("/api/v4/graphql")
+    web::scope("/graphql")
         .wrap(
             Cors::new()
                 .allowed_methods(vec!["GET", "POST"])
@@ -71,8 +77,7 @@ pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
         .data(GraphQlState { schema: Arc::new(schema) })
         .service(
             web::resource("")
-                .data(web::JsonConfig::default().limit(1_048_576))
-                .route(web::post().to(graphiql)),
+                .route(web::post().to(graphql::<T>)),
         )
         .service(web::resource("/graphiql").route(web::get().to(graphiql)))
 }

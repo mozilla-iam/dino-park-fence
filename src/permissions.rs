@@ -1,3 +1,5 @@
+use actix_web::dev::Payload;
+use actix_web::Error;
 use actix_web::error;
 use actix_web::FromRequest;
 use actix_web::HttpRequest;
@@ -16,12 +18,13 @@ pub struct Groups {
     groups: Vec<String>,
 }
 
-impl<S> FromRequest<S> for Scope {
+impl FromRequest for Scope {
     type Config = ();
-    type Result = Result<Self, error::Error>;
+    type Future = Result<Self, Error>;
+    type Error = Error;
 
     #[inline]
-    fn from_request(req: &HttpRequest<S>, _cfg: &Self::Config) -> Self::Result {
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         if let Some(token) = req
             .headers()
             .get("x-auth-token")
@@ -61,13 +64,14 @@ pub struct UserId {
     pub user_id: String,
 }
 
-impl<S> FromRequest<S> for UserId {
+impl FromRequest for UserId {
     type Config = ();
-    type Result = Result<Self, error::Error>;
+    type Future = Result<Self, Error>;
+    type Error = Error;
 
     #[cfg(not(feature = "nouid"))]
     #[inline]
-    fn from_request(req: &HttpRequest<S>, _cfg: &Self::Config) -> Self::Result {
+    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         let user_id = req
             .headers()
             .get("x-forwarded-user-subject")
@@ -82,7 +86,7 @@ impl<S> FromRequest<S> for UserId {
 
     #[cfg(feature = "nouid")]
     #[inline]
-    fn from_request(_: &HttpRequest<S>, _cfg: &Self::Config) -> Self::Result {
+    fn from_request(_: &HttpRequest, _: &mut Payload) -> Self::Future {
         use std::env::var;
         let user_id = var("DPF_USER_ID").unwrap();
         Ok(UserId { user_id })

@@ -20,7 +20,7 @@ use juniper::ScalarRefValue;
 use juniper::Value;
 use reqwest::Client;
 
-pub struct Query<T: CisClientTrait + Clone> {
+pub struct Query<T: CisClientTrait> {
     pub cis_client: T,
     pub dinopark_settings: DinoParkServices,
 }
@@ -36,12 +36,13 @@ fn get_profile(
     by: &GetBy,
     filter: &str,
 ) -> FieldResult<Profile> {
+    info!("getting {}", &id);
     cis_client
         .get_user_by(&id, by, Some(&filter))
         .map_err(Into::into)
 }
 
-pub struct Mutation<T: CisClientTrait + Clone> {
+pub struct Mutation<T: CisClientTrait> {
     pub cis_client: T,
     pub dinopark_settings: DinoParkServices,
 }
@@ -114,7 +115,7 @@ fn update_profile(
 }
 
 // generated via graphql_object!
-impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Query<T> {
+impl<T: CisClientTrait> GraphQLType<DefaultScalarValue> for Query<T> {
     type Context = (UserId, Option<Scope>);
     type TypeInfo = ();
     fn name(_: &Self::TypeInfo) -> Option<&str> {
@@ -187,6 +188,7 @@ impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Query<T> {
                     get_profile(id, &self.cis_client, by, filter)
                 }
             };
+            info!("got profile");
             return IntoResolvable::into(result, executor.context()).and_then(|res| match res {
                 Some((ctx, r)) => executor.replaced_context(ctx).resolve_with_ctx(&(), &r),
                 None => Ok(Value::null()),
@@ -200,7 +202,7 @@ impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Query<T> {
 }
 
 // generated via graphql_object!
-impl<T: CisClientTrait + Clone> GraphQLType<DefaultScalarValue> for Mutation<T> {
+impl<T: CisClientTrait> GraphQLType<DefaultScalarValue> for Mutation<T> {
     type Context = (UserId, Option<Scope>);
     type TypeInfo = ();
     fn name(_: &Self::TypeInfo) -> Option<&str> {
