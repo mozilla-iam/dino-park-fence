@@ -1,6 +1,4 @@
 use crate::graphql_api::root::{Mutation, Query, Schema};
-use crate::permissions::Scope;
-use crate::permissions::UserId;
 use crate::settings::DinoParkServices;
 use actix_web::dev::HttpServiceFactory;
 use actix_web::http;
@@ -12,6 +10,7 @@ use actix_web::Error;
 use actix_web::HttpResponse;
 use actix_web::Result;
 use cis_client::AsyncCisClientTrait;
+use dino_park_gate::scope::ScopeAndUser;
 use futures::Future;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
@@ -25,7 +24,7 @@ pub struct GraphQlState<T: AsyncCisClientTrait + 'static> {
 #[derive(Deserialize, Debug, Clone)]
 pub struct GraphQlData(GraphQLRequest);
 
-fn graphiql(_: UserId) -> Result<HttpResponse> {
+fn graphiql() -> Result<HttpResponse> {
     let html = graphiql_source("/api/v4/graphql");
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
@@ -35,13 +34,15 @@ fn graphiql(_: UserId) -> Result<HttpResponse> {
 fn graphql<T: AsyncCisClientTrait + Send + Sync>(
     data: Json<GraphQLRequest>,
     state: Data<GraphQlState<T>>,
-    user_id: UserId,
-    scope: Option<Scope>,
+    scope_and_user: ScopeAndUser,
 ) -> Box<Future<Item = HttpResponse, Error = Error>> {
-    info!("graphql for {:?} → {:?}", user_id, scope);
+    info!(
+        "graphql for {:?} → {:?}",
+        &scope_and_user.user_id, &scope_and_user.scope
+    );
     let schema = Arc::clone(&state.schema);
     let res = web::block(move || {
-        let r = data.execute(&schema, &(user_id, scope));
+        let r = data.execute(&schema, &(scope_and_user));
         Ok::<_, serde_json::error::Error>(serde_json::to_string(&r)?)
     })
     .map_err(Error::from);

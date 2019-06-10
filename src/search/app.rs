@@ -1,4 +1,3 @@
-use crate::permissions::Scope;
 use crate::proxy::proxy;
 use crate::settings::Search;
 use actix_web::client::Client;
@@ -11,6 +10,7 @@ use actix_web::web::Data;
 use actix_web::web::Query;
 use actix_web::Error;
 use actix_web::HttpResponse;
+use dino_park_gate::scope::ScopeAndUser;
 use futures::Future;
 use futures::IntoFuture;
 use url::ParseError;
@@ -26,7 +26,7 @@ struct SearchQuery {
 fn handle_simple(
     client: Data<Client>,
     search: Data<Search>,
-    scope: Scope,
+    scope_and_user: ScopeAndUser,
     query: Query<SearchQuery>,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
     let url = Url::parse(&search.simple_endpoint);
@@ -34,7 +34,7 @@ fn handle_simple(
         url.path_segments_mut()
             .map_err(|_| ParseError::RelativeUrlWithCannotBeABaseBase)?
             .pop_if_empty()
-            .push(&scope.scope)
+            .push(&scope_and_user.scope)
             .push("");
         url.query_pairs_mut()
             .append_pair("q", &query.q)

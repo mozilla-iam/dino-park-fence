@@ -2,6 +2,7 @@ use crate::proxy::proxy;
 use crate::settings::Orgchart;
 use actix_web::client::Client;
 use actix_web::dev::HttpServiceFactory;
+use actix_web::error;
 use actix_web::http;
 use actix_web::middleware::cors::Cors;
 use actix_web::web;
@@ -9,39 +10,57 @@ use actix_web::web::Data;
 use actix_web::web::Path;
 use actix_web::Error;
 use actix_web::HttpResponse;
+use dino_park_gate::scope::ScopeAndUser;
+use futures::future::Either;
 use futures::Future;
+use futures::IntoFuture;
 use percent_encoding::utf8_percent_encode;
 use percent_encoding::PATH_SEGMENT_ENCODE_SET;
 
 fn handle_full(
     client: Data<Client>,
     state: Data<Orgchart>,
+    scope_and_user: ScopeAndUser,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
-    proxy(&*client, &state.full_endpoint)
+    if scope_and_user.scope == "staff" {
+        Either::A(proxy(&*client, &state.full_endpoint))
+    } else {
+        Either::B(Err::<HttpResponse, _>(error::ErrorForbidden("not staff")).into_future())
+    }
 }
 
 fn handle_trace(
     client: Data<Client>,
     state: Data<Orgchart>,
+    scope_and_user: ScopeAndUser,
     username: Path<String>,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
     let safe_username = utf8_percent_encode(&username, PATH_SEGMENT_ENCODE_SET);
-    proxy(
-        &*client,
-        &format!("{}{}", state.trace_endpoint, safe_username),
-    )
+    if scope_and_user.scope == "staff" {
+        Either::A(proxy(
+            &*client,
+            &format!("{}{}", state.trace_endpoint, safe_username),
+        ))
+    } else {
+        Either::B(Err::<HttpResponse, _>(error::ErrorForbidden("not staff")).into_future())
+    }
 }
 
 fn handle_related(
     client: Data<Client>,
     state: Data<Orgchart>,
+    scope_and_user: ScopeAndUser,
     username: Path<String>,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
     let safe_username = utf8_percent_encode(&username, PATH_SEGMENT_ENCODE_SET);
-    proxy(
-        &*client,
-        &format!("{}{}", state.related_endpoint, safe_username),
-    )
+    if scope_and_user.scope == "staff" {
+        Either::A(proxy(
+            &*client,
+            &format!("{}{}", state.related_endpoint, safe_username),
+        ))
+    } else {
+        Either::B(Err::<HttpResponse, _>(error::ErrorForbidden("not staff")).into_future())
+    }
 }
 
 pub fn orgchart_app(settings: &Orgchart) -> impl HttpServiceFactory {

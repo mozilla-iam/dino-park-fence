@@ -1,11 +1,10 @@
 use crate::graphql_api::input::InputProfile;
-use crate::permissions::Scope;
-use crate::permissions::UserId;
 use crate::settings::DinoParkServices;
 use actix_web::test;
 use cis_client::getby::GetBy;
 use cis_client::AsyncCisClientTrait;
 use cis_profile::schema::Profile;
+use dino_park_gate::scope::ScopeAndUser;
 use juniper::FieldError;
 use juniper::FieldResult;
 use juniper::RootNode;
@@ -106,30 +105,27 @@ fn update_profile(
 }
 
 #[juniper::object{
-    Context = (UserId, Option<Scope>)
+    Context = (ScopeAndUser)
 }]
 impl<T: AsyncCisClientTrait> Query<T> {
     fn profile(username: Option<String>) -> FieldResult<Profile> {
         let executor = &executor;
-        let (user_id, scope) = executor.context();
+        let scope_and_user = executor.context();
         let (id, by, filter) = if let Some(username) = username {
             (
                 username,
                 &GetBy::PrimaryUsername,
-                scope
-                    .as_ref()
-                    .map(|s| s.scope.as_str())
-                    .unwrap_or_else(|| "public"),
+                scope_and_user.scope.as_str(),
             )
         } else {
-            (user_id.user_id.clone(), &GetBy::UserId, "private")
+            (scope_and_user.user_id.clone(), &GetBy::UserId, "private")
         };
         get_profile(id, &self.cis_client, by, filter)
     }
 }
 
 #[juniper::object{
-    Context = (UserId, Option<Scope>)
+    Context = (ScopeAndUser)
 }]
 impl<T: AsyncCisClientTrait> Mutation<T> {
     fn profile(update: InputProfile) -> FieldResult<Profile> {
@@ -138,7 +134,7 @@ impl<T: AsyncCisClientTrait> Mutation<T> {
             update,
             &self.cis_client,
             &self.dinopark_settings,
-            &Some(executor.context().0.user_id.clone()),
+            &Some(executor.context().user_id.clone()),
         )
     }
 }
