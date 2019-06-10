@@ -12,7 +12,6 @@ nouid = []
 condvar_store = { git = "https://github.com/fiji-flo/condvar_store", version = "0.0.2" }
 cis_client = { git = "https://github.com/fiji-flo/cis_client-rust", branch = "async-2", version = "0.1.0-beta.2" }
 cis_profile = { git = "https://github.com/fiji-flo/cis_profile-rust", branch = "0.1.0", version = "0.1.0", features = ["graphql", "aws", "vendored"] }
-#dino_park_gate = { git = "https://github.com/fiji-flo/dino-park-gate", branch = "future", version = "0.1.0-beta.1" }
 dino_park_gate = { path = "../dino-park-gate", version = "0.1.0-beta.1" }
 actix-web = "1.0"
 juniper = "0.12"
