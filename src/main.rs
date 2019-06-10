@@ -11,6 +11,7 @@ extern crate futures;
 extern crate percent_encoding;
 extern crate reqwest;
 extern crate serde;
+extern crate url;
 
 #[macro_use]
 extern crate juniper;
@@ -23,6 +24,7 @@ mod graphql_api;
 mod healthz;
 mod orgchart;
 mod permissions;
+mod proxy;
 mod search;
 mod settings;
 mod timezones;

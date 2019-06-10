@@ -33,27 +33,24 @@ impl FromRequest for Scope {
             let compact: jws::Compact<biscuit::ClaimsSet<Groups>, Empty> =
                 jws::Compact::new_encoded(token);
             if let Ok(claimset) = compact.unverified_payload() {
-                if claimset.private.groups.contains(&String::from("team_moco"))
-                    || claimset.private.groups.contains(&String::from("team_moco"))
-                {
-                    info!("scope → staff");
-                    return Ok(Scope {
-                        scope: String::from("staff"),
-                    });
-                }
-                if claimset
-                    .private
-                    .groups
-                    .contains(&String::from("mozilliansorg_nda"))
-                {
-                    return Ok(Scope {
-                        scope: String::from("ndaed"),
-                    });
-                }
-                return Ok(Scope {
-                    scope: String::from("authenticated"),
-                });
-            }
+                let scope = {
+                    if claimset.private.groups.contains(&String::from("team_moco"))
+                        || claimset.private.groups.contains(&String::from("team_moco"))
+                    {
+                        String::from("staff")
+                    } else if claimset
+                        .private
+                        .groups
+                        .contains(&String::from("mozilliansorg_nda"))
+                    {
+                        String::from("ndaed")
+                    } else {
+                        String::from("authenticated")
+                    }
+                };
+                info!("scopy → {}", &scope);
+                return Ok(Scope { scope });
+            };
         }
         Err(error::ErrorForbidden("no scope"))
     }

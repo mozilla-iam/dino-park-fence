@@ -2,6 +2,7 @@ use crate::graphql_api::input::InputProfile;
 use crate::permissions::Scope;
 use crate::permissions::UserId;
 use crate::settings::DinoParkServices;
+use actix_web::test;
 use cis_client::getby::GetBy;
 use cis_client::AsyncCisClientTrait;
 use cis_profile::schema::Profile;
@@ -9,7 +10,6 @@ use juniper::FieldError;
 use juniper::FieldResult;
 use juniper::RootNode;
 use reqwest::Client;
-use actix_web::test;
 
 pub struct Query<T: AsyncCisClientTrait> {
     pub cis_client: T,
@@ -27,9 +27,7 @@ fn get_profile(
     by: &GetBy,
     filter: &str,
 ) -> FieldResult<Profile> {
-    test::block_on(cis_client
-        .get_user_by(&id, by, Some(&filter)))
-        .map_err(Into::into)
+    test::block_on(cis_client.get_user_by(&id, by, Some(&filter))).map_err(Into::into)
 }
 
 pub struct Mutation<T: AsyncCisClientTrait> {
@@ -70,9 +68,12 @@ fn update_profile(
                 ));
             }
             // the primary_username changed check if it already exists
-            if test::block_on(cis_client
-                .get_user_by(updated_username, &GetBy::PrimaryUsername, None))
-                .is_ok()
+            if test::block_on(cis_client.get_user_by(
+                updated_username,
+                &GetBy::PrimaryUsername,
+                None,
+            ))
+            .is_ok()
             {
                 return Err(field_error(
                     "username_exists",
@@ -131,10 +132,7 @@ impl<T: AsyncCisClientTrait> Query<T> {
     Context = (UserId, Option<Scope>)
 }]
 impl<T: AsyncCisClientTrait> Mutation<T> {
-    fn profile() -> FieldResult<Profile> {
-        let update: InputProfile = args
-            .get("update")
-            .expect("Argument update missing - validation must have failed");
+    fn profile(update: InputProfile) -> FieldResult<Profile> {
         let executor = &executor;
         update_profile(
             update,
