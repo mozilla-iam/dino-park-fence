@@ -1,52 +1,62 @@
 use crate::graphql_api::root::{Mutation, Query, Schema};
-use crate::permissions::Scope;
-use crate::permissions::UserId;
 use crate::settings::DinoParkServices;
+use actix_web::dev::HttpServiceFactory;
 use actix_web::http;
 use actix_web::middleware::cors::Cors;
-use actix_web::App;
+use actix_web::web;
+use actix_web::web::Data;
+use actix_web::web::Json;
+use actix_web::Error;
 use actix_web::HttpResponse;
-use actix_web::Json;
 use actix_web::Result;
-use actix_web::State;
-use cis_client::client::CisClientTrait;
+use cis_client::AsyncCisClientTrait;
+use dino_park_gate::scope::ScopeAndUser;
+use futures::Future;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 use std::sync::Arc;
 
 #[derive(Clone)]
-pub struct GraphQlState<T: CisClientTrait + Clone + 'static> {
+pub struct GraphQlState<T: AsyncCisClientTrait + 'static> {
     schema: Arc<Schema<T>>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct GraphQlData(GraphQLRequest);
 
-fn graphiql(_: UserId) -> Result<HttpResponse> {
+fn graphiql() -> Result<HttpResponse> {
     let html = graphiql_source("/api/v4/graphql");
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(html))
 }
 
-fn graphql<T: CisClientTrait + Clone>(
-    body: Json<GraphQlData>,
-    state: State<GraphQlState<T>>,
-    user_id: UserId,
-    scope: Option<Scope>,
-) -> Result<HttpResponse> {
-    info!("graphql for {:?} → {:?}", user_id, scope);
-    let graphql_data = body.0;
-    let res = graphql_data.0.execute(&state.schema, &(user_id, scope));
-    Ok(HttpResponse::Ok()
-        .content_type("application/json")
-        .body(serde_json::to_string(&res)?))
+fn graphql<T: AsyncCisClientTrait + Send + Sync>(
+    data: Json<GraphQLRequest>,
+    state: Data<GraphQlState<T>>,
+    scope_and_user: ScopeAndUser,
+) -> Box<Future<Item = HttpResponse, Error = Error>> {
+    info!(
+        "graphql for {:?} → {:?}",
+        &scope_and_user.user_id, &scope_and_user.scope
+    );
+    let schema = Arc::clone(&state.schema);
+    let res = web::block(move || {
+        let r = data.execute(&schema, &(scope_and_user));
+        Ok::<_, serde_json::error::Error>(serde_json::to_string(&r)?)
+    })
+    .map_err(Error::from);
+    Box::new(res.and_then(|res| {
+        Ok(HttpResponse::Ok()
+            .content_type("application/json")
+            .body(res))
+    }))
 }
 
-pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
+pub fn graphql_app<T: AsyncCisClientTrait + Clone + Send + Sync + 'static>(
     cis_client: T,
     dinopark_settings: &DinoParkServices,
-) -> App<GraphQlState<T>> {
+) -> impl HttpServiceFactory {
     let schema = Schema::new(
         Query {
             cis_client: cis_client.clone(),
@@ -58,22 +68,18 @@ pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
         },
     );
 
-    App::with_state(GraphQlState {
-        schema: Arc::new(schema),
-    })
-    .prefix("/api/v4/graphql")
-    .configure(|app| {
-        Cors::for_app(app)
-            .allowed_methods(vec!["GET", "POST"])
-            .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-            .allowed_header(http::header::CONTENT_TYPE)
-            .max_age(3600)
-            .resource("", |r| {
-                r.method(http::Method::POST).with_config(graphql, |cfg| {
-                    cfg.0.limit(1_048_576);
-                })
-            })
-            .resource("/graphiql", |r| r.method(http::Method::GET).with(graphiql))
-            .register()
-    })
+    web::scope("/graphql")
+        .wrap(
+            Cors::new()
+                .allowed_methods(vec!["GET", "POST"])
+                .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
+                .allowed_header(http::header::CONTENT_TYPE)
+                .max_age(3600),
+        )
+        .data(GraphQlState {
+            schema: Arc::new(schema),
+        })
+        .data(web::JsonConfig::default().limit(1_048_576))
+        .service(web::resource("").route(web::post().to(graphql::<T>)))
+        .service(web::resource("/graphiql").route(web::get().to(graphiql)))
 }
