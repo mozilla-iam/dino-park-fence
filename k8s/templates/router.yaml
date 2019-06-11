@@ -79,11 +79,7 @@ spec:
           containerPort: 80
         env:
         - name: force_update
-<<<<<<< HEAD
           value: "1"
-=======
-          value: "3"
->>>>>>> upstream/master
         volumeMounts:
         - name: nginx-router
           mountPath: /etc/nginx/
