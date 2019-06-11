@@ -80,9 +80,6 @@ pub fn graphql_app<T: AsyncCisClientTrait + Clone + Send + Sync + 'static>(
             schema: Arc::new(schema),
         })
         .data(web::JsonConfig::default().limit(1_048_576))
-        .service(
-            web::resource("")
-                .route(web::post().to(graphql::<T>)),
-        )
+        .service(web::resource("").route(web::post().to(graphql::<T>)))
         .service(web::resource("/graphiql").route(web::get().to(graphiql)))
 }
