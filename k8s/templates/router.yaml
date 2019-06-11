@@ -41,7 +41,7 @@ data:
         location /world/suggest {
           proxy_pass http://dino-park-world-service:80;
         }
-        {{- if ne .Values.env "prod" -}}
+        {{ if ne .Values.env "prod" -}}
         location /whoami/ {
           proxy_pass http://dino-park-whoami-service:80;
         }
