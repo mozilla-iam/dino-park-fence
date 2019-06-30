@@ -35,6 +35,12 @@ data:
         location /events/update {
           proxy_pass http://dino-park-lookout-service:80;
         }
+        location /avatar/send/intermediate {
+          proxy_pass http://dino-park-fossil-service:80;
+        }
+        location /avatar/scale {
+          proxy_pass http://dino-park-fossil-service:80;
+        }
         location /avatar/get {
           proxy_pass http://dino-park-fossil-service:80;
         }
@@ -77,7 +83,7 @@ spec:
           containerPort: 80
         env:
         - name: force_update
-          value: "1"
+          value: "3"
         volumeMounts:
         - name: nginx-router
           mountPath: /etc/nginx/
