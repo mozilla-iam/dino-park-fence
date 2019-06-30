@@ -1,8 +1,8 @@
 use crate::graphql_api::root::{Mutation, Query, Schema};
 use crate::settings::DinoParkServices;
+use actix_cors::Cors;
 use actix_web::dev::HttpServiceFactory;
 use actix_web::http;
-use actix_web::middleware::cors::Cors;
 use actix_web::web;
 use actix_web::web::Data;
 use actix_web::web::Json;

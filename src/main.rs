@@ -1,3 +1,4 @@
+extern crate actix_cors;
 extern crate actix_web;
 extern crate biscuit;
 extern crate chrono;

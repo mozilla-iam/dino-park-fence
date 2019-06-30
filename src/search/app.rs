@@ -1,10 +1,10 @@
 use crate::proxy::proxy;
 use crate::settings::Search;
+use actix_cors::Cors;
 use actix_web::client::Client;
 use actix_web::dev::HttpServiceFactory;
 use actix_web::error;
 use actix_web::http;
-use actix_web::middleware::cors::Cors;
 use actix_web::web;
 use actix_web::web::Data;
 use actix_web::web::Query;
