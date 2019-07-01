@@ -2,6 +2,8 @@ name: dino-park-fence
 rev: latest
 aws_region: us-west-2
 internal_updates: false
+replicas: 1
+ingress_replicas: 1
 env_dino_park__orgchart__related_endpoint: "http://dino-park-tree-service:80/orgchart/related/"
 env_dino_park__orgchart__trace_endpoint: "http://dino-park-tree-service:80/orgchart/trace/"
 env_dino_park__orgchart__full_endpoint: "http://dino-park-tree-service:80/orgchart"

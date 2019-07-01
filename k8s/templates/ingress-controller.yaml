@@ -91,7 +91,7 @@ metadata:
   name: nginx-ingress-controller
   namespace: {{ .Values.namespace }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.ingress_replicas }}
   selector:
     matchLabels:
       app: ingress-nginx
