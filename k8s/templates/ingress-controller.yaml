@@ -204,7 +204,7 @@ apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
   name: nginx-ingress-scraping
-  namespace: dinopark-prod
+  namespace: {{ .Values.namespace }} 
   labels:
     k8s-app: ingress-monitor
 spec:
