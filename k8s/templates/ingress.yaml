@@ -30,6 +30,10 @@ spec:
         backend:
           serviceName: gatekeeper
           servicePort: 80
+      - path: /opensearch.xml
+        backend:
+          serviceName: internal-router
+          servicePort: 80
       - path: /~
         backend:
           serviceName: internal-router
