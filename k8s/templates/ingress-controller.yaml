@@ -180,3 +180,38 @@ spec:
   - name: https
     port: 443
     targetPort: https
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  namespace: {{ .Values.namespace }}
+  name: nginx-ingress-prometheus-discovery
+  labels:
+    k8s-app: ingress-metrics-service
+spec:
+  selector:
+    app: ingress-nginx
+  type: ClusterIP
+  clusterIP: None
+  ports:
+  - name: metrics
+    port: 10254
+    protocol: TCP
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: nginx-ingress-scraping
+  namespace: dinopark-prod
+  labels:
+    k8s-app: ingress-monitor
+spec:
+  endpoints:
+  - port: metrics
+    interval: 30s
+  selector:
+    matchLabels:
+      k8s-app: ingress-metrics-service
+
