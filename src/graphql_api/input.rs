@@ -15,6 +15,10 @@ use failure::Error;
 use juniper::GraphQLInputObject;
 use std::collections::BTreeMap;
 
+fn create_usernames_key(typ: &str) -> String {
+    format!("HACK#{}", typ)
+}
+
 fn update_picture(
     s: &Option<StringWithDisplay>,
     p: &mut StandardAttributeString,
@@ -87,13 +91,19 @@ fn update_picture(
 fn update_bugzilla_identity(
     bugzilla: &IdentityWithDisplay,
     p: &mut IdentitiesAttributesValuesArray,
+    u: &mut StandardAttributeValues,
     now: &str,
     store: &impl Signer,
 ) -> Result<(), Error> {
     let mut sign = false;
     if bugzilla.remove.unwrap_or_default() {
-        p.bugzilla_mozilla_org_id.metadata.display = Some(Display::Private);
-        p.bugzilla_mozilla_org_primary_email.metadata.display = Some(Display::Private);
+        p.bugzilla_mozilla_org_id.metadata.display = Some(Display::Staff);
+        p.bugzilla_mozilla_org_primary_email.metadata.display = Some(Display::Staff);
+
+        if let Some(KeyValue(usernames)) = &mut u.values {
+            usernames.remove(&create_usernames_key("BMOMAIL"));
+            usernames.remove(&create_usernames_key("BMONICK"));
+        }
 
         p.bugzilla_mozilla_org_id.value = Some(String::default());
         p.bugzilla_mozilla_org_primary_email.value = Some(String::default());
@@ -133,14 +143,19 @@ fn update_bugzilla_identity(
 fn update_github_identity(
     github: &IdentityWithDisplay,
     p: &mut IdentitiesAttributesValuesArray,
+    u: &mut StandardAttributeValues,
     now: &str,
     store: &impl Signer,
 ) -> Result<(), Error> {
     let mut sign = false;
     if github.remove.unwrap_or_default() {
-        p.github_id_v3.metadata.display = Some(Display::Private);
-        p.github_id_v4.metadata.display = Some(Display::Private);
-        p.github_primary_email.metadata.display = Some(Display::Private);
+        p.github_id_v3.metadata.display = Some(Display::Staff);
+        p.github_id_v4.metadata.display = Some(Display::Staff);
+        p.github_primary_email.metadata.display = Some(Display::Staff);
+
+        if let Some(KeyValue(usernames)) = &mut u.values {
+            usernames.remove(&create_usernames_key("GITHUB"));
+        }
 
         p.github_id_v3.value = Some(String::default());
         p.github_id_v4.value = Some(String::default());
@@ -186,15 +201,16 @@ fn update_github_identity(
 fn update_identities(
     i: &Option<IdentitiesWithDisplay>,
     p: &mut IdentitiesAttributesValuesArray,
+    u: &mut StandardAttributeValues,
     now: &str,
     store: &impl Signer,
 ) -> Result<(), Error> {
     if let Some(identities) = i {
         if let Some(github) = &identities.github {
-            update_github_identity(github, p, now, store)?;
+            update_github_identity(github, p, u, now, store)?;
         }
         if let Some(bugzilla) = &identities.bugzilla {
-            update_bugzilla_identity(bugzilla, p, now, store)?;
+            update_bugzilla_identity(bugzilla, p, u, now, store)?;
         }
     }
 
@@ -392,7 +408,13 @@ impl InputProfile {
             now,
             secret_store,
         )?;
-        update_identities(&self.identities, &mut p.identities, now, secret_store)?;
+        update_identities(
+            &self.identities,
+            &mut p.identities,
+            &mut p.usernames,
+            now,
+            secret_store,
+        )?;
         Ok(())
     }
 }

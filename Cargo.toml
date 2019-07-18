@@ -29,6 +29,3 @@ percent-encoding = "1.0"
 config = "0.9"
 failure = "0.1.5"
 url = "1.7"
-
-[dev-dependencies]
-chrono-tz = { version = "0.4", features = ["serde"] }

@@ -28,13 +28,11 @@ mod orgchart;
 mod proxy;
 mod search;
 mod settings;
-mod timezones;
 
 use crate::graphql_api::app::graphql_app;
 use crate::healthz::healthz_app;
 use crate::orgchart::app::orgchart_app;
 use crate::search::app::search_app;
-use crate::timezones::app::timezone_app;
 
 use actix_web::middleware::Logger;
 use actix_web::web;
@@ -68,8 +66,7 @@ fn main() -> Result<(), Error> {
                     .wrap(scope_middleware)
                     .service(graphql_app(cis_client.clone(), &dino_park_settings))
                     .service(search_app(&dino_park_settings.search))
-                    .service(orgchart_app(&dino_park_settings.orgchart))
-                    .service(timezone_app()),
+                    .service(orgchart_app(&dino_park_settings.orgchart)),
             )
             .service(healthz_app())
     })
