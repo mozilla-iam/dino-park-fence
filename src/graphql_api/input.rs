@@ -95,19 +95,24 @@ fn update_bugzilla_identity(
     now: &str,
     store: &impl Signer,
 ) -> Result<(), Error> {
-    let mut sign = false;
+    let mut sign_bugzilla = false;
+    let mut sign_usernames = false;
     if bugzilla.remove.unwrap_or_default() {
         p.bugzilla_mozilla_org_id.metadata.display = Some(Display::Staff);
         p.bugzilla_mozilla_org_primary_email.metadata.display = Some(Display::Staff);
 
         if let Some(KeyValue(usernames)) = &mut u.values {
-            usernames.remove(&create_usernames_key("BMOMAIL"));
-            usernames.remove(&create_usernames_key("BMONICK"));
+            if usernames.remove(&create_usernames_key("BMOMAIL")).is_some() {
+                sign_usernames = true;
+            }
+            if usernames.remove(&create_usernames_key("BMONICK")).is_some() {
+                sign_usernames = true;
+            }
         }
 
         p.bugzilla_mozilla_org_id.value = Some(String::default());
         p.bugzilla_mozilla_org_primary_email.value = Some(String::default());
-        sign = true;
+        sign_bugzilla = true;
     } else if bugzilla.display != p.bugzilla_mozilla_org_id.metadata.display
         || bugzilla.display != p.bugzilla_mozilla_org_primary_email.metadata.display
     {
@@ -121,11 +126,11 @@ fn update_bugzilla_identity(
 
             p.bugzilla_mozilla_org_id.metadata.display = Some(display.clone());
             p.bugzilla_mozilla_org_primary_email.metadata.display = Some(display.clone());
-            sign = true;
+            sign_bugzilla = true;
         }
     }
 
-    if sign {
+    if sign_bugzilla {
         p.bugzilla_mozilla_org_id.metadata.last_modified = now.to_owned();
         p.bugzilla_mozilla_org_primary_email.metadata.last_modified = now.to_owned();
         p.bugzilla_mozilla_org_id.signature.publisher.name = PublisherAuthority::Mozilliansorg;
@@ -135,6 +140,12 @@ fn update_bugzilla_identity(
             .name = PublisherAuthority::Mozilliansorg;
         store.sign_attribute(&mut p.bugzilla_mozilla_org_id)?;
         store.sign_attribute(&mut p.bugzilla_mozilla_org_primary_email)?;
+    }
+
+    if sign_usernames {
+        u.metadata.last_modified = now.to_owned();
+        u.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+        store.sign_attribute(u)?;
     }
 
     Ok(())
@@ -147,20 +158,23 @@ fn update_github_identity(
     now: &str,
     store: &impl Signer,
 ) -> Result<(), Error> {
-    let mut sign = false;
+    let mut sign_github = false;
+    let mut sign_usernames = false;
     if github.remove.unwrap_or_default() {
         p.github_id_v3.metadata.display = Some(Display::Staff);
         p.github_id_v4.metadata.display = Some(Display::Staff);
         p.github_primary_email.metadata.display = Some(Display::Staff);
 
         if let Some(KeyValue(usernames)) = &mut u.values {
-            usernames.remove(&create_usernames_key("GITHUB"));
+            if usernames.remove(&create_usernames_key("GITHUB")).is_some() {
+                sign_usernames = true;
+            }
         }
 
         p.github_id_v3.value = Some(String::default());
         p.github_id_v4.value = Some(String::default());
         p.github_primary_email.value = Some(String::default());
-        sign = true;
+        sign_github = true;
     } else if github.display != p.github_id_v3.metadata.display
         || github.display != p.github_id_v4.metadata.display
         || github.display != p.github_primary_email.metadata.display
@@ -179,11 +193,11 @@ fn update_github_identity(
             p.github_id_v3.metadata.display = Some(display.clone());
             p.github_id_v4.metadata.display = Some(display.clone());
             p.github_primary_email.metadata.display = Some(display.clone());
-            sign = true;
+            sign_github = true;
         }
     }
 
-    if sign {
+    if sign_github {
         p.github_id_v3.metadata.last_modified = now.to_owned();
         p.github_id_v4.metadata.last_modified = now.to_owned();
         p.github_primary_email.metadata.last_modified = now.to_owned();
@@ -193,6 +207,12 @@ fn update_github_identity(
         store.sign_attribute(&mut p.github_id_v3)?;
         store.sign_attribute(&mut p.github_id_v4)?;
         store.sign_attribute(&mut p.github_primary_email)?;
+    }
+
+    if sign_usernames {
+        u.metadata.last_modified = now.to_owned();
+        u.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+        store.sign_attribute(u)?;
     }
 
     Ok(())
