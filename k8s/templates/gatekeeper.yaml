@@ -14,7 +14,7 @@ spec:
         name: gatekeeper
     spec:
       containers:
-        - image: keycloak/keycloak-gatekeeper:latest
+        - image: 320464205386.dkr.ecr.us-west-2.amazonaws.com/keycloak-gatekeeper:samesite
           imagePullPolicy: Always
           name: gatekeeper
           ports:
