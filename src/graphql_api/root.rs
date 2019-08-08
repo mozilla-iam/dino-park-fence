@@ -3,6 +3,7 @@ use crate::settings::DinoParkServices;
 use actix_web::test;
 use cis_client::getby::GetBy;
 use cis_client::AsyncCisClientTrait;
+use cis_profile::schema::Display;
 use cis_profile::schema::Profile;
 use dino_park_gate::scope::ScopeAndUser;
 use juniper::FieldError;
@@ -108,19 +109,47 @@ fn update_profile(
     Context = (ScopeAndUser)
 }]
 impl<T: AsyncCisClientTrait> Query<T> {
-    fn profile(username: Option<String>) -> FieldResult<Profile> {
+    fn profile(username: Option<String>, view_as: Option<Display>) -> FieldResult<Profile> {
         let executor = &executor;
         let scope_and_user = executor.context();
-        let (id, by, filter) = if let Some(username) = username {
-            (
-                username,
-                &GetBy::PrimaryUsername,
-                scope_and_user.scope.as_str(),
-            )
-        } else {
-            (scope_and_user.user_id.clone(), &GetBy::UserId, "private")
+        let filter = match serde_json::from_value(scope_and_user.scope.clone().into()) {
+            Ok(scope) => {
+                if let Some(display) = view_as {
+                    if display <= scope {
+                        display
+                    } else {
+                        warn!(
+                            "invalid display {} for {} ({})",
+                            display.as_str(),
+                            scope_and_user.user_id,
+                            scope_and_user.scope
+                        );
+                        Display::Public
+                    }
+                } else if username.is_some() {
+                    scope
+                } else if username.is_none() {
+                    Display::Private
+                } else {
+                    Display::Public
+                }
+            }
+            Err(e) => {
+                warn!(
+                    "invalid scope {} for {}: {}",
+                    scope_and_user.scope, scope_and_user.user_id, e
+                );
+                Display::Public
+            }
         };
-        get_profile(id, &self.cis_client, by, filter)
+
+        let (id, by) = if let Some(username) = username {
+            (username, &GetBy::PrimaryUsername)
+        } else {
+            (scope_and_user.user_id.clone(), &GetBy::UserId)
+        };
+
+        get_profile(id, &self.cis_client, by, filter.as_str())
     }
 }
 

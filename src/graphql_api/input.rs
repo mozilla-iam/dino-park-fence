@@ -275,12 +275,25 @@ fn update_key_values(
     p: &mut StandardAttributeValues,
     now: &str,
     store: &impl Signer,
+    filter_empty_values: bool,
 ) -> Result<(), Error> {
     if let Some(x) = s {
         let mut sign = false;
         if let Some(values) = &x.values {
-            let values: BTreeMap<String, Option<String>> =
-                values.iter().map(|e| (e.k.clone(), e.v.clone())).collect();
+            let values: BTreeMap<String, Option<String>> = if filter_empty_values {
+                values
+                    .iter()
+                    .filter_map(|e| {
+                        if e.v.as_ref().map(|s| !s.is_empty()).unwrap_or_default() {
+                            None
+                        } else {
+                            Some((e.k.clone(), e.v.clone()))
+                        }
+                    })
+                    .collect()
+            } else {
+                values.iter().map(|e| (e.k.clone(), e.v.clone())).collect()
+            };
             let kv = Some(KeyValue(values));
             if kv != p.values {
                 p.values = kv;
@@ -411,22 +424,30 @@ impl InputProfile {
         update_string(&self.timezone, &mut p.timezone, now, secret_store)?;
         update_string(&self.user_id, &mut p.user_id, now, secret_store)?;
 
-        update_key_values(&self.languages, &mut p.languages, now, secret_store)?;
-        update_key_values(&self.phone_numbers, &mut p.phone_numbers, now, secret_store)?;
-        update_key_values(&self.tags, &mut p.tags, now, secret_store)?;
-        update_key_values(&self.usernames, &mut p.usernames, now, secret_store)?;
-        update_key_values(&self.uris, &mut p.uris, now, secret_store)?;
+        update_key_values(&self.languages, &mut p.languages, now, secret_store, false)?;
+        update_key_values(
+            &self.phone_numbers,
+            &mut p.phone_numbers,
+            now,
+            secret_store,
+            true,
+        )?;
+        update_key_values(&self.tags, &mut p.tags, now, secret_store, false)?;
+        update_key_values(&self.usernames, &mut p.usernames, now, secret_store, true)?;
+        update_key_values(&self.uris, &mut p.uris, now, secret_store, true)?;
         update_key_values(
             &self.pgp_public_keys,
             &mut p.pgp_public_keys,
             now,
             secret_store,
+            true,
         )?;
         update_key_values(
             &self.ssh_public_keys,
             &mut p.ssh_public_keys,
             now,
             secret_store,
+            true,
         )?;
         update_identities(
             &self.identities,

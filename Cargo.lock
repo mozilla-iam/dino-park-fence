@@ -459,12 +459,12 @@ dependencies = [
 
 [[package]]
 name = "cis_client"
-version = "0.1.0-beta.2"
-source = "git+https://github.com/fiji-flo/cis_client-rust?branch=async-2#a146ce2e730f9363589232753c2c3abb5428f25d"
+version = "0.1.1"
+source = "git+https://github.com/fiji-flo/cis_client-rust?branch=0.1.1#318606782ddefe4e972986ab9f7db5dd8338510f"
 dependencies = [
  "biscuit 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "cis_profile 0.1.0 (git+https://github.com/fiji-flo/cis_profile-rust?branch=0.1.0)",
+ "cis_profile 0.1.1 (git+https://github.com/fiji-flo/cis_profile-rust?branch=0.1.1)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.28 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -478,21 +478,21 @@ dependencies = [
 
 [[package]]
 name = "cis_profile"
-version = "0.1.0"
-source = "git+https://github.com/fiji-flo/cis_profile-rust?branch=0.1.0#6d800bb76bdfce7bc4e17e58f87f8e9c17778adf"
+version = "0.1.1"
+source = "git+https://github.com/fiji-flo/cis_profile-rust?branch=0.1.1#18b63f48809eef1ac960a2fe7ac83fbf88b360dd"
 dependencies = [
  "biscuit 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono-tz 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "juniper 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "juniper 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "num-bigint 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "openssl 0.10.23 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.9.18 (registry+https://github.com/rust-lang/crates.io-index)",
  "ring 0.14.6 (registry+https://github.com/rust-lang/crates.io-index)",
- "rusoto_core 0.39.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "rusoto_ssm 0.39.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rusoto_core 0.40.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rusoto_ssm 0.40.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.97 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.97 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.40 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -505,16 +505,6 @@ version = "0.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bitflags 1.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "condvar_store"
-version = "0.0.2"
-source = "git+https://github.com/fiji-flo/condvar_store#de3d5961d92697a396e550b0806c209f976ee38c"
-dependencies = [
- "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "failure_derive 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -683,15 +673,14 @@ dependencies = [
  "actix-web 1.0.4 (registry+https://github.com/rust-lang/crates.io-index)",
  "biscuit 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "cis_client 0.1.0-beta.2 (git+https://github.com/fiji-flo/cis_client-rust?branch=async-2)",
- "cis_profile 0.1.0 (git+https://github.com/fiji-flo/cis_profile-rust?branch=0.1.0)",
- "condvar_store 0.0.2 (git+https://github.com/fiji-flo/condvar_store)",
+ "cis_client 0.1.1 (git+https://github.com/fiji-flo/cis_client-rust?branch=0.1.1)",
+ "cis_profile 0.1.1 (git+https://github.com/fiji-flo/cis_profile-rust?branch=0.1.1)",
  "config 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "dino_park_gate 0.1.0-beta.3 (git+https://github.com/fiji-flo/dino-park-gate?branch=future)",
  "env_logger 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.5 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.28 (registry+https://github.com/rust-lang/crates.io-index)",
- "juniper 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "juniper 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "percent-encoding 1.0.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "reqwest 0.9.18 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1109,13 +1098,13 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 
 [[package]]
 name = "juniper"
-version = "0.12.0"
+version = "0.13.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "fnv 1.0.6 (registry+https://github.com/rust-lang/crates.io-index)",
  "indexmap 1.0.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "juniper_codegen 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "juniper_codegen 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.97 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.97 (registry+https://github.com/rust-lang/crates.io-index)",
  "url 1.7.2 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1124,7 +1113,7 @@ dependencies = [
 
 [[package]]
 name = "juniper_codegen"
-version = "0.12.0"
+version = "0.13.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "lazy_static 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1922,7 +1911,7 @@ dependencies = [
 
 [[package]]
 name = "rusoto_core"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "base64 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1936,7 +1925,7 @@ dependencies = [
  "lazy_static 1.3.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "md5 0.3.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "rusoto_credential 0.39.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rusoto_credential 0.40.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.97 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.97 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1951,7 +1940,7 @@ dependencies = [
 
 [[package]]
 name = "rusoto_credential"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -1969,12 +1958,12 @@ dependencies = [
 
 [[package]]
 name = "rusoto_ssm"
-version = "0.39.0"
+version = "0.40.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 dependencies = [
  "bytes 0.4.12 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.1.28 (registry+https://github.com/rust-lang/crates.io-index)",
- "rusoto_core 0.39.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "rusoto_core 0.40.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde 1.0.97 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_derive 1.0.97 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde_json 1.0.40 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -2796,10 +2785,9 @@ dependencies = [
 "checksum cfg-if 0.1.9 (registry+https://github.com/rust-lang/crates.io-index)" = "b486ce3ccf7ffd79fdeb678eac06a9e6c09fc88d33836340becb8fffe87c5e33"
 "checksum chrono 0.4.7 (registry+https://github.com/rust-lang/crates.io-index)" = "77d81f58b7301084de3b958691458a53c3f7e0b1d702f77e550b6a88e3a88abe"
 "checksum chrono-tz 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "e0e430fad0384e4defc3dc6b1223d1b886087a8bf9b7080e5ae027f73851ea15"
-"checksum cis_client 0.1.0-beta.2 (git+https://github.com/fiji-flo/cis_client-rust?branch=async-2)" = "<none>"
-"checksum cis_profile 0.1.0 (git+https://github.com/fiji-flo/cis_profile-rust?branch=0.1.0)" = "<none>"
+"checksum cis_client 0.1.1 (git+https://github.com/fiji-flo/cis_client-rust?branch=0.1.1)" = "<none>"
+"checksum cis_profile 0.1.1 (git+https://github.com/fiji-flo/cis_profile-rust?branch=0.1.1)" = "<none>"
 "checksum cloudabi 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
-"checksum condvar_store 0.0.2 (git+https://github.com/fiji-flo/condvar_store)" = "<none>"
 "checksum config 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)" = "f9107d78ed62b3fa5a86e7d18e647abed48cfd8f8fab6c72f4cdb982d196f7e6"
 "checksum constant_time_eq 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)" = "8ff012e225ce166d4422e0e78419d901719760f62ae2b7969ca6b564d1b54a9e"
 "checksum cookie 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "888604f00b3db336d2af898ec3c1d5d0ddf5e6d462220f2ededc33a87ac4bbd5"
@@ -2862,8 +2850,8 @@ dependencies = [
 "checksum iovec 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)" = "dbe6e417e7d0975db6512b90796e8ce223145ac4e33c377e4a42882a0e88bb08"
 "checksum ipconfig 0.2.1 (registry+https://github.com/rust-lang/crates.io-index)" = "aa79fa216fbe60834a9c0737d7fcd30425b32d1c58854663e24d4c4b328ed83f"
 "checksum itoa 0.4.4 (registry+https://github.com/rust-lang/crates.io-index)" = "501266b7edd0174f8530248f87f99c88fbe60ca4ef3dd486835b8d8d53136f7f"
-"checksum juniper 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3365cb2712ac210a62fdb31e608e43da1a60d9c72affd49f064f4e744ad1a26b"
-"checksum juniper_codegen 0.12.0 (registry+https://github.com/rust-lang/crates.io-index)" = "1f58987aefa7edd8033a558e9019347ad4f016b97caa58290abf2728ce773859"
+"checksum juniper 0.13.1 (registry+https://github.com/rust-lang/crates.io-index)" = "b570603cc5ea362590965be2d201f24c5e39f2675953d46813ea4c5f7a34e75c"
+"checksum juniper_codegen 0.13.2 (registry+https://github.com/rust-lang/crates.io-index)" = "230e99ba589c473bb53d33bf4bd9aedcb7069c50b336bb76dcff9f69a1b19418"
 "checksum kernel32-sys 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "7507624b29483431c0ba2d82aece8ca6cdba9382bff4ddd0f7490560c056098d"
 "checksum language-tags 0.2.2 (registry+https://github.com/rust-lang/crates.io-index)" = "a91d884b6667cd606bb5a69aa0c99ba811a115fc68915e7056ec08a46e93199a"
 "checksum lazy_static 0.2.11 (registry+https://github.com/rust-lang/crates.io-index)" = "76f033c7ad61445c5b347c7382dd1237847eb1bce590fe50365dcb33d546be73"
@@ -2949,9 +2937,9 @@ dependencies = [
 "checksum reqwest 0.9.18 (registry+https://github.com/rust-lang/crates.io-index)" = "00eb63f212df0e358b427f0f40aa13aaea010b470be642ad422bcbca2feff2e4"
 "checksum resolv-conf 0.6.2 (registry+https://github.com/rust-lang/crates.io-index)" = "b263b4aa1b5de9ffc0054a2386f96992058bb6870aab516f8cdeb8a667d56dcb"
 "checksum ring 0.14.6 (registry+https://github.com/rust-lang/crates.io-index)" = "426bc186e3e95cac1e4a4be125a4aca7e84c2d616ffc02244eef36e2a60a093c"
-"checksum rusoto_core 0.39.0 (registry+https://github.com/rust-lang/crates.io-index)" = "42753f93bf02ca5d177b85dfbfde7e8011ee330b3a5576584b99da3443d26da8"
-"checksum rusoto_credential 0.39.0 (registry+https://github.com/rust-lang/crates.io-index)" = "adbb49748d537ead58aa70042655ce730ea4da511babbb9e7238a869b9d240ea"
-"checksum rusoto_ssm 0.39.0 (registry+https://github.com/rust-lang/crates.io-index)" = "157288a75e593dcfb7eb7f701c50ab725323cef721eb9dd64b2b3622e3413075"
+"checksum rusoto_core 0.40.0 (registry+https://github.com/rust-lang/crates.io-index)" = "dd1a1069ba04874a485528d1602fab4569f2434a5547614428e2cc22b91bfb71"
+"checksum rusoto_credential 0.40.0 (registry+https://github.com/rust-lang/crates.io-index)" = "b0d6cc3a602f01b9c5a04c8ed4ee281b789c5b2692d93202367c9b99ebc022ed"
+"checksum rusoto_ssm 0.40.0 (registry+https://github.com/rust-lang/crates.io-index)" = "93948f190bd851876f8ef4be85ae2ee17b4a019d8c5bcffce33a8f226257b581"
 "checksum rust-ini 0.13.0 (registry+https://github.com/rust-lang/crates.io-index)" = "3e52c148ef37f8c375d49d5a73aa70713125b7f19095948a923f80afdeb22ec2"
 "checksum rustc-demangle 0.1.15 (registry+https://github.com/rust-lang/crates.io-index)" = "a7f4dccf6f4891ebcc0c39f9b6eb1a83b9bf5d747cb439ec6fba4f3b977038af"
 "checksum rustc_version 0.2.3 (registry+https://github.com/rust-lang/crates.io-index)" = "138e3e0acb6c9fb258b19b67cb8abd63c00679d2851805ea151465464fe9030a"
