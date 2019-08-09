@@ -3,6 +3,7 @@ use crate::settings::DinoParkServices;
 use actix_web::test;
 use cis_client::getby::GetBy;
 use cis_client::AsyncCisClientTrait;
+use cis_profile::schema::Display;
 use cis_profile::schema::Profile;
 use dino_park_gate::scope::ScopeAndUser;
 use juniper::FieldError;
@@ -108,19 +109,18 @@ fn update_profile(
     Context = (ScopeAndUser)
 }]
 impl<T: AsyncCisClientTrait> Query<T> {
-    fn profile(username: Option<String>) -> FieldResult<Profile> {
+    fn profile(username: Option<String>, view_as: Option<Display>) -> FieldResult<Profile> {
         let executor = &executor;
         let scope_and_user = executor.context();
-        let (id, by, filter) = if let Some(username) = username {
-            (
-                username,
-                &GetBy::PrimaryUsername,
-                scope_and_user.scope.as_str(),
-            )
-        } else {
-            (scope_and_user.user_id.clone(), &GetBy::UserId, "private")
-        };
-        get_profile(id, &self.cis_client, by, filter)
+
+        let params = get_profile_params(username, scope_and_user, view_as)?;
+
+        get_profile(
+            params.id,
+            &self.cis_client,
+            &params.by,
+            params.filter.as_str(),
+        )
     }
 }
 
@@ -140,3 +140,151 @@ impl<T: AsyncCisClientTrait> Mutation<T> {
 }
 
 pub type Schema<T> = RootNode<'static, Query<T>, Mutation<T>>;
+
+struct GetProfileParams {
+    id: String,
+    by: GetBy,
+    filter: Display,
+}
+
+fn get_profile_params(
+    username: Option<String>,
+    scope_and_user: &ScopeAndUser,
+    view_as: Option<Display>,
+) -> Result<GetProfileParams, FieldError> {
+    let scope = match serde_json::from_value(scope_and_user.scope.clone().into()) {
+        Ok(scope) => scope,
+        Err(e) => {
+            warn!(
+                "invalid scope {} for {}: {}",
+                scope_and_user.scope, scope_and_user.user_id, e
+            );
+            Display::Public
+        }
+    };
+    let params = if let Some(username) = username {
+        // If a username has been provided we retrieve the
+        // profile by username and filter according to
+        // view_as if view_as if less restrictive than the
+        // users scope.
+        let filter = if let Some(filter) = view_as {
+            if filter <= scope {
+                filter
+            } else {
+                warn!(
+                    "invalid display {} for {} ({})",
+                    filter.as_str(),
+                    scope_and_user.user_id,
+                    scope_and_user.scope
+                );
+                return Err(field_error(
+                    "invalid_view_as",
+                    "Insufficient permission for requested view_as display level!",
+                ));
+            }
+        } else {
+            scope
+        };
+        GetProfileParams {
+            id: username,
+            by: GetBy::PrimaryUsername,
+            filter,
+        }
+    } else {
+        // If no username has been provided we retrieve the
+        // profile by user_id of the current user and allow
+        // any view as if provided, otherwise use private.
+        GetProfileParams {
+            id: scope_and_user.user_id.clone(),
+            by: GetBy::UserId,
+            filter: view_as.unwrap_or_else(|| Display::Private),
+        }
+    };
+    Ok(params)
+}
+
+#[cfg(test)]
+mod root_test {
+    use super::*;
+
+    #[test]
+    fn test_get_filter_params_without_view_as() -> Result<(), FieldError> {
+        let username = Some(String::from("user1"));
+        let scope_and_user = ScopeAndUser {
+            user_id: String::from("user2"),
+            scope: String::from("staff"),
+        };
+        let params = get_profile_params(username, &scope_and_user, None)?;
+        assert!(match params.by {
+            GetBy::PrimaryUsername => true,
+            _ => false,
+        });
+        assert_eq!(params.id, "user1");
+        assert_eq!(params.filter, Display::Staff);
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_filter_params_with_view_as_pass() -> Result<(), FieldError> {
+        let username = Some(String::from("user1"));
+        let view_as = Some(Display::Ndaed);
+        let scope_and_user = ScopeAndUser {
+            user_id: String::from("user2"),
+            scope: String::from("staff"),
+        };
+        let params = get_profile_params(username, &scope_and_user, view_as)?;
+        assert!(match params.by {
+            GetBy::PrimaryUsername => true,
+            _ => false,
+        });
+        assert_eq!(params.id, "user1");
+        assert_eq!(params.filter, Display::Ndaed);
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_filter_params_with_view_as_fail() -> Result<(), FieldError> {
+        let username = Some(String::from("user1"));
+        let view_as = Some(Display::Ndaed);
+        let scope_and_user = ScopeAndUser {
+            user_id: String::from("user2"),
+            scope: String::from("authenticated"),
+        };
+        let params = get_profile_params(username, &scope_and_user, view_as);
+        assert!(params.is_err());
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_filter_params_self_without_view_as() -> Result<(), FieldError> {
+        let scope_and_user = ScopeAndUser {
+            user_id: String::from("user1"),
+            scope: String::from("staff"),
+        };
+        let params = get_profile_params(None, &scope_and_user, None)?;
+        assert!(match params.by {
+            GetBy::UserId => true,
+            _ => false,
+        });
+        assert_eq!(params.id, "user1");
+        assert_eq!(params.filter, Display::Private);
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_filter_params_self_with_higher_view_as() -> Result<(), FieldError> {
+        let view_as = Some(Display::Staff);
+        let scope_and_user = ScopeAndUser {
+            user_id: String::from("user1"),
+            scope: String::from("authenticated"),
+        };
+        let params = get_profile_params(None, &scope_and_user, view_as)?;
+        assert!(match params.by {
+            GetBy::UserId => true,
+            _ => false,
+        });
+        assert_eq!(params.id, "user1");
+        assert_eq!(params.filter, Display::Staff);
+        Ok(())
+    }
+}

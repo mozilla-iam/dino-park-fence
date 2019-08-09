@@ -4,7 +4,6 @@ extern crate biscuit;
 extern crate chrono;
 extern crate cis_client;
 extern crate cis_profile;
-extern crate condvar_store;
 extern crate config;
 extern crate dino_park_gate;
 extern crate env_logger;
