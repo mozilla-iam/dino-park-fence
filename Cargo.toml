@@ -1,6 +1,6 @@
 [package]
 name = "dino-park-fence"
-version = "0.1.0-beta.1"
+version = "0.1.0-beta.2"
 authors = ["Florian Merz <flomerz@gmail.com>"]
 edition = "2018"
 
