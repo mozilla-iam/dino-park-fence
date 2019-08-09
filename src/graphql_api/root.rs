@@ -112,44 +112,15 @@ impl<T: AsyncCisClientTrait> Query<T> {
     fn profile(username: Option<String>, view_as: Option<Display>) -> FieldResult<Profile> {
         let executor = &executor;
         let scope_and_user = executor.context();
-        let filter = match serde_json::from_value(scope_and_user.scope.clone().into()) {
-            Ok(scope) => {
-                if let Some(display) = view_as {
-                    if display <= scope {
-                        display
-                    } else {
-                        warn!(
-                            "invalid display {} for {} ({})",
-                            display.as_str(),
-                            scope_and_user.user_id,
-                            scope_and_user.scope
-                        );
-                        Display::Public
-                    }
-                } else if username.is_some() {
-                    scope
-                } else if username.is_none() {
-                    Display::Private
-                } else {
-                    Display::Public
-                }
-            }
-            Err(e) => {
-                warn!(
-                    "invalid scope {} for {}: {}",
-                    scope_and_user.scope, scope_and_user.user_id, e
-                );
-                Display::Public
-            }
-        };
 
-        let (id, by) = if let Some(username) = username {
-            (username, &GetBy::PrimaryUsername)
-        } else {
-            (scope_and_user.user_id.clone(), &GetBy::UserId)
-        };
+        let params = get_profile_params(username, scope_and_user, view_as)?;
 
-        get_profile(id, &self.cis_client, by, filter.as_str())
+        get_profile(
+            params.id,
+            &self.cis_client,
+            &params.by,
+            params.filter.as_str(),
+        )
     }
 }
 
@@ -169,3 +140,110 @@ impl<T: AsyncCisClientTrait> Mutation<T> {
 }
 
 pub type Schema<T> = RootNode<'static, Query<T>, Mutation<T>>;
+
+struct GetProfileParams {
+    id: String,
+    by: GetBy,
+    filter: Display,
+}
+
+fn get_profile_params(
+    username: Option<String>,
+    scope_and_user: &ScopeAndUser,
+    view_as: Option<Display>,
+) -> Result<GetProfileParams, FieldError> {
+    let scope_or_view_as = match serde_json::from_value(scope_and_user.scope.clone().into()) {
+        Ok(scope) => {
+            if let Some(display) = view_as {
+                if display <= scope {
+                    Some(display)
+                } else {
+                    warn!(
+                        "invalid display {} for {} ({})",
+                        display.as_str(),
+                        scope_and_user.user_id,
+                        scope_and_user.scope
+                    );
+                    return Err(field_error(
+                        "invalid_view_as",
+                        "Insufficient permission for requested view_as display level!",
+                    ));
+                }
+            } else {
+                Some(scope)
+            }
+        }
+        Err(e) => {
+            warn!(
+                "invalid scope {} for {}: {}",
+                scope_and_user.scope, scope_and_user.user_id, e
+            );
+            Some(Display::Public)
+        }
+    };
+
+    let (id, by, filter) = match (username, scope_or_view_as) {
+        (Some(username), Some(filter)) => (username, GetBy::PrimaryUsername, filter),
+        (Some(username), None) => (username, GetBy::PrimaryUsername, Display::Public),
+        (None, Some(filter)) => (scope_and_user.user_id.clone(), GetBy::UserId, filter),
+        (None, None) => (
+            scope_and_user.user_id.clone(),
+            GetBy::UserId,
+            Display::Private,
+        ),
+    };
+    Ok(GetProfileParams { id, by, filter })
+}
+
+#[cfg(test)]
+mod root_test {
+    use super::*;
+
+    #[test]
+    fn test_get_filter_params_self_without_view_as() -> Result<(), FieldError> {
+        let username = Some(String::from("user1"));
+        let scope_and_user = ScopeAndUser {
+            user_id: String::from("user2"),
+            scope: String::from("staff"),
+        };
+        let params = get_profile_params(username, &scope_and_user, None)?;
+        assert!(match params.by {
+            GetBy::PrimaryUsername => true,
+            _ => false,
+        });
+        assert_eq!(params.id, "user1");
+        assert_eq!(params.filter, Display::Staff);
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_filter_params_self_with_view_as_pass() -> Result<(), FieldError> {
+        let username = Some(String::from("user1"));
+        let view_as = Some(Display::Ndaed);
+        let scope_and_user = ScopeAndUser {
+            user_id: String::from("user2"),
+            scope: String::from("staff"),
+        };
+        let params = get_profile_params(username, &scope_and_user, view_as)?;
+        assert!(match params.by {
+            GetBy::PrimaryUsername => true,
+            _ => false,
+        });
+        assert_eq!(params.id, "user1");
+        assert_eq!(params.filter, Display::Ndaed);
+        Ok(())
+    }
+
+    #[test]
+    fn test_get_filter_params_self_with_view_as_fail() -> Result<(), FieldError> {
+        let username = Some(String::from("user1"));
+        let view_as = Some(Display::Ndaed);
+        let scope_and_user = ScopeAndUser {
+            user_id: String::from("user2"),
+            scope: String::from("authenticated"),
+        };
+        let params = get_profile_params(username, &scope_and_user, view_as);
+        assert!(params.is_err());
+        Ok(())
+    }
+}
