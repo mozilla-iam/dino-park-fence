@@ -284,7 +284,7 @@ fn update_key_values(
                 values
                     .iter()
                     .filter_map(|e| {
-                        if e.v.as_ref().map(|s| !s.is_empty()).unwrap_or_default() {
+                        if e.v.as_ref().map(|s| s.is_empty()).unwrap_or_default() {
                             None
                         } else {
                             Some((e.k.clone(), e.v.clone()))
