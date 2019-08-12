@@ -13,7 +13,7 @@ metadata:
     nginx.ingress.kubernetes.io/enable-modsecurity: "true"
     nginx.ingress.kubernetes.io/enable-owasp-core-rules: "true"
     nginx.ingress.kubernetes.io/configuration-snippet: |
-            more_set_headers "X-Frame-Options: DENY" "X-Frame-Options: DENY" "X-XSS-Protection: 1" "X-Content-Type-Options: nosniff" "Strict-Transport-Security: max-age=63072000" "Content-Security-Policy: default-src 'self'; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; script-src 'self' 'sha256-K1+2GrQe85tVmkpPtGQGsg47TvpKMhhigwYXAimwjxU='; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
+            more_set_headers "X-Frame-Options: DENY" "X-Frame-Options: DENY" "X-XSS-Protection: 1" "X-Content-Type-Options: nosniff" "Strict-Transport-Security: max-age=63072000" "Content-Security-Policy: default-src 'self'; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; script-src 'self' 'sha256-4qKuKHlhZHVtOHkzV6IoRxvJyftFsU9Bzug8piLac2s='; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'";
 spec:
   tls:
   - hosts:
