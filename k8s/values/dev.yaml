@@ -1,4 +1,5 @@
 env: dev
 namespace: dinopark-dev
 domain_name: dinopark.k8s.dev.sso.allizom.org
+pictures_domain_name: picture.api.dev.sso.allizom.org
 assume_role: arn:aws:iam::320464205386:role/dino-park-fence-role-dev-us-west-2
