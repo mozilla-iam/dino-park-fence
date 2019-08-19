@@ -11,7 +11,7 @@ nouid = []
 [dependencies]
 cis_client = { git = "https://github.com/fiji-flo/cis_client-rust", branch = "0.1.1", version = "0.1.1" }
 cis_profile = { git = "https://github.com/fiji-flo/cis_profile-rust", branch = "0.1.1", version = "0.1.1", features = ["graphql", "aws", "vendored"] }
-dino_park_gate = { git = "https://github.com/fiji-flo/dino-park-gate", branch = "future", version = "0.1.0-beta.3" }
+dino_park_gate = { git = "https://github.com/fiji-flo/dino-park-gate", branch = "0.1.0-beta.4", version = "0.1.0-beta.4" }
 actix-web = "1.0"
 actix-cors = "0.1"
 juniper = "0.13"
