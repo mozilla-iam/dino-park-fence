@@ -35,7 +35,7 @@ fn graphql<T: AsyncCisClientTrait + Send + Sync>(
     data: Json<GraphQLRequest>,
     state: Data<GraphQlState<T>>,
     scope_and_user: ScopeAndUser,
-) -> Box<Future<Item = HttpResponse, Error = Error>> {
+) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
     info!(
         "graphql for {:?} → {:?}",
         &scope_and_user.user_id, &scope_and_user.scope
