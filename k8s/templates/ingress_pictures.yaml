@@ -1,4 +1,3 @@
-{{ if ne .Values.env "prod" }}
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -26,4 +25,3 @@ spec:
         backend:
           serviceName: dino-park-fossil-service
           servicePort: 80
-{{ end }}
