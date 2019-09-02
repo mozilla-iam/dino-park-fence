@@ -4,6 +4,7 @@ use crate::settings::Fossil;
 use chrono::SecondsFormat;
 use chrono::Utc;
 use cis_profile::crypto::Signer;
+use cis_profile::schema::AccessInformationProviderSubObject;
 use cis_profile::schema::Display;
 use cis_profile::schema::IdentitiesAttributesValuesArray;
 use cis_profile::schema::KeyValue;
@@ -17,6 +18,27 @@ use std::collections::BTreeMap;
 
 fn create_usernames_key(typ: &str) -> String {
     format!("HACK#{}", typ)
+}
+
+fn update_access_information_display(
+    d: &Option<Display>,
+    p: &mut AccessInformationProviderSubObject,
+    now: &str,
+    store: &impl Signer,
+) -> Result<(), Error> {
+    if *d != p.metadata.display {
+        if let Some(display) = &d {
+            // Initialize with empty values if there are now access groups.
+            if p.values.is_none() {
+                p.values = Some(KeyValue(BTreeMap::default()));
+            }
+            p.metadata.display = Some(display.clone());
+            p.metadata.last_modified = now.to_owned();
+            p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+            store.sign_attribute(p)?;
+        }
+    }
+    Ok(())
 }
 
 fn update_picture(
@@ -381,6 +403,7 @@ pub struct InputProfile {
     pub uris: Option<KeyValuesWithDisplay>,
     pub user_id: Option<StringWithDisplay>,
     pub usernames: Option<KeyValuesWithDisplay>,
+    pub access_information_mozilliansorg: Option<Display>,
 }
 
 impl InputProfile {
@@ -453,6 +476,13 @@ impl InputProfile {
             &self.identities,
             &mut p.identities,
             &mut p.usernames,
+            now,
+            secret_store,
+        )?;
+
+        update_access_information_display(
+            &self.access_information_mozilliansorg,
+            &mut p.access_information.mozilliansorg,
             now,
             secret_store,
         )?;
@@ -535,6 +565,64 @@ mod test {
         assert_eq!(p.tags.values, None);
         assert_eq!(p.languages.values, Some(Default::default()));
         assert_eq!(p.languages.metadata.display, Some(Display::Vouched));
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_access_information_display_initializes_groups() -> Result<(), Error> {
+        let secret_store = get_fake_secret_store();
+        let fossil_settings = Fossil {
+            upload_endpoint: String::default(),
+        };
+        let mut p = Profile::default();
+        let update = InputProfile {
+            access_information_mozilliansorg: Some(Display::Ndaed),
+            ..Default::default()
+        };
+        assert_eq!(p.access_information.mozilliansorg.values, None);
+        assert_ne!(
+            p.access_information.mozilliansorg.metadata.display,
+            Some(Display::Ndaed)
+        );
+        update.update_profile(&mut p, &secret_store, &fossil_settings)?;
+        assert_eq!(
+            p.access_information.mozilliansorg.values,
+            Some(KeyValue(BTreeMap::default()))
+        );
+        assert_eq!(
+            p.access_information.mozilliansorg.metadata.display,
+            Some(Display::Ndaed)
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_access_information_display_keeps_groups() -> Result<(), Error> {
+        let secret_store = get_fake_secret_store();
+        let fossil_settings = Fossil {
+            upload_endpoint: String::default(),
+        };
+
+        let mut groups = BTreeMap::new();
+        groups.insert(String::from("Something"), None);
+
+        let mut p = Profile::default();
+        p.access_information.mozilliansorg.values = Some(KeyValue(groups.clone()));
+        p.access_information.mozilliansorg.metadata.display = Some(Display::Private);
+
+        let update = InputProfile {
+            access_information_mozilliansorg: Some(Display::Ndaed),
+            ..Default::default()
+        };
+        update.update_profile(&mut p, &secret_store, &fossil_settings)?;
+        assert_eq!(
+            p.access_information.mozilliansorg.values,
+            Some(KeyValue(groups))
+        );
+        assert_eq!(
+            p.access_information.mozilliansorg.metadata.display,
+            Some(Display::Ndaed)
+        );
         Ok(())
     }
 }
