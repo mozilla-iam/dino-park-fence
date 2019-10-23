@@ -1,23 +1,5 @@
-extern crate actix_cors;
-extern crate actix_web;
-extern crate biscuit;
-extern crate chrono;
-extern crate cis_client;
-extern crate cis_profile;
-extern crate config;
-extern crate dino_park_gate;
-extern crate env_logger;
-extern crate failure;
-extern crate futures;
-extern crate percent_encoding;
-extern crate reqwest;
-extern crate serde;
-extern crate url;
-
 #[macro_use]
 extern crate juniper;
-#[macro_use]
-extern crate log;
 #[macro_use]
 extern crate serde_derive;
 
@@ -41,6 +23,7 @@ use cis_client::CisClient;
 use dino_park_gate::provider::Provider;
 use dino_park_gate::scope::ScopeAndUserAuth;
 use failure::Error;
+use log::info;
 
 fn main() -> Result<(), Error> {
     ::std::env::set_var(

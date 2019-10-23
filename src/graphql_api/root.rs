@@ -9,6 +9,9 @@ use dino_park_gate::scope::ScopeAndUser;
 use juniper::FieldError;
 use juniper::FieldResult;
 use juniper::RootNode;
+use log::error;
+use log::info;
+use log::warn;
 use reqwest::Client;
 
 pub struct Query<T: AsyncCisClientTrait> {

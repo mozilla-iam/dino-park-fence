@@ -14,6 +14,7 @@ use dino_park_gate::scope::ScopeAndUser;
 use futures::Future;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
+use log::info;
 use std::sync::Arc;
 
 #[derive(Clone)]

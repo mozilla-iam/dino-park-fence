@@ -5,6 +5,7 @@ use actix_web::Error;
 use actix_web::HttpResponse;
 use futures::Future;
 use futures::Stream;
+use log::info;
 use serde_json::Value;
 
 pub fn proxy(client: &Client, endpoint: &str) -> impl Future<Item = HttpResponse, Error = Error> {
