@@ -379,9 +379,12 @@ pub struct IdentitiesWithDisplay {
 
 #[derive(GraphQLInputObject, Default)]
 pub struct InputProfile {
+    pub access_information_mozilliansorg: Option<Display>,
     pub active: Option<BoolWithDisplay>,
     pub alternative_name: Option<StringWithDisplay>,
     pub created: Option<StringWithDisplay>,
+    pub custom_1_primary_email: Option<StringWithDisplay>,
+    pub custom_2_primary_email: Option<StringWithDisplay>,
     pub description: Option<StringWithDisplay>,
     pub first_name: Option<StringWithDisplay>,
     pub fun_title: Option<StringWithDisplay>,
@@ -403,7 +406,6 @@ pub struct InputProfile {
     pub uris: Option<KeyValuesWithDisplay>,
     pub user_id: Option<StringWithDisplay>,
     pub usernames: Option<KeyValuesWithDisplay>,
-    pub access_information_mozilliansorg: Option<Display>,
 }
 
 impl InputProfile {
@@ -421,6 +423,18 @@ impl InputProfile {
             secret_store,
         )?;
         update_string(&self.created, &mut p.created, now, secret_store)?;
+        update_string(
+            &self.custom_1_primary_email,
+            &mut p.identities.custom_1_primary_email,
+            now,
+            secret_store,
+        )?;
+        update_string(
+            &self.custom_2_primary_email,
+            &mut p.identities.custom_2_primary_email,
+            now,
+            secret_store,
+        )?;
         update_string(&self.description, &mut p.description, now, secret_store)?;
         update_string(&self.first_name, &mut p.first_name, now, secret_store)?;
         update_string(&self.fun_title, &mut p.fun_title, now, secret_store)?;
