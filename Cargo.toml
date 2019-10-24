@@ -1,6 +1,6 @@
 [package]
 name = "dino-park-fence"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Florian Merz <flomerz@gmail.com>"]
 edition = "2018"
 
@@ -9,7 +9,7 @@ default = []
 nouid = []
 
 [dependencies]
-cis_client = { git = "https://github.com/fiji-flo/cis_client-rust", branch = "0.1.4", version = "0.1.4" }
+cis_client = { git = "https://github.com/fiji-flo/cis_client-rust", branch = "0.1.5", version = "0.1.5" }
 cis_profile = { git = "https://github.com/fiji-flo/cis_profile-rust", branch = "0.1.3", version = "0.1.3", features = ["graphql", "aws", "vendored"] }
 dino_park_gate = { git = "https://github.com/fiji-flo/dino-park-gate", branch = "0.1.0-beta.4", version = "0.1.0-beta.4" }
 actix-web = "1.0"

@@ -469,8 +469,8 @@ dependencies = [
 
 [[package]]
 name = "cis_client"
-version = "0.1.4"
-source = "git+https://github.com/fiji-flo/cis_client-rust?branch=0.1.4#b915d8b6629049e5ee57b3d4f0d1735a9d462255"
+version = "0.1.5"
+source = "git+https://github.com/fiji-flo/cis_client-rust?branch=0.1.5#91316cbd4816a6e9587a23a6f55e4d1e33cc6ab0"
 dependencies = [
  "biscuit 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -678,13 +678,13 @@ dependencies = [
 
 [[package]]
 name = "dino-park-fence"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "actix-cors 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "actix-web 1.0.8 (registry+https://github.com/rust-lang/crates.io-index)",
  "biscuit 0.2.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)",
- "cis_client 0.1.4 (git+https://github.com/fiji-flo/cis_client-rust?branch=0.1.4)",
+ "cis_client 0.1.5 (git+https://github.com/fiji-flo/cis_client-rust?branch=0.1.5)",
  "cis_profile 0.1.3 (git+https://github.com/fiji-flo/cis_profile-rust?branch=0.1.3)",
  "config 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "dino_park_gate 0.1.0-beta.4 (git+https://github.com/fiji-flo/dino-park-gate?branch=0.1.0-beta.4)",
@@ -2659,7 +2659,7 @@ dependencies = [
 "checksum cfg-if 0.1.10 (registry+https://github.com/rust-lang/crates.io-index)" = "4785bdd1c96b2a846b2bd7cc02e86b6b3dbf14e7e53446c4f54c92a361040822"
 "checksum chrono 0.4.9 (registry+https://github.com/rust-lang/crates.io-index)" = "e8493056968583b0193c1bb04d6f7684586f3726992d6c573261941a895dbd68"
 "checksum chrono-tz 0.5.1 (registry+https://github.com/rust-lang/crates.io-index)" = "e0e430fad0384e4defc3dc6b1223d1b886087a8bf9b7080e5ae027f73851ea15"
-"checksum cis_client 0.1.4 (git+https://github.com/fiji-flo/cis_client-rust?branch=0.1.4)" = "<none>"
+"checksum cis_client 0.1.5 (git+https://github.com/fiji-flo/cis_client-rust?branch=0.1.5)" = "<none>"
 "checksum cis_profile 0.1.3 (git+https://github.com/fiji-flo/cis_profile-rust?branch=0.1.3)" = "<none>"
 "checksum cloudabi 0.0.3 (registry+https://github.com/rust-lang/crates.io-index)" = "ddfc5b9aa5d4507acaf872de71051dfd0e309860e88966e1051e462a077aac4f"
 "checksum config 0.9.3 (registry+https://github.com/rust-lang/crates.io-index)" = "f9107d78ed62b3fa5a86e7d18e647abed48cfd8f8fab6c72f4cdb982d196f7e6"
