@@ -5,6 +5,7 @@ extern crate serde_derive;
 
 mod graphql_api;
 mod healthz;
+mod metrics;
 mod orgchart;
 mod proxy;
 mod search;
@@ -12,6 +13,7 @@ mod settings;
 
 use crate::graphql_api::app::graphql_app;
 use crate::healthz::healthz_app;
+use crate::metrics::metrics_app;
 use crate::orgchart::app::orgchart_app;
 use crate::search::app::search_app;
 
@@ -32,6 +34,7 @@ fn main() -> Result<(), Error> {
     );
     env_logger::init();
     info!("building the fence");
+    let m = metrics::Metrics::new()?;
     let s = settings::Settings::new()?;
     let cis_client = CisClient::from_settings(&s.cis)?;
     let dino_park_settings = s.dino_park.clone();
@@ -43,6 +46,7 @@ fn main() -> Result<(), Error> {
         };
         App::new()
             .wrap(Logger::default().exclude("/healthz"))
+            .data(m.clone())
             .service(
                 web::scope("/api/v4/")
                     .wrap(scope_middleware)
@@ -51,6 +55,7 @@ fn main() -> Result<(), Error> {
                     .service(orgchart_app(&dino_park_settings.orgchart)),
             )
             .service(healthz_app())
+            .service(metrics_app())
     })
     .bind("0.0.0.0:8081")?
     .run()
