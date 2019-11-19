@@ -40,6 +40,7 @@ fn update_profile(
     cis_client: &impl AsyncCisClientTrait,
     dinopark_settings: &DinoParkServices,
     user: &Option<String>,
+    scope: String,
 ) -> FieldResult<(Profile, bool)> {
     let user_id = user
         .clone()
@@ -86,6 +87,7 @@ fn update_profile(
     let changed = update
         .update_profile(
             &mut profile,
+            &scope,
             cis_client.get_secret_store(),
             &dinopark_settings.fossil,
         )
@@ -140,6 +142,7 @@ impl<T: AsyncCisClientTrait> Mutation<T> {
             &self.cis_client,
             &self.dinopark_settings,
             &Some(executor.context().0.user_id.clone()),
+            executor.context().0.scope.clone(),
         ) {
             Ok((profile, true)) => {
                 executor.context().1.counters.field_any_changed.inc();
