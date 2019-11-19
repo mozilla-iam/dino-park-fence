@@ -12,9 +12,29 @@ use cis_profile::schema::Profile;
 use cis_profile::schema::PublisherAuthority;
 use cis_profile::schema::StandardAttributeString;
 use cis_profile::schema::StandardAttributeValues;
+use failure::format_err;
 use failure::Error;
 use juniper::GraphQLInputObject;
 use std::collections::BTreeMap;
+
+const DISPLAY_ANY: &[Display; 6] = &[
+    Display::Private,
+    Display::Staff,
+    Display::Ndaed,
+    Display::Vouched,
+    Display::Authenticated,
+    Display::Public,
+];
+
+const DISPLAY_NOT_PRIVATE: &[Display; 5] = &[
+    Display::Staff,
+    Display::Ndaed,
+    Display::Vouched,
+    Display::Authenticated,
+    Display::Public,
+];
+
+const DISPLAY_PRIVATE_STAFF: &[Display; 2] = &[Display::Private, Display::Staff];
 
 fn create_usernames_key(typ: &str) -> String {
     format!("HACK#{}", typ)
@@ -25,9 +45,13 @@ fn update_access_information_display(
     p: &mut AccessInformationProviderSubObject,
     now: &str,
     store: &impl Signer,
-) -> Result<(), Error> {
+    allowed: &[Display],
+) -> Result<bool, Error> {
     if *d != p.metadata.display {
         if let Some(display) = &d {
+            if !allowed.contains(display) {
+                return Err(format_err!("invalid display level"));
+            }
             // Initialize with empty values if there are now access groups.
             if p.values.is_none() {
                 p.values = Some(KeyValue(BTreeMap::default()));
@@ -36,9 +60,10 @@ fn update_access_information_display(
             p.metadata.last_modified = now.to_owned();
             p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
             store.sign_attribute(p)?;
+            return Ok(true);
         }
     }
-    Ok(())
+    Ok(false)
 }
 
 fn update_picture(
@@ -48,11 +73,14 @@ fn update_picture(
     now: &str,
     store: &impl Signer,
     fossil_settings: &Fossil,
-) -> Result<(), Error> {
+) -> Result<bool, Error> {
+    let mut changed = false;
     if let Some(new_picture) = s {
-        let mut changed = false;
         if new_picture.display != p.metadata.display {
             if let Some(display) = &new_picture.display {
+                if !DISPLAY_NOT_PRIVATE.contains(display) {
+                    return Err(format_err!("invalid display level"));
+                }
                 // if display changed but field is null change it to empty string
                 if p.value.is_none() {
                     p.value = Some(String::default());
@@ -107,7 +135,7 @@ fn update_picture(
             store.sign_attribute(p)?;
         }
     }
-    Ok(())
+    Ok(changed)
 }
 
 fn update_bugzilla_identity(
@@ -116,29 +144,32 @@ fn update_bugzilla_identity(
     u: &mut StandardAttributeValues,
     now: &str,
     store: &impl Signer,
-) -> Result<(), Error> {
-    let mut sign_bugzilla = false;
-    let mut sign_usernames = false;
+) -> Result<bool, Error> {
+    let mut changed_bugzilla = false;
+    let mut changed_usernames = false;
     if bugzilla.remove.unwrap_or_default() {
         p.bugzilla_mozilla_org_id.metadata.display = Some(Display::Staff);
         p.bugzilla_mozilla_org_primary_email.metadata.display = Some(Display::Staff);
 
         if let Some(KeyValue(usernames)) = &mut u.values {
             if usernames.remove(&create_usernames_key("BMOMAIL")).is_some() {
-                sign_usernames = true;
+                changed_usernames = true;
             }
             if usernames.remove(&create_usernames_key("BMONICK")).is_some() {
-                sign_usernames = true;
+                changed_usernames = true;
             }
         }
 
         p.bugzilla_mozilla_org_id.value = Some(String::default());
         p.bugzilla_mozilla_org_primary_email.value = Some(String::default());
-        sign_bugzilla = true;
+        changed_bugzilla = true;
     } else if bugzilla.display != p.bugzilla_mozilla_org_id.metadata.display
         || bugzilla.display != p.bugzilla_mozilla_org_primary_email.metadata.display
     {
         if let Some(display) = &bugzilla.display {
+            if !DISPLAY_NOT_PRIVATE.contains(display) {
+                return Err(format_err!("invalid display level"));
+            }
             if p.bugzilla_mozilla_org_id.value.is_none() {
                 p.bugzilla_mozilla_org_id.value = Some(String::default())
             }
@@ -148,11 +179,11 @@ fn update_bugzilla_identity(
 
             p.bugzilla_mozilla_org_id.metadata.display = Some(display.clone());
             p.bugzilla_mozilla_org_primary_email.metadata.display = Some(display.clone());
-            sign_bugzilla = true;
+            changed_bugzilla = true;
         }
     }
 
-    if sign_bugzilla {
+    if changed_bugzilla {
         p.bugzilla_mozilla_org_id.metadata.last_modified = now.to_owned();
         p.bugzilla_mozilla_org_primary_email.metadata.last_modified = now.to_owned();
         p.bugzilla_mozilla_org_id.signature.publisher.name = PublisherAuthority::Mozilliansorg;
@@ -164,13 +195,13 @@ fn update_bugzilla_identity(
         store.sign_attribute(&mut p.bugzilla_mozilla_org_primary_email)?;
     }
 
-    if sign_usernames {
+    if changed_usernames {
         u.metadata.last_modified = now.to_owned();
         u.signature.publisher.name = PublisherAuthority::Mozilliansorg;
         store.sign_attribute(u)?;
     }
 
-    Ok(())
+    Ok(changed_bugzilla || changed_usernames)
 }
 
 fn update_github_identity(
@@ -179,9 +210,9 @@ fn update_github_identity(
     u: &mut StandardAttributeValues,
     now: &str,
     store: &impl Signer,
-) -> Result<(), Error> {
-    let mut sign_github = false;
-    let mut sign_usernames = false;
+) -> Result<bool, Error> {
+    let mut changed_github = false;
+    let mut changed_usernames = false;
     if github.remove.unwrap_or_default() {
         p.github_id_v3.metadata.display = Some(Display::Staff);
         p.github_id_v4.metadata.display = Some(Display::Staff);
@@ -189,19 +220,22 @@ fn update_github_identity(
 
         if let Some(KeyValue(usernames)) = &mut u.values {
             if usernames.remove(&create_usernames_key("GITHUB")).is_some() {
-                sign_usernames = true;
+                changed_usernames = true;
             }
         }
 
         p.github_id_v3.value = Some(String::default());
         p.github_id_v4.value = Some(String::default());
         p.github_primary_email.value = Some(String::default());
-        sign_github = true;
+        changed_github = true;
     } else if github.display != p.github_id_v3.metadata.display
         || github.display != p.github_id_v4.metadata.display
         || github.display != p.github_primary_email.metadata.display
     {
         if let Some(display) = &github.display {
+            if !DISPLAY_NOT_PRIVATE.contains(display) {
+                return Err(format_err!("invalid display level"));
+            }
             if p.github_id_v3.value.is_none() {
                 p.github_id_v3.value = Some(String::default())
             }
@@ -215,11 +249,11 @@ fn update_github_identity(
             p.github_id_v3.metadata.display = Some(display.clone());
             p.github_id_v4.metadata.display = Some(display.clone());
             p.github_primary_email.metadata.display = Some(display.clone());
-            sign_github = true;
+            changed_github = true;
         }
     }
 
-    if sign_github {
+    if changed_github {
         p.github_id_v3.metadata.last_modified = now.to_owned();
         p.github_id_v4.metadata.last_modified = now.to_owned();
         p.github_primary_email.metadata.last_modified = now.to_owned();
@@ -231,13 +265,13 @@ fn update_github_identity(
         store.sign_attribute(&mut p.github_primary_email)?;
     }
 
-    if sign_usernames {
+    if changed_usernames {
         u.metadata.last_modified = now.to_owned();
         u.signature.publisher.name = PublisherAuthority::Mozilliansorg;
         store.sign_attribute(u)?;
     }
 
-    Ok(())
+    Ok(changed_github || changed_usernames)
 }
 
 fn update_identities(
@@ -246,17 +280,74 @@ fn update_identities(
     u: &mut StandardAttributeValues,
     now: &str,
     store: &impl Signer,
-) -> Result<(), Error> {
+) -> Result<bool, Error> {
+    let mut changed = false;
     if let Some(identities) = i {
         if let Some(github) = &identities.github {
-            update_github_identity(github, p, u, now, store)?;
+            changed |= update_github_identity(github, p, u, now, store)?;
         }
         if let Some(bugzilla) = &identities.bugzilla {
-            update_bugzilla_identity(bugzilla, p, u, now, store)?;
+            changed |= update_bugzilla_identity(bugzilla, p, u, now, store)?;
         }
     }
 
-    Ok(())
+    Ok(changed)
+}
+
+fn update_display_for_string(
+    d: &Option<Display>,
+    p: &mut StandardAttributeString,
+    now: &str,
+    store: &impl Signer,
+    allowed: &[Display],
+) -> Result<bool, Error> {
+    let mut changed = false;
+    if d != &p.metadata.display {
+        if let Some(display) = &d {
+            if !allowed.contains(display) {
+                return Err(format_err!("invalid display level"));
+            }
+            // if display changed but field is null we cannot do anything
+            if p.value.is_some() {
+                p.metadata.display = Some(display.clone());
+                changed = true;
+            }
+        }
+    }
+    if changed {
+        p.metadata.last_modified = now.to_owned();
+        p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+        store.sign_attribute(p)?;
+    }
+    Ok(changed)
+}
+
+fn update_display_for_key_values(
+    d: &Option<Display>,
+    p: &mut StandardAttributeValues,
+    now: &str,
+    store: &impl Signer,
+    allowed: &[Display],
+) -> Result<bool, Error> {
+    let mut changed = false;
+    if d != &p.metadata.display {
+        if let Some(display) = &d {
+            if !allowed.contains(display) {
+                return Err(format_err!("invalid display level"));
+            }
+            // if display changed but field is null change it to empty string
+            if p.values.is_some() {
+                p.metadata.display = Some(display.clone());
+                changed = true;
+            }
+        }
+    }
+    if changed {
+        p.metadata.last_modified = now.to_owned();
+        p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+        store.sign_attribute(p)?;
+    }
+    Ok(changed)
 }
 
 fn update_string(
@@ -264,32 +355,36 @@ fn update_string(
     p: &mut StandardAttributeString,
     now: &str,
     store: &impl Signer,
-) -> Result<(), Error> {
+    allowed: &[Display],
+) -> Result<bool, Error> {
+    let mut changed = false;
     if let Some(x) = s {
-        let mut sign = false;
         if x.value != p.value {
             if let Some(value) = &x.value {
                 p.value = Some(value.clone());
-                sign = true;
+                changed = true;
             }
         }
         if x.display != p.metadata.display {
             if let Some(display) = &x.display {
+                if !allowed.contains(display) {
+                    return Err(format_err!("invalid display level"));
+                }
                 // if display changed but field is null change it to empty string
                 if p.value.is_none() {
                     p.value = Some(String::default());
                 }
                 p.metadata.display = Some(display.clone());
-                sign = true;
+                changed = true;
             }
         }
-        if sign {
+        if changed {
             p.metadata.last_modified = now.to_owned();
             p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
             store.sign_attribute(p)?;
         }
     }
-    Ok(())
+    Ok(changed)
 }
 
 fn update_key_values(
@@ -298,9 +393,10 @@ fn update_key_values(
     now: &str,
     store: &impl Signer,
     filter_empty_values: bool,
-) -> Result<(), Error> {
+    allowed: &[Display],
+) -> Result<bool, Error> {
+    let mut changed = false;
     if let Some(x) = s {
-        let mut sign = false;
         if let Some(values) = &x.values {
             let values: BTreeMap<String, Option<String>> = if filter_empty_values {
                 values
@@ -320,25 +416,28 @@ fn update_key_values(
             if kv != p.values {
                 p.values = kv;
             }
-            sign = true;
+            changed = true;
         }
         if x.display != p.metadata.display {
             if let Some(display) = &x.display {
+                if !allowed.contains(display) {
+                    return Err(format_err!("invalid display level"));
+                }
                 // if display changed but field is null change it to empty dict
                 if p.values.is_none() {
                     p.values = Some(KeyValue(BTreeMap::default()));
                 }
                 p.metadata.display = Some(display.clone());
-                sign = true;
+                changed = true;
             }
         }
-        if sign {
+        if changed {
             p.metadata.last_modified = now.to_owned();
             p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
             store.sign_attribute(p)?;
         }
     }
-    Ok(())
+    Ok(changed)
 }
 
 #[derive(GraphQLInputObject, Default)]
@@ -379,6 +478,7 @@ pub struct IdentitiesWithDisplay {
 
 #[derive(GraphQLInputObject, Default)]
 pub struct InputProfile {
+    pub access_information_ldap: Option<Display>,
     pub access_information_mozilliansorg: Option<Display>,
     pub active: Option<BoolWithDisplay>,
     pub alternative_name: Option<StringWithDisplay>,
@@ -394,13 +494,15 @@ pub struct InputProfile {
     pub last_name: Option<StringWithDisplay>,
     pub location: Option<StringWithDisplay>,
     pub login_method: Option<StringWithDisplay>,
-    pub pgp_public_keys: Option<KeyValuesWithDisplay>,
+    pub pgp_public_keys: Option<Display>,
     pub phone_numbers: Option<KeyValuesWithDisplay>,
     pub picture: Option<StringWithDisplay>,
-    pub primary_email: Option<StringWithDisplay>,
+    pub primary_email: Option<Display>,
     pub primary_username: Option<StringWithDisplay>,
     pub pronouns: Option<StringWithDisplay>,
-    pub ssh_public_keys: Option<KeyValuesWithDisplay>,
+    pub ssh_public_keys: Option<Display>,
+    pub staff_information_title: Option<Display>,
+    pub staff_information_office_location: Option<Display>,
     pub tags: Option<KeyValuesWithDisplay>,
     pub timezone: Option<StringWithDisplay>,
     pub uris: Option<KeyValuesWithDisplay>,
@@ -414,35 +516,87 @@ impl InputProfile {
         p: &mut Profile,
         secret_store: &impl Signer,
         fossil_settings: &Fossil,
-    ) -> Result<(), Error> {
+    ) -> Result<bool, Error> {
         let now = &Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true);
-        update_string(
+        let mut changed = false;
+        changed |= update_string(
             &self.alternative_name,
             &mut p.alternative_name,
             now,
             secret_store,
+            DISPLAY_NOT_PRIVATE,
         )?;
-        update_string(&self.created, &mut p.created, now, secret_store)?;
-        update_string(
+        changed |= update_string(
+            &self.created,
+            &mut p.created,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_string(
             &self.custom_1_primary_email,
             &mut p.identities.custom_1_primary_email,
             now,
             secret_store,
+            DISPLAY_NOT_PRIVATE,
         )?;
-        update_string(
+        changed |= update_string(
             &self.custom_2_primary_email,
             &mut p.identities.custom_2_primary_email,
             now,
             secret_store,
+            DISPLAY_NOT_PRIVATE,
         )?;
-        update_string(&self.description, &mut p.description, now, secret_store)?;
-        update_string(&self.first_name, &mut p.first_name, now, secret_store)?;
-        update_string(&self.fun_title, &mut p.fun_title, now, secret_store)?;
-        update_string(&self.last_modified, &mut p.last_modified, now, secret_store)?;
-        update_string(&self.last_name, &mut p.last_name, now, secret_store)?;
-        update_string(&self.location, &mut p.location, now, secret_store)?;
-        update_string(&self.login_method, &mut p.login_method, now, secret_store)?;
-        update_picture(
+        changed |= update_string(
+            &self.description,
+            &mut p.description,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_string(
+            &self.first_name,
+            &mut p.first_name,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_string(
+            &self.fun_title,
+            &mut p.fun_title,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_string(
+            &self.last_modified,
+            &mut p.last_modified,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_string(
+            &self.last_name,
+            &mut p.last_name,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_string(
+            &self.location,
+            &mut p.location,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_string(
+            &self.login_method,
+            &mut p.login_method,
+            now,
+            secret_store,
+            DISPLAY_ANY,
+        )?;
+        changed |= update_picture(
             &self.picture,
             &mut p.picture,
             &p.uuid,
@@ -450,43 +604,97 @@ impl InputProfile {
             secret_store,
             &fossil_settings,
         )?;
-        update_string(&self.primary_email, &mut p.primary_email, now, secret_store)?;
-        update_string(
+        changed |= update_display_for_string(
+            &self.primary_email,
+            &mut p.primary_email,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_string(
             &self.primary_username,
             &mut p.primary_username,
             now,
             secret_store,
+            &[Display::Public],
         )?;
-        update_string(&self.pronouns, &mut p.pronouns, now, secret_store)?;
-        update_string(&self.timezone, &mut p.timezone, now, secret_store)?;
-        update_string(&self.user_id, &mut p.user_id, now, secret_store)?;
+        changed |= update_string(
+            &self.pronouns,
+            &mut p.pronouns,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_string(
+            &self.timezone,
+            &mut p.timezone,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_string(
+            &self.user_id,
+            &mut p.user_id,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
 
-        update_key_values(&self.languages, &mut p.languages, now, secret_store, false)?;
-        update_key_values(
+        changed |= update_key_values(
+            &self.languages,
+            &mut p.languages,
+            now,
+            secret_store,
+            false,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_key_values(
             &self.phone_numbers,
             &mut p.phone_numbers,
             now,
             secret_store,
             true,
+            DISPLAY_ANY,
         )?;
-        update_key_values(&self.tags, &mut p.tags, now, secret_store, false)?;
-        update_key_values(&self.usernames, &mut p.usernames, now, secret_store, true)?;
-        update_key_values(&self.uris, &mut p.uris, now, secret_store, true)?;
-        update_key_values(
+        changed |= update_key_values(
+            &self.tags,
+            &mut p.tags,
+            now,
+            secret_store,
+            false,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_key_values(
+            &self.usernames,
+            &mut p.usernames,
+            now,
+            secret_store,
+            true,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_key_values(
+            &self.uris,
+            &mut p.uris,
+            now,
+            secret_store,
+            true,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_display_for_key_values(
             &self.pgp_public_keys,
             &mut p.pgp_public_keys,
             now,
             secret_store,
-            true,
+            DISPLAY_ANY,
         )?;
-        update_key_values(
+        changed |= update_display_for_key_values(
             &self.ssh_public_keys,
             &mut p.ssh_public_keys,
             now,
             secret_store,
-            true,
+            DISPLAY_ANY,
         )?;
-        update_identities(
+        changed |= update_identities(
             &self.identities,
             &mut p.identities,
             &mut p.usernames,
@@ -494,13 +702,35 @@ impl InputProfile {
             secret_store,
         )?;
 
-        update_access_information_display(
+        changed |= update_access_information_display(
             &self.access_information_mozilliansorg,
             &mut p.access_information.mozilliansorg,
             now,
             secret_store,
+            DISPLAY_NOT_PRIVATE,
         )?;
-        Ok(())
+        changed |= update_access_information_display(
+            &self.access_information_ldap,
+            &mut p.access_information.ldap,
+            now,
+            secret_store,
+            DISPLAY_PRIVATE_STAFF,
+        )?;
+        changed |= update_display_for_string(
+            &self.staff_information_title,
+            &mut p.staff_information.title,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_display_for_string(
+            &self.staff_information_office_location,
+            &mut p.staff_information.office_location,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        Ok(changed)
     }
 }
 
@@ -535,6 +765,27 @@ mod test {
         assert_eq!(p.fun_title.value, None);
         update.update_profile(&mut p, &secret_store, &fossil_settings)?;
         assert_eq!(p.fun_title.value, update.fun_title.unwrap().value);
+        Ok(())
+    }
+
+    #[test]
+    fn test_update_with_invalid_display_fails() -> Result<(), Error> {
+        let secret_store = get_fake_secret_store();
+        let fossil_settings = Fossil {
+            upload_endpoint: String::default(),
+        };
+        let mut p = Profile::default();
+        let mut update = InputProfile::default();
+        update.fun_title = Some(StringWithDisplay {
+            value: None,
+            display: Some(Display::Private),
+        });
+        assert_eq!(p.pronouns.value, None);
+        assert_eq!(p.fun_title.value, None);
+        assert_ne!(p.fun_title.metadata.display, Some(Display::Private));
+        assert!(update
+            .update_profile(&mut p, &secret_store, &fossil_settings)
+            .is_err());
         Ok(())
     }
 

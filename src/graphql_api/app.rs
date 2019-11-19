@@ -1,4 +1,5 @@
 use crate::graphql_api::root::{Mutation, Query, Schema};
+use crate::metrics::Metrics;
 use crate::settings::DinoParkServices;
 use actix_cors::Cors;
 use actix_web::dev::HttpServiceFactory;
@@ -36,6 +37,7 @@ fn graphql<T: AsyncCisClientTrait + Send + Sync>(
     data: Json<GraphQLRequest>,
     state: Data<GraphQlState<T>>,
     scope_and_user: ScopeAndUser,
+    metrics: Data<Metrics>,
 ) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
     info!(
         "graphql for {:?} → {:?}",
@@ -43,7 +45,7 @@ fn graphql<T: AsyncCisClientTrait + Send + Sync>(
     );
     let schema = Arc::clone(&state.schema);
     let res = web::block(move || {
-        let r = data.execute(&schema, &(scope_and_user));
+        let r = data.execute(&schema, &(scope_and_user, (*metrics).clone()));
         Ok::<_, serde_json::error::Error>(serde_json::to_string(&r)?)
     })
     .map_err(Error::from);
