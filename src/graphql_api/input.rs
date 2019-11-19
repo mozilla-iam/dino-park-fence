@@ -514,6 +514,7 @@ impl InputProfile {
     pub fn update_profile(
         &self,
         p: &mut Profile,
+        scope: &str,
         secret_store: &impl Signer,
         fossil_settings: &Fossil,
     ) -> Result<bool, Error> {
@@ -609,7 +610,11 @@ impl InputProfile {
             &mut p.primary_email,
             now,
             secret_store,
-            DISPLAY_NOT_PRIVATE,
+            if scope == "staff" {
+                DISPLAY_NOT_PRIVATE
+            } else {
+                DISPLAY_ANY
+            },
         )?;
         changed |= update_string(
             &self.primary_username,
@@ -763,7 +768,7 @@ mod test {
             display: None,
         });
         assert_eq!(p.fun_title.value, None);
-        update.update_profile(&mut p, &secret_store, &fossil_settings)?;
+        update.update_profile(&mut p, "staff", &secret_store, &fossil_settings)?;
         assert_eq!(p.fun_title.value, update.fun_title.unwrap().value);
         Ok(())
     }
@@ -784,7 +789,7 @@ mod test {
         assert_eq!(p.fun_title.value, None);
         assert_ne!(p.fun_title.metadata.display, Some(Display::Private));
         assert!(update
-            .update_profile(&mut p, &secret_store, &fossil_settings)
+            .update_profile(&mut p, "staff", &secret_store, &fossil_settings)
             .is_err());
         Ok(())
     }
@@ -804,7 +809,7 @@ mod test {
         assert_eq!(p.pronouns.value, None);
         assert_eq!(p.fun_title.value, None);
         assert_ne!(p.fun_title.metadata.display, Some(Display::Vouched));
-        update.update_profile(&mut p, &secret_store, &fossil_settings)?;
+        update.update_profile(&mut p, "staff", &secret_store, &fossil_settings)?;
         assert_eq!(p.pronouns.value, None);
         assert_eq!(p.fun_title.value, Some(String::default()));
         assert_eq!(p.fun_title.metadata.display, Some(Display::Vouched));
@@ -826,7 +831,7 @@ mod test {
         assert_eq!(p.tags.values, None);
         assert_eq!(p.languages.values, None);
         assert_ne!(p.languages.metadata.display, Some(Display::Vouched));
-        update.update_profile(&mut p, &secret_store, &fossil_settings)?;
+        update.update_profile(&mut p, "staff", &secret_store, &fossil_settings)?;
         assert_eq!(p.tags.values, None);
         assert_eq!(p.languages.values, Some(Default::default()));
         assert_eq!(p.languages.metadata.display, Some(Display::Vouched));
@@ -849,7 +854,7 @@ mod test {
             p.access_information.mozilliansorg.metadata.display,
             Some(Display::Ndaed)
         );
-        update.update_profile(&mut p, &secret_store, &fossil_settings)?;
+        update.update_profile(&mut p, "staff", &secret_store, &fossil_settings)?;
         assert_eq!(
             p.access_information.mozilliansorg.values,
             Some(KeyValue(BTreeMap::default()))
@@ -879,7 +884,7 @@ mod test {
             access_information_mozilliansorg: Some(Display::Ndaed),
             ..Default::default()
         };
-        update.update_profile(&mut p, &secret_store, &fossil_settings)?;
+        update.update_profile(&mut p, "staff", &secret_store, &fossil_settings)?;
         assert_eq!(
             p.access_information.mozilliansorg.values,
             Some(KeyValue(groups))
