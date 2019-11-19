@@ -1,4 +1,6 @@
+use crate::graphql_api::error::field_error;
 use crate::graphql_api::input::InputProfile;
+use crate::metrics::Metrics;
 use crate::settings::DinoParkServices;
 use actix_web::test;
 use cis_client::getby::GetBy;
@@ -17,11 +19,6 @@ use reqwest::Client;
 pub struct Query<T: AsyncCisClientTrait> {
     pub cis_client: T,
     pub dinopark_settings: DinoParkServices,
-}
-
-fn field_error(msg: &str, e: impl std::fmt::Display) -> FieldError {
-    let error = format!("{}: {}", msg, e);
-    FieldError::new(msg, graphql_value!({ "internal_error": error }))
 }
 
 fn get_profile(
@@ -43,7 +40,8 @@ fn update_profile(
     cis_client: &impl AsyncCisClientTrait,
     dinopark_settings: &DinoParkServices,
     user: &Option<String>,
-) -> FieldResult<Profile> {
+    scope: String,
+) -> FieldResult<(Profile, bool)> {
     let user_id = user
         .clone()
         .ok_or_else(|| field_error("no username in query or scope", "?!"))?;
@@ -86,35 +84,41 @@ fn update_profile(
         }
     }
 
-    update
+    let changed = update
         .update_profile(
             &mut profile,
+            &scope,
             cis_client.get_secret_store(),
             &dinopark_settings.fossil,
         )
         .map_err(|e| field_error("unable update/sign profle", e))?;
-    let ret = test::block_on(cis_client.update_user(&user_id, profile))?;
-    info!("update returned: {}", ret);
-    let updated_profile = test::block_on(cis_client.get_user_by(&user_id, &GetBy::UserId, None))?;
-    if dinopark_settings.lookout.internal_update_enabled {
-        if let Err(e) = Client::new()
-            .post(&dinopark_settings.lookout.internal_update_endpoint)
-            .json(&updated_profile)
-            .send()
-        {
-            error!("unable to post to lookout: {}", e);
+    if changed {
+        let ret = test::block_on(cis_client.update_user(&user_id, profile))?;
+        info!("update returned: {}", ret);
+        let updated_profile =
+            test::block_on(cis_client.get_user_by(&user_id, &GetBy::UserId, None))?;
+        if dinopark_settings.lookout.internal_update_enabled {
+            if let Err(e) = Client::new()
+                .post(&dinopark_settings.lookout.internal_update_endpoint)
+                .json(&updated_profile)
+                .send()
+            {
+                error!("unable to post to lookout: {}", e);
+            }
         }
+        Ok((updated_profile, changed))
+    } else {
+        Ok((profile, changed))
     }
-    Ok(updated_profile)
 }
 
 #[juniper::object{
-    Context = (ScopeAndUser)
+    Context = (ScopeAndUser, Metrics)
 }]
 impl<T: AsyncCisClientTrait> Query<T> {
     fn profile(username: Option<String>, view_as: Option<Display>) -> FieldResult<Profile> {
         let executor = &executor;
-        let scope_and_user = executor.context();
+        let scope_and_user = &executor.context().0;
 
         let params = get_profile_params(username, scope_and_user, view_as)?;
 
@@ -128,17 +132,25 @@ impl<T: AsyncCisClientTrait> Query<T> {
 }
 
 #[juniper::object{
-    Context = (ScopeAndUser)
+    Context = (ScopeAndUser, Metrics)
 }]
 impl<T: AsyncCisClientTrait> Mutation<T> {
     fn profile(update: InputProfile) -> FieldResult<Profile> {
         let executor = &executor;
-        update_profile(
+        match update_profile(
             update,
             &self.cis_client,
             &self.dinopark_settings,
-            &Some(executor.context().user_id.clone()),
-        )
+            &Some(executor.context().0.user_id.clone()),
+            executor.context().0.scope.clone(),
+        ) {
+            Ok((profile, true)) => {
+                executor.context().1.counters.field_any_changed.inc();
+                Ok(profile)
+            }
+            Ok((profile, false)) => Ok(profile),
+            Err(e) => Err(e),
+        }
     }
 }
 
@@ -216,6 +228,7 @@ mod root_test {
         let scope_and_user = ScopeAndUser {
             user_id: String::from("user2"),
             scope: String::from("staff"),
+            groups_scope: None,
         };
         let params = get_profile_params(username, &scope_and_user, None)?;
         assert!(match params.by {
@@ -234,6 +247,7 @@ mod root_test {
         let scope_and_user = ScopeAndUser {
             user_id: String::from("user2"),
             scope: String::from("staff"),
+            groups_scope: None,
         };
         let params = get_profile_params(username, &scope_and_user, view_as)?;
         assert!(match params.by {
@@ -252,6 +266,7 @@ mod root_test {
         let scope_and_user = ScopeAndUser {
             user_id: String::from("user2"),
             scope: String::from("authenticated"),
+            groups_scope: None,
         };
         let params = get_profile_params(username, &scope_and_user, view_as);
         assert!(params.is_err());
@@ -263,6 +278,7 @@ mod root_test {
         let scope_and_user = ScopeAndUser {
             user_id: String::from("user1"),
             scope: String::from("staff"),
+            groups_scope: None,
         };
         let params = get_profile_params(None, &scope_and_user, None)?;
         assert!(match params.by {
@@ -280,6 +296,7 @@ mod root_test {
         let scope_and_user = ScopeAndUser {
             user_id: String::from("user1"),
             scope: String::from("authenticated"),
+            groups_scope: None,
         };
         let params = get_profile_params(None, &scope_and_user, view_as)?;
         assert!(match params.by {
