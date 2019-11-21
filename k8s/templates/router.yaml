@@ -50,6 +50,11 @@ data:
         location /whoami/ {
           proxy_pass http://dino-park-whoami-service:80;
         }
+        {{ if or (eq .Values.env "test") (eq .Values.env "dev") -}}
+        location /preview {
+          proxy_pass http://dino-park-front-end-preview-service:80;
+        }
+        {{ end -}}
         location / {
           proxy_pass http://dino-park-front-end-service:80;
         }
@@ -83,7 +88,7 @@ spec:
           containerPort: 80
         env:
         - name: force_update
-          value: "1"
+          value: "2"
         volumeMounts:
         - name: nginx-router
           mountPath: /etc/nginx/
