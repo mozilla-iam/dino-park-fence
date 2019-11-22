@@ -478,8 +478,10 @@ pub struct IdentitiesWithDisplay {
 
 #[derive(GraphQLInputObject, Default)]
 pub struct InputProfile {
-    pub access_information_ldap: Option<Display>,
+    pub access_information_ldap_display: Option<Display>,
+    // TODO: delete after upgrade
     pub access_information_mozilliansorg: Option<Display>,
+    pub access_information_mozilliansorg_display: Option<Display>,
     pub active: Option<BoolWithDisplay>,
     pub alternative_name: Option<StringWithDisplay>,
     pub created: Option<StringWithDisplay>,
@@ -494,15 +496,15 @@ pub struct InputProfile {
     pub last_name: Option<StringWithDisplay>,
     pub location: Option<StringWithDisplay>,
     pub login_method: Option<StringWithDisplay>,
-    pub pgp_public_keys: Option<Display>,
+    pub pgp_public_keys_display: Option<Display>,
     pub phone_numbers: Option<KeyValuesWithDisplay>,
     pub picture: Option<StringWithDisplay>,
-    pub primary_email: Option<Display>,
+    pub primary_email_display: Option<Display>,
     pub primary_username: Option<StringWithDisplay>,
     pub pronouns: Option<StringWithDisplay>,
-    pub ssh_public_keys: Option<Display>,
-    pub staff_information_title: Option<Display>,
-    pub staff_information_office_location: Option<Display>,
+    pub ssh_public_keys_display: Option<Display>,
+    pub staff_information_title_display: Option<Display>,
+    pub staff_information_office_location_display: Option<Display>,
     pub tags: Option<KeyValuesWithDisplay>,
     pub timezone: Option<StringWithDisplay>,
     pub uris: Option<KeyValuesWithDisplay>,
@@ -606,7 +608,7 @@ impl InputProfile {
             &fossil_settings,
         )?;
         changed |= update_display_for_string(
-            &self.primary_email,
+            &self.primary_email_display,
             &mut p.primary_email,
             now,
             secret_store,
@@ -686,14 +688,14 @@ impl InputProfile {
             DISPLAY_NOT_PRIVATE,
         )?;
         changed |= update_display_for_key_values(
-            &self.pgp_public_keys,
+            &self.pgp_public_keys_display,
             &mut p.pgp_public_keys,
             now,
             secret_store,
             DISPLAY_ANY,
         )?;
         changed |= update_display_for_key_values(
-            &self.ssh_public_keys,
+            &self.ssh_public_keys_display,
             &mut p.ssh_public_keys,
             now,
             secret_store,
@@ -707,6 +709,7 @@ impl InputProfile {
             secret_store,
         )?;
 
+        // TODO: delete after upgrade
         changed |= update_access_information_display(
             &self.access_information_mozilliansorg,
             &mut p.access_information.mozilliansorg,
@@ -715,21 +718,28 @@ impl InputProfile {
             DISPLAY_NOT_PRIVATE,
         )?;
         changed |= update_access_information_display(
-            &self.access_information_ldap,
+            &self.access_information_mozilliansorg_display,
+            &mut p.access_information.mozilliansorg,
+            now,
+            secret_store,
+            DISPLAY_NOT_PRIVATE,
+        )?;
+        changed |= update_access_information_display(
+            &self.access_information_ldap_display,
             &mut p.access_information.ldap,
             now,
             secret_store,
             DISPLAY_PRIVATE_STAFF,
         )?;
         changed |= update_display_for_string(
-            &self.staff_information_title,
+            &self.staff_information_title_display,
             &mut p.staff_information.title,
             now,
             secret_store,
             DISPLAY_NOT_PRIVATE,
         )?;
         changed |= update_display_for_string(
-            &self.staff_information_office_location,
+            &self.staff_information_office_location_display,
             &mut p.staff_information.office_location,
             now,
             secret_store,
@@ -846,7 +856,7 @@ mod test {
         };
         let mut p = Profile::default();
         let update = InputProfile {
-            access_information_mozilliansorg: Some(Display::Ndaed),
+            access_information_mozilliansorg_display: Some(Display::Ndaed),
             ..Default::default()
         };
         assert_eq!(p.access_information.mozilliansorg.values, None);
@@ -881,7 +891,7 @@ mod test {
         p.access_information.mozilliansorg.metadata.display = Some(Display::Private);
 
         let update = InputProfile {
-            access_information_mozilliansorg: Some(Display::Ndaed),
+            access_information_mozilliansorg_display: Some(Display::Ndaed),
             ..Default::default()
         };
         update.update_profile(&mut p, "staff", &secret_store, &fossil_settings)?;
