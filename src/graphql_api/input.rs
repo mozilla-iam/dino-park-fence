@@ -539,14 +539,14 @@ impl InputProfile {
             &mut p.identities.custom_1_primary_email,
             now,
             secret_store,
-            DISPLAY_NOT_PRIVATE,
+            DISPLAY_ANY,
         )?;
         changed |= update_string(
             &self.custom_2_primary_email,
             &mut p.identities.custom_2_primary_email,
             now,
             secret_store,
-            DISPLAY_NOT_PRIVATE,
+            DISPLAY_ANY,
         )?;
         changed |= update_string(
             &self.description,
