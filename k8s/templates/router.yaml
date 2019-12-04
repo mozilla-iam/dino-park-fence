@@ -70,7 +70,7 @@ metadata:
   labels:
     app: internal-router
 spec:
-  replicas: 1
+  replicas: {{ .Values.router_replicas }}
   template:
     metadata:
       labels:

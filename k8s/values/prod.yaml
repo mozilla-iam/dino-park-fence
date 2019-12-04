@@ -4,5 +4,8 @@ domain_name: people.mozilla.org
 secondary_domain_name: dinopark.k8s.sso.mozilla.com
 pictures_domain_name: picture.api.sso.mozilla.com
 assume_role: arn:aws:iam::320464205386:role/dino-park-fence-role-prod-us-west-2
-replicas: 3
+dinopark_fence_replicas: 3
 ingress_replicas: 5
+router_replicas: 3
+oidc_replicas: 3
+gatekeeper_replicas: 3
