@@ -15,7 +15,29 @@ use futures::future::Either;
 use futures::Future;
 use futures::IntoFuture;
 use percent_encoding::utf8_percent_encode;
-use percent_encoding::PATH_SEGMENT_ENCODE_SET;
+use percent_encoding::AsciiSet;
+use percent_encoding::CONTROLS;
+
+pub const USERINFO_ENCODE_SET: &AsciiSet = &CONTROLS
+    .add(b' ')
+    .add(b'"')
+    .add(b'#')
+    .add(b'<')
+    .add(b'>')
+    .add(b'`')
+    .add(b'?')
+    .add(b'{')
+    .add(b'}')
+    .add(b'/')
+    .add(b':')
+    .add(b';')
+    .add(b'=')
+    .add(b'@')
+    .add(b'[')
+    .add(b'\\')
+    .add(b']')
+    .add(b'^')
+    .add(b'|');
 
 fn handle_full(
     client: Data<Client>,
@@ -35,7 +57,7 @@ fn handle_trace(
     scope_and_user: ScopeAndUser,
     username: Path<String>,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
-    let safe_username = utf8_percent_encode(&username, PATH_SEGMENT_ENCODE_SET);
+    let safe_username = utf8_percent_encode(&username, USERINFO_ENCODE_SET);
     if scope_and_user.scope == "staff" {
         Either::A(proxy(
             &*client,
@@ -52,7 +74,7 @@ fn handle_related(
     scope_and_user: ScopeAndUser,
     username: Path<String>,
 ) -> impl Future<Item = HttpResponse, Error = Error> {
-    let safe_username = utf8_percent_encode(&username, PATH_SEGMENT_ENCODE_SET);
+    let safe_username = utf8_percent_encode(&username, USERINFO_ENCODE_SET);
     if scope_and_user.scope == "staff" {
         Either::A(proxy(
             &*client,

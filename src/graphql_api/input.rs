@@ -1,7 +1,7 @@
 use crate::graphql_api::avatar::change_picture_display;
 use crate::graphql_api::avatar::upload_picture;
 use crate::settings::Fossil;
-use chrono::SecondsFormat;
+use chrono::DateTime;
 use chrono::Utc;
 use cis_profile::crypto::Signer;
 use cis_profile::schema::AccessInformationProviderSubObject;
@@ -43,7 +43,7 @@ fn create_usernames_key(typ: &str) -> String {
 fn update_access_information_display(
     d: &Option<Display>,
     p: &mut AccessInformationProviderSubObject,
-    now: &str,
+    now: &DateTime<Utc>,
     store: &impl Signer,
     allowed: &[Display],
 ) -> Result<bool, Error> {
@@ -57,7 +57,7 @@ fn update_access_information_display(
                 p.values = Some(KeyValue(BTreeMap::default()));
             }
             p.metadata.display = Some(display.clone());
-            p.metadata.last_modified = now.to_owned();
+            p.metadata.last_modified = *now;
             p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
             store.sign_attribute(p)?;
             return Ok(true);
@@ -70,7 +70,7 @@ fn update_picture(
     s: &Option<StringWithDisplay>,
     p: &mut StandardAttributeString,
     uuid: &StandardAttributeString,
-    now: &str,
+    now: &DateTime<Utc>,
     store: &impl Signer,
     fossil_settings: &Fossil,
 ) -> Result<bool, Error> {
@@ -130,7 +130,7 @@ fn update_picture(
         }
 
         if changed {
-            p.metadata.last_modified = now.to_owned();
+            p.metadata.last_modified = *now;
             p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
             store.sign_attribute(p)?;
         }
@@ -142,7 +142,7 @@ fn update_bugzilla_identity(
     bugzilla: &IdentityWithDisplay,
     p: &mut IdentitiesAttributesValuesArray,
     u: &mut StandardAttributeValues,
-    now: &str,
+    now: &DateTime<Utc>,
     store: &impl Signer,
 ) -> Result<bool, Error> {
     let mut changed_bugzilla = false;
@@ -184,7 +184,7 @@ fn update_bugzilla_identity(
     }
 
     if changed_bugzilla {
-        p.bugzilla_mozilla_org_id.metadata.last_modified = now.to_owned();
+        p.bugzilla_mozilla_org_id.metadata.last_modified = *now;
         p.bugzilla_mozilla_org_primary_email.metadata.last_modified = now.to_owned();
         p.bugzilla_mozilla_org_id.signature.publisher.name = PublisherAuthority::Mozilliansorg;
         p.bugzilla_mozilla_org_primary_email
@@ -196,7 +196,7 @@ fn update_bugzilla_identity(
     }
 
     if changed_usernames {
-        u.metadata.last_modified = now.to_owned();
+        u.metadata.last_modified = *now;
         u.signature.publisher.name = PublisherAuthority::Mozilliansorg;
         store.sign_attribute(u)?;
     }
@@ -208,7 +208,7 @@ fn update_github_identity(
     github: &IdentityWithDisplay,
     p: &mut IdentitiesAttributesValuesArray,
     u: &mut StandardAttributeValues,
-    now: &str,
+    now: &DateTime<Utc>,
     store: &impl Signer,
 ) -> Result<bool, Error> {
     let mut changed_github = false;
@@ -254,8 +254,8 @@ fn update_github_identity(
     }
 
     if changed_github {
-        p.github_id_v3.metadata.last_modified = now.to_owned();
-        p.github_id_v4.metadata.last_modified = now.to_owned();
+        p.github_id_v3.metadata.last_modified = *now;
+        p.github_id_v4.metadata.last_modified = *now;
         p.github_primary_email.metadata.last_modified = now.to_owned();
         p.github_id_v3.signature.publisher.name = PublisherAuthority::Mozilliansorg;
         p.github_id_v4.signature.publisher.name = PublisherAuthority::Mozilliansorg;
@@ -266,7 +266,7 @@ fn update_github_identity(
     }
 
     if changed_usernames {
-        u.metadata.last_modified = now.to_owned();
+        u.metadata.last_modified = *now;
         u.signature.publisher.name = PublisherAuthority::Mozilliansorg;
         store.sign_attribute(u)?;
     }
@@ -278,7 +278,7 @@ fn update_identities(
     i: &Option<IdentitiesWithDisplay>,
     p: &mut IdentitiesAttributesValuesArray,
     u: &mut StandardAttributeValues,
-    now: &str,
+    now: &DateTime<Utc>,
     store: &impl Signer,
 ) -> Result<bool, Error> {
     let mut changed = false;
@@ -297,7 +297,7 @@ fn update_identities(
 fn update_display_for_string(
     d: &Option<Display>,
     p: &mut StandardAttributeString,
-    now: &str,
+    now: &DateTime<Utc>,
     store: &impl Signer,
     allowed: &[Display],
 ) -> Result<bool, Error> {
@@ -315,7 +315,7 @@ fn update_display_for_string(
         }
     }
     if changed {
-        p.metadata.last_modified = now.to_owned();
+        p.metadata.last_modified = *now;
         p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
         store.sign_attribute(p)?;
     }
@@ -325,7 +325,7 @@ fn update_display_for_string(
 fn update_display_for_key_values(
     d: &Option<Display>,
     p: &mut StandardAttributeValues,
-    now: &str,
+    now: &DateTime<Utc>,
     store: &impl Signer,
     allowed: &[Display],
 ) -> Result<bool, Error> {
@@ -343,7 +343,7 @@ fn update_display_for_key_values(
         }
     }
     if changed {
-        p.metadata.last_modified = now.to_owned();
+        p.metadata.last_modified = *now;
         p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
         store.sign_attribute(p)?;
     }
@@ -353,7 +353,7 @@ fn update_display_for_key_values(
 fn update_string(
     s: &Option<StringWithDisplay>,
     p: &mut StandardAttributeString,
-    now: &str,
+    now: &DateTime<Utc>,
     store: &impl Signer,
     allowed: &[Display],
 ) -> Result<bool, Error> {
@@ -379,7 +379,7 @@ fn update_string(
             }
         }
         if changed {
-            p.metadata.last_modified = now.to_owned();
+            p.metadata.last_modified = *now;
             p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
             store.sign_attribute(p)?;
         }
@@ -390,7 +390,7 @@ fn update_string(
 fn update_key_values(
     s: &Option<KeyValuesWithDisplay>,
     p: &mut StandardAttributeValues,
-    now: &str,
+    now: &DateTime<Utc>,
     store: &impl Signer,
     filter_empty_values: bool,
     allowed: &[Display],
@@ -432,7 +432,7 @@ fn update_key_values(
             }
         }
         if changed {
-            p.metadata.last_modified = now.to_owned();
+            p.metadata.last_modified = *now;
             p.signature.publisher.name = PublisherAuthority::Mozilliansorg;
             store.sign_attribute(p)?;
         }
@@ -520,7 +520,7 @@ impl InputProfile {
         secret_store: &impl Signer,
         fossil_settings: &Fossil,
     ) -> Result<bool, Error> {
-        let now = &Utc::now().to_rfc3339_opts(SecondsFormat::Secs, true);
+        let now = &Utc::now();
         let mut changed = false;
         changed |= update_string(
             &self.alternative_name,
