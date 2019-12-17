@@ -55,6 +55,11 @@ data:
           proxy_pass http://dino-park-front-end-preview-service:80;
         }
         {{ end -}}
+        {{ if eq .Values.env "dev" -}}
+        location /groups {
+          proxy_pass http://dino-park-packs-service:80;
+        }
+        {{ end -}}
         location / {
           proxy_pass http://dino-park-front-end-service:80;
         }
@@ -88,7 +93,7 @@ spec:
           containerPort: 80
         env:
         - name: force_update
-          value: "2"
+          value: "3"
         volumeMounts:
         - name: nginx-router
           mountPath: /etc/nginx/
