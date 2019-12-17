@@ -9,9 +9,9 @@ default = []
 localuserscope = ["dino_park_gate/localuserscope"]
 
 [dependencies]
-cis_client = { git = "https://github.com/fiji-flo/cis_client-rust", branch = "0.1.6", version = "0.1.6" }
-cis_profile = { git = "https://github.com/fiji-flo/cis_profile-rust", branch = "0.1.4", version = "0.1.4", features = ["graphql", "aws", "vendored"] }
-dino_park_gate = { git = "https://github.com/fiji-flo/dino-park-gate", branch = "0.1.1", version = "0.1.1" }
+cis_client = { git = "https://github.com/fiji-flo/cis_client-rust", branch = "0.3.0", version = "0.3.0" }
+cis_profile = { git = "https://github.com/fiji-flo/cis_profile-rust", branch = "0.3.0", version = "0.3.0", features = ["graphql", "aws", "vendored"] }
+dino_park_gate = { git = "https://github.com/fiji-flo/dino-park-gate", branch = "0.2.0", version = "0.2.0" }
 actix-web = "1.0"
 actix-cors = "0.1"
 juniper = "0.14"
@@ -23,8 +23,8 @@ serde_json = "1.0.32"
 serde_derive = "1.0.80"
 reqwest = "0.9"
 chrono = "0.4"
-biscuit = "0.2.0"
-percent-encoding = "1.0"
+biscuit = "0.4"
+percent-encoding = "2.1"
 config = "0.9"
 failure = "0.1"
 url = "2.1"
