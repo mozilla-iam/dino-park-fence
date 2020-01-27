@@ -56,7 +56,7 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: oidc-proxy
+          serviceName: gatekeeper
           servicePort: 80
       - path: /events/update
         backend:
