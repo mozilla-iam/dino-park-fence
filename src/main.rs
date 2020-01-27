@@ -37,7 +37,7 @@ fn main() -> Result<(), Error> {
     let m = metrics::Metrics::new()?;
     let s = settings::Settings::new()?;
     let cis_client = CisClient::from_settings(&s.cis)?;
-    let dino_park_settings = s.dino_park.clone();
+    let dino_park_settings = s.dino_park;
     let provider = Provider::from_issuer("https://auth.mozilla.auth0.com/")?;
     // Start http server
     HttpServer::new(move || {
