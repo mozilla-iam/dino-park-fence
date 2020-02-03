@@ -14,7 +14,7 @@ spec:
         name: gatekeeper
     spec:
       containers:
-        - image: 320464205386.dkr.ecr.us-west-2.amazonaws.com/keycloak-gatekeeper:samesitelax
+        - image: 320464205386.dkr.ecr.us-west-2.amazonaws.com/keycloak-gatekeeper:fixstate
           imagePullPolicy: Always
           name: gatekeeper
           ports:
