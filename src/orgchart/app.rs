@@ -11,9 +11,7 @@ use actix_web::web::Path;
 use actix_web::Error;
 use actix_web::HttpResponse;
 use dino_park_gate::scope::ScopeAndUser;
-use futures::future::Either;
-use futures::Future;
-use futures::IntoFuture;
+use dino_park_trust::Trust;
 use percent_encoding::utf8_percent_encode;
 use percent_encoding::AsciiSet;
 use percent_encoding::CONTROLS;
@@ -39,49 +37,51 @@ pub const USERINFO_ENCODE_SET: &AsciiSet = &CONTROLS
     .add(b'^')
     .add(b'|');
 
-fn handle_full(
+async fn handle_full(
     client: Data<Client>,
     state: Data<Orgchart>,
     scope_and_user: ScopeAndUser,
-) -> impl Future<Item = HttpResponse, Error = Error> {
-    if scope_and_user.scope == "staff" {
-        Either::A(proxy(&*client, &state.full_endpoint))
+) -> Result<HttpResponse, Error> {
+    if scope_and_user.scope == Trust::Staff {
+        proxy(&*client, &state.full_endpoint).await
     } else {
-        Either::B(Err::<HttpResponse, _>(error::ErrorForbidden("not staff")).into_future())
+        Err::<HttpResponse, _>(error::ErrorForbidden("not staff"))
     }
 }
 
-fn handle_trace(
+async fn handle_trace(
     client: Data<Client>,
     state: Data<Orgchart>,
     scope_and_user: ScopeAndUser,
     username: Path<String>,
-) -> impl Future<Item = HttpResponse, Error = Error> {
+) -> Result<HttpResponse, Error> {
     let safe_username = utf8_percent_encode(&username, USERINFO_ENCODE_SET);
-    if scope_and_user.scope == "staff" {
-        Either::A(proxy(
+    if scope_and_user.scope == Trust::Staff {
+        proxy(
             &*client,
             &format!("{}{}", state.trace_endpoint, safe_username),
-        ))
+        )
+        .await
     } else {
-        Either::B(Err::<HttpResponse, _>(error::ErrorForbidden("not staff")).into_future())
+        Err::<HttpResponse, _>(error::ErrorForbidden("not staff"))
     }
 }
 
-fn handle_related(
+async fn handle_related(
     client: Data<Client>,
     state: Data<Orgchart>,
     scope_and_user: ScopeAndUser,
     username: Path<String>,
-) -> impl Future<Item = HttpResponse, Error = Error> {
+) -> Result<HttpResponse, Error> {
     let safe_username = utf8_percent_encode(&username, USERINFO_ENCODE_SET);
-    if scope_and_user.scope == "staff" {
-        Either::A(proxy(
+    if scope_and_user.scope == Trust::Staff {
+        proxy(
             &*client,
             &format!("{}{}", state.related_endpoint, safe_username),
-        ))
+        )
+        .await
     } else {
-        Either::B(Err::<HttpResponse, _>(error::ErrorForbidden("not staff")).into_future())
+        Err::<HttpResponse, _>(error::ErrorForbidden("not staff"))
     }
 }
 
@@ -93,11 +93,12 @@ pub fn orgchart_app(settings: &Orgchart) -> impl HttpServiceFactory {
                 .allowed_methods(vec!["GET"])
                 .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
                 .allowed_header(http::header::CONTENT_TYPE)
-                .max_age(3600),
+                .max_age(3600)
+                .finish(),
         )
         .data(settings.clone())
         .data(client)
-        .service(web::resource("").route(web::get().to_async(handle_full)))
-        .service(web::resource("/related/{username}").route(web::get().to_async(handle_related)))
-        .service(web::resource("/trace/{username}").route(web::get().to_async(handle_trace)))
+        .service(web::resource("").route(web::get().to(handle_full)))
+        .service(web::resource("/related/{username}").route(web::get().to(handle_related)))
+        .service(web::resource("/trace/{username}").route(web::get().to(handle_trace)))
 }

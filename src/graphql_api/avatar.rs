@@ -1,6 +1,6 @@
 use cis_profile::schema::Display;
 use failure::Error;
-use reqwest::Client;
+use reqwest::blocking::Client;
 
 #[derive(Serialize)]
 struct UploadRequest<'a> {

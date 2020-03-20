@@ -12,6 +12,7 @@ use cis_profile::schema::Profile;
 use cis_profile::schema::PublisherAuthority;
 use cis_profile::schema::StandardAttributeString;
 use cis_profile::schema::StandardAttributeValues;
+use dino_park_trust::Trust;
 use failure::format_err;
 use failure::Error;
 use juniper::GraphQLInputObject;
@@ -100,7 +101,7 @@ fn update_picture(
                         &value,
                         uuid,
                         &display,
-                        p.value.as_ref().map(String::as_str),
+                        p.value.as_deref(),
                         &fossil_settings.upload_endpoint,
                     )?;
                     p.value = Some(url);
@@ -117,7 +118,7 @@ fn update_picture(
                 let url = change_picture_display(
                     uuid,
                     &display,
-                    p.value.as_ref().map(String::as_str),
+                    p.value.as_deref(),
                     &fossil_settings.upload_endpoint,
                 )?;
                 p.value = Some(url);
@@ -516,7 +517,7 @@ impl InputProfile {
     pub fn update_profile(
         &self,
         p: &mut Profile,
-        scope: &str,
+        scope: &Trust,
         secret_store: &impl Signer,
         fossil_settings: &Fossil,
     ) -> Result<bool, Error> {
@@ -612,7 +613,7 @@ impl InputProfile {
             &mut p.primary_email,
             now,
             secret_store,
-            if scope == "staff" {
+            if scope == &Trust::Staff {
                 DISPLAY_NOT_PRIVATE
             } else {
                 DISPLAY_ANY
@@ -778,7 +779,7 @@ mod test {
             display: None,
         });
         assert_eq!(p.fun_title.value, None);
-        update.update_profile(&mut p, "staff", &secret_store, &fossil_settings)?;
+        update.update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)?;
         assert_eq!(p.fun_title.value, update.fun_title.unwrap().value);
         Ok(())
     }
@@ -799,7 +800,7 @@ mod test {
         assert_eq!(p.fun_title.value, None);
         assert_ne!(p.fun_title.metadata.display, Some(Display::Private));
         assert!(update
-            .update_profile(&mut p, "staff", &secret_store, &fossil_settings)
+            .update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)
             .is_err());
         Ok(())
     }
@@ -819,7 +820,7 @@ mod test {
         assert_eq!(p.pronouns.value, None);
         assert_eq!(p.fun_title.value, None);
         assert_ne!(p.fun_title.metadata.display, Some(Display::Vouched));
-        update.update_profile(&mut p, "staff", &secret_store, &fossil_settings)?;
+        update.update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)?;
         assert_eq!(p.pronouns.value, None);
         assert_eq!(p.fun_title.value, Some(String::default()));
         assert_eq!(p.fun_title.metadata.display, Some(Display::Vouched));
@@ -841,7 +842,7 @@ mod test {
         assert_eq!(p.tags.values, None);
         assert_eq!(p.languages.values, None);
         assert_ne!(p.languages.metadata.display, Some(Display::Vouched));
-        update.update_profile(&mut p, "staff", &secret_store, &fossil_settings)?;
+        update.update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)?;
         assert_eq!(p.tags.values, None);
         assert_eq!(p.languages.values, Some(Default::default()));
         assert_eq!(p.languages.metadata.display, Some(Display::Vouched));
@@ -864,7 +865,7 @@ mod test {
             p.access_information.mozilliansorg.metadata.display,
             Some(Display::Ndaed)
         );
-        update.update_profile(&mut p, "staff", &secret_store, &fossil_settings)?;
+        update.update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)?;
         assert_eq!(
             p.access_information.mozilliansorg.values,
             Some(KeyValue(BTreeMap::default()))
@@ -894,7 +895,7 @@ mod test {
             access_information_mozilliansorg_display: Some(Display::Ndaed),
             ..Default::default()
         };
-        update.update_profile(&mut p, "staff", &secret_store, &fossil_settings)?;
+        update.update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)?;
         assert_eq!(
             p.access_information.mozilliansorg.values,
             Some(KeyValue(groups))

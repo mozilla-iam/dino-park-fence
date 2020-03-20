@@ -10,35 +10,34 @@ use actix_web::web::Json;
 use actix_web::Error;
 use actix_web::HttpResponse;
 use actix_web::Result;
-use cis_client::AsyncCisClientTrait;
+use cis_client::sync::client::CisClientTrait;
 use dino_park_gate::scope::ScopeAndUser;
-use futures::Future;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 use log::info;
 use std::sync::Arc;
 
 #[derive(Clone)]
-pub struct GraphQlState<T: AsyncCisClientTrait + 'static> {
+pub struct GraphQlState<T: CisClientTrait + 'static> {
     schema: Arc<Schema<T>>,
 }
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct GraphQlData(GraphQLRequest);
 
-fn graphiql() -> Result<HttpResponse> {
+async fn graphiql() -> Result<HttpResponse> {
     let html = graphiql_source("/api/v4/graphql");
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(html))
 }
 
-fn graphql<T: AsyncCisClientTrait + Send + Sync>(
+async fn graphql<T: CisClientTrait + Send + Sync>(
     data: Json<GraphQLRequest>,
     state: Data<GraphQlState<T>>,
     scope_and_user: ScopeAndUser,
     metrics: Data<Metrics>,
-) -> Box<dyn Future<Item = HttpResponse, Error = Error>> {
+) -> Result<HttpResponse, Error> {
     info!(
         "graphql for {:?} → {:?}",
         &scope_and_user.user_id, &scope_and_user.scope
@@ -48,15 +47,14 @@ fn graphql<T: AsyncCisClientTrait + Send + Sync>(
         let r = data.execute(&schema, &(scope_and_user, (*metrics).clone()));
         Ok::<_, serde_json::error::Error>(serde_json::to_string(&r)?)
     })
-    .map_err(Error::from);
-    Box::new(res.and_then(|res| {
-        Ok(HttpResponse::Ok()
-            .content_type("application/json")
-            .body(res))
-    }))
+    .await
+    .map_err(Error::from)?;
+    Ok(HttpResponse::Ok()
+        .header(http::header::CONTENT_TYPE, "application/json")
+        .body(res))
 }
 
-pub fn graphql_app<T: AsyncCisClientTrait + Clone + Send + Sync + 'static>(
+pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
     cis_client: T,
     dinopark_settings: &DinoParkServices,
 ) -> impl HttpServiceFactory {
@@ -77,7 +75,8 @@ pub fn graphql_app<T: AsyncCisClientTrait + Clone + Send + Sync + 'static>(
                 .allowed_methods(vec!["GET", "POST"])
                 .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
                 .allowed_header(http::header::CONTENT_TYPE)
-                .max_age(3600),
+                .max_age(3600)
+                .finish(),
         )
         .data(GraphQlState {
             schema: Arc::new(schema),

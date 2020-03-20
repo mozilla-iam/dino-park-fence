@@ -2,50 +2,53 @@ use crate::graphql_api::error::field_error;
 use crate::graphql_api::input::InputProfile;
 use crate::metrics::Metrics;
 use crate::settings::DinoParkServices;
-use actix_web::test;
 use cis_client::getby::GetBy;
-use cis_client::AsyncCisClientTrait;
+use cis_client::sync::client::CisClientTrait;
 use cis_profile::schema::Display;
 use cis_profile::schema::Profile;
 use dino_park_gate::scope::ScopeAndUser;
+use dino_park_trust::Trust;
 use juniper::FieldError;
 use juniper::FieldResult;
 use juniper::RootNode;
 use log::error;
 use log::info;
 use log::warn;
-use reqwest::Client;
+use reqwest::blocking::Client;
+use std::sync::Arc;
 
-pub struct Query<T: AsyncCisClientTrait> {
+pub struct Query<T: CisClientTrait> {
     pub cis_client: T,
     pub dinopark_settings: DinoParkServices,
 }
 
 fn get_profile(
     id: String,
-    cis_client: &impl AsyncCisClientTrait,
+    cis_client: &impl CisClientTrait,
     by: &GetBy,
     filter: &str,
 ) -> FieldResult<Profile> {
-    test::block_on(cis_client.get_user_by(&id, by, Some(&filter))).map_err(Into::into)
+    cis_client
+        .get_user_by(&id, by, Some(&filter))
+        .map_err(Into::into)
 }
 
-pub struct Mutation<T: AsyncCisClientTrait> {
+pub struct Mutation<T: CisClientTrait> {
     pub cis_client: T,
     pub dinopark_settings: DinoParkServices,
 }
 
 fn update_profile(
     update: InputProfile,
-    cis_client: &impl AsyncCisClientTrait,
+    cis_client: &impl CisClientTrait,
     dinopark_settings: &DinoParkServices,
     user: &Option<String>,
-    scope: String,
+    scope: Trust,
 ) -> FieldResult<(Profile, bool)> {
     let user_id = user
         .clone()
         .ok_or_else(|| field_error("no username in query or scope", "?!"))?;
-    let mut profile = test::block_on(cis_client.get_user_by(&user_id, &GetBy::UserId, None))?;
+    let mut profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
     if let Some(updated_username) = update
         .primary_username
         .as_ref()
@@ -69,12 +72,9 @@ fn update_profile(
                 ));
             }
             // the primary_username changed check if it already exists
-            if test::block_on(cis_client.get_user_by(
-                updated_username,
-                &GetBy::PrimaryUsername,
-                None,
-            ))
-            .is_ok()
+            if cis_client
+                .get_user_by(updated_username, &GetBy::PrimaryUsername, None)
+                .is_ok()
             {
                 return Err(field_error(
                     "username_exists",
@@ -93,10 +93,9 @@ fn update_profile(
         )
         .map_err(|e| field_error("unable update/sign profle", e))?;
     if changed {
-        let ret = test::block_on(cis_client.update_user(&user_id, profile))?;
+        let ret = cis_client.update_user(&user_id, profile)?;
         info!("update returned: {}", ret);
-        let updated_profile =
-            test::block_on(cis_client.get_user_by(&user_id, &GetBy::UserId, None))?;
+        let updated_profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
         if dinopark_settings.lookout.internal_update_enabled {
             if let Err(e) = Client::new()
                 .post(&dinopark_settings.lookout.internal_update_endpoint)
@@ -113,9 +112,9 @@ fn update_profile(
 }
 
 #[juniper::object{
-    Context = (ScopeAndUser, Metrics)
+    Context = (ScopeAndUser, Arc<Metrics>)
 }]
-impl<T: AsyncCisClientTrait> Query<T> {
+impl<T: CisClientTrait> Query<T> {
     fn profile(username: Option<String>, view_as: Option<Display>) -> FieldResult<Profile> {
         let executor = &executor;
         let scope_and_user = &executor.context().0;
@@ -132,9 +131,9 @@ impl<T: AsyncCisClientTrait> Query<T> {
 }
 
 #[juniper::object{
-    Context = (ScopeAndUser, Metrics)
+    Context = (ScopeAndUser, Arc<Metrics>)
 }]
-impl<T: AsyncCisClientTrait> Mutation<T> {
+impl<T: CisClientTrait> Mutation<T> {
     fn profile(update: InputProfile) -> FieldResult<Profile> {
         let executor = &executor;
         match update_profile(
@@ -167,16 +166,7 @@ fn get_profile_params(
     scope_and_user: &ScopeAndUser,
     view_as: Option<Display>,
 ) -> Result<GetProfileParams, FieldError> {
-    let scope = match serde_json::from_value(scope_and_user.scope.clone().into()) {
-        Ok(scope) => scope,
-        Err(e) => {
-            warn!(
-                "invalid scope {} for {}: {}",
-                scope_and_user.scope, scope_and_user.user_id, e
-            );
-            Display::Public
-        }
-    };
+    let scope: Display = scope_and_user.scope.clone().into();
     let params = if let Some(username) = username {
         // If a username has been provided we retrieve the
         // profile by username and filter according to
@@ -190,7 +180,7 @@ fn get_profile_params(
                     "invalid display {} for {} ({})",
                     filter.as_str(),
                     scope_and_user.user_id,
-                    scope_and_user.scope
+                    scope_and_user.scope.as_str()
                 );
                 return Err(field_error(
                     "invalid_view_as",
@@ -221,14 +211,16 @@ fn get_profile_params(
 #[cfg(test)]
 mod root_test {
     use super::*;
+    use dino_park_trust::GroupsTrust;
+    use dino_park_trust::Trust;
 
     #[test]
     fn test_get_filter_params_without_view_as() -> Result<(), FieldError> {
         let username = Some(String::from("user1"));
         let scope_and_user = ScopeAndUser {
             user_id: String::from("user2"),
-            scope: String::from("staff"),
-            groups_scope: None,
+            scope: Trust::Staff,
+            groups_scope: GroupsTrust::None,
         };
         let params = get_profile_params(username, &scope_and_user, None)?;
         assert!(match params.by {
@@ -246,8 +238,8 @@ mod root_test {
         let view_as = Some(Display::Ndaed);
         let scope_and_user = ScopeAndUser {
             user_id: String::from("user2"),
-            scope: String::from("staff"),
-            groups_scope: None,
+            scope: Trust::Staff,
+            groups_scope: GroupsTrust::None,
         };
         let params = get_profile_params(username, &scope_and_user, view_as)?;
         assert!(match params.by {
@@ -265,8 +257,8 @@ mod root_test {
         let view_as = Some(Display::Ndaed);
         let scope_and_user = ScopeAndUser {
             user_id: String::from("user2"),
-            scope: String::from("authenticated"),
-            groups_scope: None,
+            scope: Trust::Authenticated,
+            groups_scope: GroupsTrust::None,
         };
         let params = get_profile_params(username, &scope_and_user, view_as);
         assert!(params.is_err());
@@ -277,8 +269,8 @@ mod root_test {
     fn test_get_filter_params_self_without_view_as() -> Result<(), FieldError> {
         let scope_and_user = ScopeAndUser {
             user_id: String::from("user1"),
-            scope: String::from("staff"),
-            groups_scope: None,
+            scope: Trust::Staff,
+            groups_scope: GroupsTrust::None,
         };
         let params = get_profile_params(None, &scope_and_user, None)?;
         assert!(match params.by {
@@ -295,8 +287,8 @@ mod root_test {
         let view_as = Some(Display::Staff);
         let scope_and_user = ScopeAndUser {
             user_id: String::from("user1"),
-            scope: String::from("authenticated"),
-            groups_scope: None,
+            scope: Trust::Authenticated,
+            groups_scope: GroupsTrust::None,
         };
         let params = get_profile_params(None, &scope_and_user, view_as)?;
         assert!(match params.by {

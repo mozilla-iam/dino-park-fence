@@ -24,21 +24,29 @@ use actix_web::HttpServer;
 use cis_client::CisClient;
 use dino_park_gate::provider::Provider;
 use dino_park_gate::scope::ScopeAndUserAuth;
-use failure::Error;
 use log::info;
+use std::io::Error;
+use std::io::ErrorKind;
 
-fn main() -> Result<(), Error> {
+fn map_io_err(e: impl Into<failure::Error>) -> Error {
+    Error::new(ErrorKind::Other, e.into())
+}
+
+#[actix_rt::main]
+async fn main() -> std::io::Result<()> {
     ::std::env::set_var(
         "RUST_LOG",
         "actix_web=info,dino_park_fence=info,dino_park_gate=info",
     );
     env_logger::init();
     info!("building the fence");
-    let m = metrics::Metrics::new()?;
-    let s = settings::Settings::new()?;
-    let cis_client = CisClient::from_settings(&s.cis)?;
+    let m = metrics::Metrics::new().map_err(map_io_err)?;
+    let s = settings::Settings::new().map_err(map_io_err)?;
+    let cis_client = CisClient::from_settings(&s.cis).await.map_err(map_io_err)?;
     let dino_park_settings = s.dino_park;
-    let provider = Provider::from_issuer("https://auth.mozilla.auth0.com/")?;
+    let provider = Provider::from_issuer("https://auth.mozilla.auth0.com/")
+        .await
+        .map_err(map_io_err)?;
     // Start http server
     HttpServer::new(move || {
         let scope_middleware = ScopeAndUserAuth {
@@ -59,5 +67,5 @@ fn main() -> Result<(), Error> {
     })
     .bind("0.0.0.0:8081")?
     .run()
-    .map_err(Into::into)
+    .await
 }

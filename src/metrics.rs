@@ -33,7 +33,7 @@ impl Metrics {
     }
 }
 
-fn metrics(_: HttpRequest, m: web::Data<Metrics>) -> HttpResponse {
+async fn metrics(_: HttpRequest, m: web::Data<Metrics>) -> HttpResponse {
     let metric_families = m.registry.gather();
     let mut buffer = vec![];
     let encoder = TextEncoder::new();
@@ -50,7 +50,8 @@ pub fn metrics_app() -> impl HttpServiceFactory {
                 .allowed_methods(vec!["GET"])
                 .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
                 .allowed_header(http::header::CONTENT_TYPE)
-                .max_age(3600),
+                .max_age(3600)
+                .finish(),
         )
         .service(web::resource("").to(metrics))
 }
