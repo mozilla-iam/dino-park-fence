@@ -1,16 +1,16 @@
+use crate::error::ApiError;
 use crate::proxy::proxy;
 use crate::settings::Search;
 use actix_cors::Cors;
 use actix_web::client::Client;
 use actix_web::dev::HttpServiceFactory;
-use actix_web::error;
 use actix_web::http;
 use actix_web::web;
 use actix_web::web::Data;
 use actix_web::web::Query;
-use actix_web::Error;
 use actix_web::HttpResponse;
 use dino_park_gate::scope::ScopeAndUser;
+use dino_park_guard::guard;
 use url::Url;
 
 #[derive(Deserialize)]
@@ -20,16 +20,16 @@ struct SearchQuery {
     a: Option<String>,
 }
 
+#[guard(Public)]
 async fn handle_simple(
     client: Data<Client>,
     search: Data<Search>,
     scope_and_user: ScopeAndUser,
     query: Query<SearchQuery>,
-) -> Result<HttpResponse, Error> {
-    let mut url =
-        Url::parse(&search.simple_endpoint).map_err(error::UrlGenerationError::ParseError)?;
+) -> Result<HttpResponse, ApiError> {
+    let mut url = Url::parse(&search.simple_endpoint).map_err(|_| ApiError::Unknown)?;
     url.path_segments_mut()
-        .map_err(|_| error::UrlGenerationError::NotEnoughElements)?
+        .map_err(|_| ApiError::Unknown)?
         .pop_if_empty()
         .push(&scope_and_user.scope.as_str())
         .push("");

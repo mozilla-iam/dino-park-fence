@@ -28,7 +28,7 @@ spec:
       paths:
       - path: /
         backend:
-          serviceName: wants-gatekeeper
+          serviceName: public-splitter
           servicePort: 80
       - path: /reload.html
         backend:

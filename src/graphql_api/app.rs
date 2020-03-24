@@ -1,3 +1,4 @@
+use crate::error::ApiError;
 use crate::graphql_api::root::{Mutation, Query, Schema};
 use crate::metrics::Metrics;
 use crate::settings::DinoParkServices;
@@ -7,11 +8,10 @@ use actix_web::http;
 use actix_web::web;
 use actix_web::web::Data;
 use actix_web::web::Json;
-use actix_web::Error;
 use actix_web::HttpResponse;
-use actix_web::Result;
 use cis_client::sync::client::CisClientTrait;
 use dino_park_gate::scope::ScopeAndUser;
+use dino_park_guard::guard;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 use log::info;
@@ -25,33 +25,33 @@ pub struct GraphQlState<T: CisClientTrait + 'static> {
 #[derive(Deserialize, Debug, Clone)]
 pub struct GraphQlData(GraphQLRequest);
 
-async fn graphiql() -> Result<HttpResponse> {
+#[guard(Staff)]
+async fn graphiql() -> Result<HttpResponse, ApiError> {
     let html = graphiql_source("/api/v4/graphql");
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(html))
 }
 
+#[guard(Public)]
 async fn graphql<T: CisClientTrait + Send + Sync>(
     data: Json<GraphQLRequest>,
     state: Data<GraphQlState<T>>,
     scope_and_user: ScopeAndUser,
     metrics: Data<Metrics>,
-) -> Result<HttpResponse, Error> {
+) -> Result<HttpResponse, ApiError> {
     info!(
         "graphql for {:?} → {:?}",
         &scope_and_user.user_id, &scope_and_user.scope
     );
     let schema = Arc::clone(&state.schema);
     let res = web::block(move || {
-        let r = data.execute(&schema, &(scope_and_user, (*metrics).clone()));
-        Ok::<_, serde_json::error::Error>(serde_json::to_string(&r)?)
+        let res = data.execute(&schema, &(scope_and_user, (*metrics).clone()));
+        serde_json::to_value(&res)
     })
     .await
-    .map_err(Error::from)?;
-    Ok(HttpResponse::Ok()
-        .header(http::header::CONTENT_TYPE, "application/json")
-        .body(res))
+    .map_err(|_| ApiError::Unknown)?;
+    Ok(HttpResponse::Ok().json(res))
 }
 
 pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(

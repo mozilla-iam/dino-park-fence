@@ -9,17 +9,18 @@ default = []
 localuserscope = ["dino_park_gate/localuserscope"]
 
 [dependencies]
-cis_client = { git = "https://github.com/mozilla-iam/cis_client-rust", tag = "0.6.0", version = "0.6.0", features = ["sync"] }
+cis_client = { git = "https://github.com/mozilla-iam/cis_client-rust", tag = "0.6.1", version = "0.6.1", features = ["sync"] }
 cis_profile = { git = "https://github.com/mozilla-iam/cis_profile-rust", tag = "0.4.0", version = "0.4.0", features = ["aws", "vendored", "graphql"] }
-dino_park_gate = { git = "https://github.com/mozilla-iam/dino-park-gate", tag = "0.5.2", version = "0.5.2" }
+dino_park_gate = { git = "https://github.com/mozilla-iam/dino-park-gate", tag = "0.6.0", version = "0.6.0" }
 dino_park_trust = { git = "https://github.com/mozilla-iam/dino-park-trust", tag = "0.0.5", version = "0.0.5" }
+dino_park_guard = { git = "https://github.com/mozilla-iam/dino-park-guard", tag = "0.0.1", version = "0.0.1" }
 actix-web = "2.0"
 actix-rt = "1.0"
 actix-cors = "0.2"
 juniper = "0.14"
 futures = "0.3"
 log = "0.4"
-env_logger = "0.6"
+env_logger = "0.7"
 serde = "1.0.80"
 serde_json = "1.0.32"
 serde_derive = "1.0.80"
@@ -27,7 +28,7 @@ reqwest = { version = "0.10", features = ["blocking"] }
 chrono = "0.4"
 biscuit = "0.4"
 percent-encoding = "2.1"
-config = "0.9"
+config = "0.10"
 failure = "0.1"
 url = "2.1"
-prometheus = { version = "0.7", default-features = false }
+prometheus = { version = "0.8", default-features = false }

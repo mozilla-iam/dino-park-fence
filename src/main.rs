@@ -3,12 +3,14 @@ extern crate juniper;
 #[macro_use]
 extern crate serde_derive;
 
+mod error;
 mod graphql_api;
 mod healthz;
 mod metrics;
 mod orgchart;
 mod proxy;
 mod search;
+mod session;
 mod settings;
 
 use crate::graphql_api::app::graphql_app;
@@ -16,6 +18,7 @@ use crate::healthz::healthz_app;
 use crate::metrics::metrics_app;
 use crate::orgchart::app::orgchart_app;
 use crate::search::app::search_app;
+use crate::session::app::session_app;
 
 use actix_web::middleware::Logger;
 use actix_web::web;
@@ -49,9 +52,7 @@ async fn main() -> std::io::Result<()> {
         .map_err(map_io_err)?;
     // Start http server
     HttpServer::new(move || {
-        let scope_middleware = ScopeAndUserAuth {
-            checker: provider.clone(),
-        };
+        let scope_middleware = ScopeAndUserAuth::new(provider.clone()).public();
         App::new()
             .wrap(Logger::default().exclude("/healthz"))
             .data(m.clone())
@@ -62,6 +63,7 @@ async fn main() -> std::io::Result<()> {
                     .service(search_app(&dino_park_settings.search))
                     .service(orgchart_app(&dino_park_settings.orgchart)),
             )
+            .service(session_app())
             .service(healthz_app())
             .service(metrics_app())
     })
