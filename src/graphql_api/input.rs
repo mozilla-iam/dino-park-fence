@@ -1,5 +1,5 @@
 use crate::graphql_api::avatar::change_picture_display;
-use crate::graphql_api::avatar::upload_picture;
+use crate::graphql_api::avatar::save_picture;
 use crate::settings::Fossil;
 use chrono::DateTime;
 use chrono::Utc;
@@ -97,7 +97,7 @@ fn update_picture(
                         .value
                         .as_ref()
                         .ok_or_else(|| failure::err_msg("no uuid in profile"))?;
-                    let url = upload_picture(
+                    let url = save_picture(
                         &value,
                         uuid,
                         &display,

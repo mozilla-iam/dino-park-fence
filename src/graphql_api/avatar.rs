@@ -1,3 +1,4 @@
+use crate::error::ApiError;
 use cis_profile::schema::Display;
 use failure::Error;
 use reqwest::blocking::Client;
@@ -27,7 +28,7 @@ struct UploadResponse {
     url: String,
 }
 
-pub fn upload_picture(
+pub fn save_picture(
     update: &str,
     uuid: &str,
     display: &Display,
@@ -35,7 +36,6 @@ pub fn upload_picture(
     fossil_send_endpoint: &str,
 ) -> Result<String, Error> {
     if update.starts_with("intermediate:") {
-        // TODO: clean up once migrated.
         let payload = SaveRequest {
             intermediate: &update[13..],
             display,
@@ -49,18 +49,7 @@ pub fn upload_picture(
             .json()?;
         Ok(url)
     } else {
-        let payload = UploadRequest {
-            data_uri: update,
-            display,
-            old_url,
-        };
-        let UploadResponse { url } = Client::new()
-            .post(&format!("{}{}", fossil_send_endpoint, uuid))
-            .json(&payload)
-            .send()?
-            .error_for_status()?
-            .json()?;
-        Ok(url)
+        Err(ApiError::Unknown.into())
     }
 }
 
