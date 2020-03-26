@@ -54,6 +54,15 @@ data:
       server {
         listen 80;
 
+        location /~ {
+          return 404;
+        }
+
+        location /(logbackin.html$|favicon.ico$|reload.html$|opensearch.xml$|webapp|)$ {
+          proxy_pass http://dino-park-front-end-service.{{ .Values.namespace }}.svc.cluster.local:80;
+
+        }
+
         location /login {
           proxy_pass http://gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80/;
         }
@@ -80,6 +89,10 @@ data:
 
         location /avatar/get/ {
           proxy_pass http://$pictures;
+        }
+
+        location /events/update {
+          proxy_pass http://dino-park-lookout-service.{{ .Values.namespace }}.svc.cluster.local:80;
         }
 
         location / {
