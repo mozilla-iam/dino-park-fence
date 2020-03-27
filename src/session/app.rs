@@ -7,8 +7,8 @@ use actix_web::HttpResponse;
 use actix_web::Responder;
 
 const KEEP_LOGGED_IN_COOKIE_NAME: &str = "pmo-kli";
-const LOGIN_PATH: &str = "/login";
-const LOGOUT_PATH: &str = "/logout";
+const LOGIN_PATH: &str = "/";
+const LOGOUT_PATH: &str = "/oauth/logout?redirect=/";
 
 const FIVE_YEARS_IN_SECS: i64 = 5 * 365 * 24 * 60 * 60;
 

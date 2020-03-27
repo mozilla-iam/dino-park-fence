@@ -63,14 +63,6 @@ data:
 
         }
 
-        location /login {
-          proxy_pass http://gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80/;
-        }
-
-        location /logout {
-          proxy_pass http://gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80/oauth/logout/?redirect=/;
-        }
-
         location /_/ {
           proxy_pass http://dino-park-fence-service.{{ .Values.namespace }}.svc.cluster.local:80;
         }
