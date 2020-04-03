@@ -652,8 +652,8 @@ dependencies = [
  "cis_client 0.6.1 (git+https://github.com/mozilla-iam/cis_client-rust?tag=0.6.1)",
  "cis_profile 0.4.0 (git+https://github.com/mozilla-iam/cis_profile-rust?tag=0.4.0)",
  "config 0.10.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "dino_park_gate 0.6.1 (git+https://github.com/mozilla-iam/dino-park-gate?tag=0.6.1)",
- "dino_park_guard 0.0.1 (git+https://github.com/mozilla-iam/dino-park-guard?tag=0.0.1)",
+ "dino_park_gate 0.6.2",
+ "dino_park_guard 0.1.1 (git+https://github.com/mozilla-iam/dino-park-guard?tag=0.1.1)",
  "dino_park_trust 0.0.5 (git+https://github.com/mozilla-iam/dino-park-trust?tag=0.0.5)",
  "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -676,30 +676,6 @@ source = "git+https://github.com/mozilla-iam/dino-park-oidc?tag=0.0.1#541d60b168
 dependencies = [
  "biscuit 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "chrono 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
- "failure 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "failure_derive 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "futures 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
- "reqwest 0.10.4 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.105 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_derive 1.0.105 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_json 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
- "shared-expiry-get 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "url 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
-]
-
-[[package]]
-name = "dino_park_gate"
-version = "0.4.0"
-source = "git+https://github.com/mozilla-iam/dino-park-gate?tag=0.4.0#85653613905cbfb55c37e85d0b69d45cdbc6e157"
-dependencies = [
- "actix-service 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
- "actix-web 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
- "biscuit 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
- "bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
- "chrono 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
- "dino_park_trust 0.0.4 (git+https://github.com/mozilla-iam/dino-park-trust?tag=0.0.4)",
- "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure_derive 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
@@ -738,25 +714,39 @@ dependencies = [
 ]
 
 [[package]]
-name = "dino_park_guard"
-version = "0.0.1"
-source = "git+https://github.com/mozilla-iam/dino-park-guard?tag=0.0.1#e4aed1606eb7186abb318ee5f9b5650e654f287f"
+name = "dino_park_gate"
+version = "0.6.2"
 dependencies = [
- "dino_park_gate 0.4.0 (git+https://github.com/mozilla-iam/dino-park-gate?tag=0.4.0)",
- "dino_park_trust 0.0.4 (git+https://github.com/mozilla-iam/dino-park-trust?tag=0.0.4)",
+ "actix-service 1.0.5 (registry+https://github.com/rust-lang/crates.io-index)",
+ "actix-web 2.0.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "biscuit 0.4.2 (registry+https://github.com/rust-lang/crates.io-index)",
+ "bitflags 1.2.1 (registry+https://github.com/rust-lang/crates.io-index)",
+ "chrono 0.4.11 (registry+https://github.com/rust-lang/crates.io-index)",
+ "dino-park-oidc 0.0.1 (git+https://github.com/mozilla-iam/dino-park-oidc?tag=0.0.1)",
+ "dino_park_trust 0.0.5 (git+https://github.com/mozilla-iam/dino-park-trust?tag=0.0.5)",
+ "env_logger 0.7.1 (registry+https://github.com/rust-lang/crates.io-index)",
  "failure 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "quote 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "syn 1.0.17 (registry+https://github.com/rust-lang/crates.io-index)",
+ "failure_derive 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
+ "futures 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log 0.4.8 (registry+https://github.com/rust-lang/crates.io-index)",
+ "reqwest 0.10.4 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde 1.0.105 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_derive 1.0.105 (registry+https://github.com/rust-lang/crates.io-index)",
+ "serde_json 1.0.50 (registry+https://github.com/rust-lang/crates.io-index)",
+ "shared-expiry-get 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "url 2.1.1 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
-name = "dino_park_trust"
-version = "0.0.4"
-source = "git+https://github.com/mozilla-iam/dino-park-trust?tag=0.0.4#0fab42154e214f6acc1bbfdf32ba974005bc9733"
+name = "dino_park_guard"
+version = "0.1.1"
+source = "git+https://github.com/mozilla-iam/dino-park-guard?tag=0.1.1#ec330365d9caa679cb9965d48814c2a9a1282f5e"
 dependencies = [
+ "dino_park_gate 0.6.1 (git+https://github.com/mozilla-iam/dino-park-gate?tag=0.6.1)",
+ "dino_park_trust 0.0.5 (git+https://github.com/mozilla-iam/dino-park-trust?tag=0.0.5)",
  "failure 0.1.7 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde 1.0.105 (registry+https://github.com/rust-lang/crates.io-index)",
- "serde_derive 1.0.105 (registry+https://github.com/rust-lang/crates.io-index)",
+ "quote 1.0.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "syn 1.0.17 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -2719,10 +2709,8 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 "checksum derive_more 0.99.5 (registry+https://github.com/rust-lang/crates.io-index)" = "e2323f3f47db9a0e77ce7a300605d8d2098597fc451ed1a97bb1f6411bb550a7"
 "checksum digest 0.8.1 (registry+https://github.com/rust-lang/crates.io-index)" = "f3d0c8c8752312f9713efd397ff63acb9f85585afbf179282e720e7704954dd5"
 "checksum dino-park-oidc 0.0.1 (git+https://github.com/mozilla-iam/dino-park-oidc?tag=0.0.1)" = "<none>"
-"checksum dino_park_gate 0.4.0 (git+https://github.com/mozilla-iam/dino-park-gate?tag=0.4.0)" = "<none>"
 "checksum dino_park_gate 0.6.1 (git+https://github.com/mozilla-iam/dino-park-gate?tag=0.6.1)" = "<none>"
-"checksum dino_park_guard 0.0.1 (git+https://github.com/mozilla-iam/dino-park-guard?tag=0.0.1)" = "<none>"
-"checksum dino_park_trust 0.0.4 (git+https://github.com/mozilla-iam/dino-park-trust?tag=0.0.4)" = "<none>"
+"checksum dino_park_guard 0.1.1 (git+https://github.com/mozilla-iam/dino-park-guard?tag=0.1.1)" = "<none>"
 "checksum dino_park_trust 0.0.5 (git+https://github.com/mozilla-iam/dino-park-trust?tag=0.0.5)" = "<none>"
 "checksum dirs 2.0.2 (registry+https://github.com/rust-lang/crates.io-index)" = "13aea89a5c93364a98e9b37b2fa237effbb694d5cfe01c5b70941f7eb087d5e3"
 "checksum dirs-sys 0.3.4 (registry+https://github.com/rust-lang/crates.io-index)" = "afa0b23de8fd801745c471deffa6e12d248f962c9fd4b4c33787b055599bde7b"

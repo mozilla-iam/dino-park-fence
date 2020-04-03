@@ -89,7 +89,7 @@ spec:
           containerPort: 80
         env:
         - name: force_update
-          value: "3"
+          value: "{{ .Values.update_ir | default 0 }}"
         volumeMounts:
         - name: nginx-router
           mountPath: /etc/nginx/
