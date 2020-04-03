@@ -118,6 +118,9 @@ impl<T: CisClientTrait> Query<T> {
     fn profile(username: Option<String>, view_as: Option<Display>) -> FieldResult<Profile> {
         let executor = &executor;
         let scope_and_user = &executor.context().0;
+        if scope_and_user.scope == Trust::Public && username.is_none() {
+            return Ok(Profile::default());
+        }
 
         let params = get_profile_params(username, scope_and_user, view_as)?;
 
@@ -136,6 +139,10 @@ impl<T: CisClientTrait> Query<T> {
 impl<T: CisClientTrait> Mutation<T> {
     fn profile(update: InputProfile) -> FieldResult<Profile> {
         let executor = &executor;
+        let scope_and_user = &executor.context().0;
+        if scope_and_user.scope == Trust::Public {
+            return Ok(Profile::default());
+        }
         match update_profile(
             update,
             &self.cis_client,

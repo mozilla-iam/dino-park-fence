@@ -1,0 +1,149 @@
+{{ if .Values.public }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: public-splitter
+  namespace: {{ .Values.namespace }}
+data:
+  nginx.conf: |
+    worker_rlimit_nofile 8192;
+
+    events {
+      worker_connections  4096;  ## Default: 1024
+    }
+
+    http {
+      proxy_redirect          off;
+      proxy_set_header        Host            $host;
+      proxy_set_header        X-Real-IP       $remote_addr;
+      proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
+      client_max_body_size    32m;
+      client_body_buffer_size 128k;
+      proxy_connect_timeout   90;
+      proxy_send_timeout      90;
+      proxy_read_timeout      90;
+      proxy_buffers           32 4k;
+      resolver                kube-dns.kube-system.svc.cluster.local  valid=5s;
+
+      map $http_cookie $login {
+        default "no";
+        "~*pmo-kli=1" "yes";
+        "~*pmo-access=([^;]+)" "yes";
+      }
+
+      map $login $target {
+        default "dino-park-front-end-service.{{ .Values.namespace }}.svc.cluster.local:80";
+        "yes" "gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80";
+      }
+
+      map $login $api {
+        default "dino-park-fence-service.{{ .Values.namespace }}.svc.cluster.local:80";
+        "yes" "gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80";
+      }
+
+      map $login $pictures {
+        default "dino-park-fossil-service.{{ .Values.namespace }}.svc.cluster.local:80";
+        "yes" "gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80";
+      }
+
+      map $login $github {
+        default "dino-park-whoami-service.{{ .Values.namespace }}.svc.cluster.local:80";
+        "yes" "gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80";
+      }
+
+      server {
+        listen 80;
+
+        location /~ {
+          return 404;
+        }
+
+        location /(logbackin.html$|favicon.ico$|reload.html$|opensearch.xml$|webapp/|) {
+          proxy_pass http://dino-park-front-end-service.{{ .Values.namespace }}.svc.cluster.local:80;
+
+        }
+
+        location /_/ {
+          proxy_pass http://dino-park-fence-service.{{ .Values.namespace }}.svc.cluster.local:80;
+        }
+
+        location /oauth {
+          proxy_pass http://gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80;
+        }
+
+        location /api/v4/ {
+          proxy_pass http://$api;
+        }
+
+        location  /whoami/github/username/ {
+          proxy_pass http://$github;
+        }
+
+        location /avatar/get/ {
+          proxy_pass http://$pictures;
+        }
+
+        location /events/update {
+          proxy_pass http://dino-park-lookout-service.{{ .Values.namespace }}.svc.cluster.local:80;
+        }
+
+        location / {
+          proxy_pass http://$target;
+        }
+      }
+    }
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: public-splitter
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: public-splitter
+spec:
+  replicas: {{ .Values.router_replicas }}
+  selector:
+    matchLabels:
+      app: public-splitter
+  template:
+    metadata:
+      labels:
+        app: public-splitter
+    spec:
+      volumes:
+      - name: public-splitter
+        configMap:
+          name: public-splitter
+      containers:
+      - name: public-splitter
+        image: nginx:1.17
+        ports:
+        - name: http
+          containerPort: 80
+        env:
+        - name: force_update
+          value: "{{ .Values.update_ps | default 0 }}"
+        volumeMounts:
+        - name: public-splitter
+          mountPath: /etc/nginx/
+          readOnly: true
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+  labels:
+    name: public-splitter
+  name: public-splitter
+  namespace: {{ .Values.namespace }}
+spec:
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 80
+  selector:
+    app: public-splitter
+{{ end }}
