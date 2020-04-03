@@ -1,3 +1,4 @@
+{{ if .Values.public }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -58,7 +59,7 @@ data:
           return 404;
         }
 
-        location /(logbackin.html$|favicon.ico$|reload.html$|opensearch.xml$|webapp|)$ {
+        location /(logbackin.html$|favicon.ico$|reload.html$|opensearch.xml$|webapp/|) {
           proxy_pass http://dino-park-front-end-service.{{ .Values.namespace }}.svc.cluster.local:80;
 
         }
@@ -94,7 +95,7 @@ data:
     }
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: public-splitter
@@ -103,6 +104,9 @@ metadata:
     app: public-splitter
 spec:
   replicas: {{ .Values.router_replicas }}
+  selector:
+    matchLabels:
+      app: public-splitter
   template:
     metadata:
       labels:
@@ -114,7 +118,7 @@ spec:
           name: public-splitter
       containers:
       - name: public-splitter
-        image: nginx
+        image: nginx:1.17
         ports:
         - name: http
           containerPort: 80
@@ -142,3 +146,4 @@ spec:
     targetPort: 80
   selector:
     app: public-splitter
+{{ end }}

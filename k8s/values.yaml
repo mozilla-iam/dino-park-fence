@@ -14,3 +14,4 @@ env_dino_park__search__simple_endpoint: "http://dino-park-search-service:80/sear
 env_dino_park__fossil__upload_endpoint: "http://dino-park-fossil-service:80/avatar/send/"
 env_dino_park__lookout__internal_update_enabled: "true"
 env_dino_park__lookout__internal_update_endpoint: "http://dino-park-lookout-service:80/internal/update"
+public: false

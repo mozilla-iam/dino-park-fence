@@ -26,6 +26,11 @@ data:
 
       server {
         listen 80;
+        {{- if not .Values.public }}
+        location /~ {
+          return 404;
+        }
+        {{- end }}
         location /api/v4/ {
           proxy_pass http://dino-park-fence-service:80;
         }
@@ -55,7 +60,7 @@ data:
     }
 
 ---
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: internal-router
@@ -64,6 +69,9 @@ metadata:
     app: internal-router
 spec:
   replicas: {{ .Values.router_replicas }}
+  selector:
+    matchLabels:
+      app: internal-router
   template:
     metadata:
       labels:
@@ -75,7 +83,7 @@ spec:
           name: nginx-router
       containers:
       - name: nginx-router
-        image: nginx
+        image: nginx:1.17
         ports:
         - name: http
           containerPort: 80
@@ -93,7 +101,7 @@ kind: Service
 metadata:
   annotations:
   labels:
-    name: internal-router
+    app: internal-router
   name: internal-router
   namespace: {{ .Values.namespace }}
 spec:
