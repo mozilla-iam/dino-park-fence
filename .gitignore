@@ -3,5 +3,6 @@
 .settings*.json
 .vscode
 .dev.env
-secret-*.yaml
+secret-*
 .terraform
+auth
