@@ -54,7 +54,7 @@ spec:
   - host: {{ . }}
     http:
       paths:
-      {{ if .Values.public -}}
+      {{ if $.Values.public -}}
       - path: /
         backend:
           serviceName: public-splitter
