@@ -218,6 +218,7 @@ fn get_profile_params(
 #[cfg(test)]
 mod root_test {
     use super::*;
+    use dino_park_trust::AALevel;
     use dino_park_trust::GroupsTrust;
     use dino_park_trust::Trust;
 
@@ -228,6 +229,7 @@ mod root_test {
             user_id: String::from("user2"),
             scope: Trust::Staff,
             groups_scope: GroupsTrust::None,
+            aa_level: AALevel::Low,
         };
         let params = get_profile_params(username, &scope_and_user, None)?;
         assert!(match params.by {
@@ -247,6 +249,7 @@ mod root_test {
             user_id: String::from("user2"),
             scope: Trust::Staff,
             groups_scope: GroupsTrust::None,
+            aa_level: AALevel::Low,
         };
         let params = get_profile_params(username, &scope_and_user, view_as)?;
         assert!(match params.by {
@@ -266,6 +269,7 @@ mod root_test {
             user_id: String::from("user2"),
             scope: Trust::Authenticated,
             groups_scope: GroupsTrust::None,
+            aa_level: AALevel::Low,
         };
         let params = get_profile_params(username, &scope_and_user, view_as);
         assert!(params.is_err());
@@ -278,6 +282,7 @@ mod root_test {
             user_id: String::from("user1"),
             scope: Trust::Staff,
             groups_scope: GroupsTrust::None,
+            aa_level: AALevel::Low,
         };
         let params = get_profile_params(None, &scope_and_user, None)?;
         assert!(match params.by {
@@ -296,6 +301,7 @@ mod root_test {
             user_id: String::from("user1"),
             scope: Trust::Authenticated,
             groups_scope: GroupsTrust::None,
+            aa_level: AALevel::Low,
         };
         let params = get_profile_params(None, &scope_and_user, view_as)?;
         assert!(match params.by {
