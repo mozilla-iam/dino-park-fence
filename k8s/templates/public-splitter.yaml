@@ -60,27 +60,57 @@ data:
         }
 
         location /(logbackin.html$|favicon.ico$|reload.html$|opensearch.xml$|webapp/|) {
+          {{ if eq .Values.env "test" -}}
+          auth_basic "Authenticate yourself!";
+          auth_basic_user_file /lock/auth;
+          {{ end -}}
+
           proxy_pass http://dino-park-front-end-service.{{ .Values.namespace }}.svc.cluster.local:80;
 
         }
 
         location /_/ {
+          {{ if eq .Values.env "test" -}}
+          auth_basic "Authenticate yourself!";
+          auth_basic_user_file /lock/auth;
+          {{ end -}}
+
           proxy_pass http://dino-park-fence-service.{{ .Values.namespace }}.svc.cluster.local:80;
         }
 
         location /oauth {
+          {{ if eq .Values.env "test" -}}
+          auth_basic "Authenticate yourself!";
+          auth_basic_user_file /lock/auth;
+          {{ end -}}
+
           proxy_pass http://gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80;
         }
 
         location /api/v4/ {
+          {{ if eq .Values.env "test" -}}
+          auth_basic "Authenticate yourself!";
+          auth_basic_user_file /lock/auth;
+          {{ end -}}
+
           proxy_pass http://$api;
         }
 
         location  /whoami/github/username/ {
+          {{ if eq .Values.env "test" -}}
+          auth_basic "Authenticate yourself!";
+          auth_basic_user_file /lock/auth;
+          {{ end -}}
+
           proxy_pass http://$github;
         }
 
         location /avatar/get/ {
+          {{ if eq .Values.env "test" -}}
+          auth_basic "Authenticate yourself!";
+          auth_basic_user_file /lock/auth;
+          {{ end -}}
+
           proxy_pass http://$pictures;
         }
 
@@ -89,6 +119,11 @@ data:
         }
 
         location / {
+          {{ if eq .Values.env "test" -}}
+          auth_basic "Authenticate yourself!";
+          auth_basic_user_file /lock/auth;
+          {{ end -}}
+
           proxy_pass http://$target;
         }
       }
@@ -112,10 +147,6 @@ spec:
       labels:
         app: public-splitter
     spec:
-      volumes:
-      - name: public-splitter
-        configMap:
-          name: public-splitter
       containers:
       - name: public-splitter
         image: nginx:1.17
@@ -129,6 +160,20 @@ spec:
         - name: public-splitter
           mountPath: /etc/nginx/
           readOnly: true
+        {{- if eq .Values.env "test" }}
+        - name: basicauth-secret
+          mountPath: "/lock"
+          readOnly: true
+        {{- end }}
+      volumes:
+      - name: public-splitter
+        configMap:
+          name: public-splitter
+      {{ if eq .Values.env "test" -}}
+      - name: basicauth-secret
+        secret:
+          secretName: basicauth-secret
+      {{- end }}
 
 ---
 apiVersion: v1
