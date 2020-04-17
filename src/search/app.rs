@@ -1,10 +1,8 @@
 use crate::error::ApiError;
 use crate::proxy::proxy;
 use crate::settings::Search;
-use actix_cors::Cors;
 use actix_web::client::Client;
 use actix_web::dev::HttpServiceFactory;
-use actix_web::http;
 use actix_web::web;
 use actix_web::web::Data;
 use actix_web::web::Query;
@@ -45,14 +43,6 @@ async fn handle_simple(
 pub fn search_app(settings: &Search) -> impl HttpServiceFactory {
     let client = Client::default();
     web::scope("/search")
-        .wrap(
-            Cors::new()
-                .allowed_methods(vec!["GET"])
-                .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-                .allowed_header(http::header::CONTENT_TYPE)
-                .max_age(3600)
-                .finish(),
-        )
         .data(client)
         .data(settings.clone())
         .service(web::resource("/simple/").route(web::get().to(handle_simple)))

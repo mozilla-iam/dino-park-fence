@@ -1,4 +1,3 @@
-use actix_cors::Cors;
 use actix_http::cookie::SameSite;
 use actix_web::dev::HttpServiceFactory;
 use actix_web::http;
@@ -38,7 +37,7 @@ fn set_cookie_and_redirect(
                 .path("/")
                 .secure(true)
                 .http_only(true)
-                .same_site(SameStite::Lax)
+                .same_site(SameSite::Lax)
                 .max_age(FIVE_YEARS_IN_SECS)
                 .finish(),
         )
@@ -64,14 +63,6 @@ async fn logout() -> impl Responder {
 
 pub fn session_app() -> impl HttpServiceFactory {
     web::scope("/_")
-        .wrap(
-            Cors::new()
-                .allowed_methods(vec!["GET"])
-                .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-                .allowed_header(http::header::CONTENT_TYPE)
-                .max_age(3600)
-                .finish(),
-        )
         .route("/login", web::get().to(login))
         .route("/logout", web::get().to(logout))
 }

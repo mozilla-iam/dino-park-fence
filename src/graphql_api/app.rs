@@ -2,9 +2,7 @@ use crate::error::ApiError;
 use crate::graphql_api::root::{Mutation, Query, Schema};
 use crate::metrics::Metrics;
 use crate::settings::DinoParkServices;
-use actix_cors::Cors;
 use actix_web::dev::HttpServiceFactory;
-use actix_web::http;
 use actix_web::web;
 use actix_web::web::Data;
 use actix_web::web::Json;
@@ -70,14 +68,6 @@ pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
     );
 
     web::scope("/graphql")
-        .wrap(
-            Cors::new()
-                .allowed_methods(vec!["GET", "POST"])
-                .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-                .allowed_header(http::header::CONTENT_TYPE)
-                .max_age(3600)
-                .finish(),
-        )
         .data(GraphQlState {
             schema: Arc::new(schema),
         })

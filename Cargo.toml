@@ -16,7 +16,6 @@ dino_park_trust = { git = "https://github.com/mozilla-iam/dino-park-trust", tag 
 dino_park_guard = { git = "https://github.com/mozilla-iam/dino-park-guard", tag = "0.2.1", version = "0.2.1" }
 actix-web = "2.0"
 actix-rt = "1.0"
-actix-cors = "0.2"
 actix-http= "1.0"
 juniper = "0.14"
 futures = "0.3"

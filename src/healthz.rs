@@ -1,6 +1,4 @@
-use actix_cors::Cors;
 use actix_web::dev::HttpServiceFactory;
-use actix_web::http;
 use actix_web::web;
 use actix_web::HttpResponse;
 
@@ -9,14 +7,5 @@ async fn healthz() -> HttpResponse {
 }
 
 pub fn healthz_app() -> impl HttpServiceFactory {
-    web::scope("/healthz")
-        .wrap(
-            Cors::new()
-                .allowed_methods(vec!["GET", "HEAD"])
-                .allowed_headers(vec![http::header::AUTHORIZATION, http::header::ACCEPT])
-                .allowed_header(http::header::CONTENT_TYPE)
-                .max_age(3600)
-                .finish(),
-        )
-        .service(web::resource("").to(healthz))
+    web::scope("/healthz").service(web::resource("").to(healthz))
 }
