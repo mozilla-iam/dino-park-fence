@@ -17,6 +17,7 @@ dino_park_guard = { git = "https://github.com/mozilla-iam/dino-park-guard", tag 
 actix-web = "2.0"
 actix-rt = "1.0"
 actix-cors = "0.2"
+actix-http= "1.0"
 juniper = "0.14"
 futures = "0.3"
 log = "0.4"

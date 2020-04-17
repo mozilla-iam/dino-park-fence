@@ -1,4 +1,5 @@
 use actix_cors::Cors;
+use actix_http::cookie::SameSite;
 use actix_web::dev::HttpServiceFactory;
 use actix_web::http;
 use actix_web::http::Cookie;
@@ -37,6 +38,7 @@ fn set_cookie_and_redirect(
                 .path("/")
                 .secure(true)
                 .http_only(true)
+                .same_site(SameStite::Lax)
                 .max_age(FIVE_YEARS_IN_SECS)
                 .finish(),
         )
