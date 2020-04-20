@@ -78,6 +78,15 @@ data:
           proxy_pass http://dino-park-fence-service.{{ .Values.namespace }}.svc.cluster.local:80;
         }
 
+        location /oauth/logout {
+          {{ if eq .Values.env "test" -}}
+          auth_basic "Authenticate yourself!";
+          auth_basic_user_file /lock/auth;
+          {{ end -}}
+
+          proxy_pass http://gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80$uri?redirect=/;
+        }
+
         location /oauth {
           {{ if eq .Values.env "test" -}}
           auth_basic "Authenticate yourself!";
