@@ -139,6 +139,52 @@ fn update_picture(
     Ok(changed)
 }
 
+fn update_google_identity(
+    google: &IdentityWithDisplay,
+    p: &mut IdentitiesAttributesValuesArray,
+    now: &DateTime<Utc>,
+    store: &impl Signer,
+) -> Result<bool, Error> {
+    let mut changed_google = false;
+    if google.remove.unwrap_or_default() {
+        p.google_oauth2_id.metadata.display = Some(Display::Staff);
+        p.google_primary_email.metadata.display = Some(Display::Staff);
+
+        p.google_oauth2_id.value = Some(String::default());
+        p.google_primary_email.value = Some(String::default());
+        changed_google = true;
+    } else if google.display != p.google_oauth2_id.metadata.display
+        || google.display != p.google_primary_email.metadata.display
+    {
+        if let Some(display) = &google.display {
+            if !DISPLAY_NOT_PRIVATE.contains(display) {
+                return Err(format_err!("invalid display level"));
+            }
+            if p.google_oauth2_id.value.is_none() {
+                p.google_oauth2_id.value = Some(String::default())
+            }
+            if p.google_primary_email.value.is_none() {
+                p.google_primary_email.value = Some(String::default())
+            }
+
+            p.google_oauth2_id.metadata.display = Some(display.clone());
+            p.google_primary_email.metadata.display = Some(display.clone());
+            changed_google = true;
+        }
+    }
+
+    if changed_google {
+        p.google_oauth2_id.metadata.last_modified = *now;
+        p.google_primary_email.metadata.last_modified = now.to_owned();
+        p.google_oauth2_id.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+        p.google_primary_email.signature.publisher.name = PublisherAuthority::Mozilliansorg;
+        store.sign_attribute(&mut p.google_oauth2_id)?;
+        store.sign_attribute(&mut p.google_primary_email)?;
+    }
+
+    Ok(changed_google)
+}
+
 fn update_bugzilla_identity(
     bugzilla: &IdentityWithDisplay,
     p: &mut IdentitiesAttributesValuesArray,
@@ -289,6 +335,9 @@ fn update_identities(
         }
         if let Some(bugzilla) = &identities.bugzilla {
             changed |= update_bugzilla_identity(bugzilla, p, u, now, store)?;
+        }
+        if let Some(google) = &identities.google {
+            changed |= update_google_identity(google, p, now, store)?;
         }
     }
 
@@ -475,6 +524,7 @@ pub struct IdentityWithDisplay {
 pub struct IdentitiesWithDisplay {
     pub github: Option<IdentityWithDisplay>,
     pub bugzilla: Option<IdentityWithDisplay>,
+    pub google: Option<IdentityWithDisplay>,
 }
 
 #[derive(GraphQLInputObject, Default)]
