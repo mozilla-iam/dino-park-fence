@@ -2,12 +2,14 @@ use crate::graphql_api::error::field_error;
 use crate::graphql_api::input::InputProfile;
 use crate::metrics::Metrics;
 use crate::settings::DinoParkServices;
+use cis_client::error::ProfileError;
 use cis_client::getby::GetBy;
 use cis_client::sync::client::CisClientTrait;
 use cis_profile::schema::Display;
 use cis_profile::schema::Profile;
 use dino_park_gate::scope::ScopeAndUser;
 use dino_park_trust::Trust;
+use failure::Error;
 use juniper::FieldError;
 use juniper::FieldResult;
 use juniper::RootNode;
@@ -27,10 +29,8 @@ fn get_profile(
     cis_client: &impl CisClientTrait,
     by: &GetBy,
     filter: &str,
-) -> FieldResult<Profile> {
-    cis_client
-        .get_user_by(&id, by, Some(&filter))
-        .map_err(Into::into)
+) -> Result<Profile, Error> {
+    cis_client.get_user_by(&id, by, Some(&filter))
 }
 
 pub struct Mutation<T: CisClientTrait> {
@@ -59,7 +59,7 @@ fn update_profile(
             if num_chars < 2 || num_chars > 64 {
                 return Err(field_error(
                     "username_length",
-                    "Lenght of username must be between 2 and 64. And only contain letters from a-z, digits from 0-9, underscore or hyphen.",
+                    "Length of username must be between 2 and 64. And only contain letters from a-z, digits from 0-9, underscore or hyphen.",
                 ));
             }
             let only_valid_chars = updated_username
@@ -68,7 +68,7 @@ fn update_profile(
             if !only_valid_chars {
                 return Err(field_error(
                     "username_invalid_chars",
-                    "Lenght of username must be between 2 and 64. And only contain letters from a-z, digits from 0-9, underscore or hyphen.",
+                    "Length of username must be between 2 and 64. And only contain letters from a-z, digits from 0-9, underscore or hyphen.",
                 ));
             }
             // the primary_username changed check if it already exists
@@ -78,7 +78,7 @@ fn update_profile(
             {
                 return Err(field_error(
                     "username_exists",
-                    "This username already exitst!",
+                    "This username already exists!",
                 ));
             }
         }
@@ -91,7 +91,7 @@ fn update_profile(
             cis_client.get_secret_store(),
             &dinopark_settings.fossil,
         )
-        .map_err(|e| field_error("unable update/sign profle", e))?;
+        .map_err(|e| field_error("unable update/sign profile", e))?;
     if changed {
         let ret = cis_client.update_user(&user_id, profile)?;
         info!("update returned: {}", ret);
@@ -116,20 +116,31 @@ fn update_profile(
 }]
 impl<T: CisClientTrait> Query<T> {
     fn profile(username: Option<String>, view_as: Option<Display>) -> FieldResult<Profile> {
+        let self_query = username.is_none();
         let executor = &executor;
         let scope_and_user = &executor.context().0;
-        if scope_and_user.scope == Trust::Public && username.is_none() {
+        if scope_and_user.scope == Trust::Public && self_query {
             return Ok(Profile::default());
         }
 
         let params = get_profile_params(username, scope_and_user, view_as)?;
 
-        get_profile(
+        match get_profile(
             params.id,
             &self.cis_client,
             &params.by,
             params.filter.as_str(),
-        )
+        ) {
+            Ok(p) => Ok(p),
+            Err(e) if self_query => match e.downcast::<ProfileError>() {
+                Ok(ProfileError::ProfileDoesNotExist) => Err(FieldError::new(
+                    "wait_for_profile",
+                    graphql_value!({"warning": "profile does not exist yet"}),
+                )),
+                Err(e) => Err(e.into()),
+            },
+            Err(e) => Err(e.into()),
+        }
     }
 }
 
