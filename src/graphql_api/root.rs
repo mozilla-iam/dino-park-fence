@@ -64,11 +64,11 @@ fn update_profile(
             }
             let only_valid_chars = updated_username
                 .chars()
-                .all(|c| c.is_ascii_alphanumeric() || c == '-' || c == '_');
+                .all(|c| (c.is_lowercase() && c.is_ascii_alphanumeric()) || c == '-' || c == '_');
             if !only_valid_chars {
                 return Err(field_error(
                     "username_invalid_chars",
-                    "Length of username must be between 2 and 64. And only contain letters from a-z, digits from 0-9, underscore or hyphen.",
+                    "Length of username must be between 2 and 64. And only contain lowercase letters from a-z, digits from 0-9, underscore or hyphen.",
                 ));
             }
             // the primary_username changed check if it already exists

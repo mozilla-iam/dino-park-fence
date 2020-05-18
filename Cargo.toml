@@ -1,7 +1,7 @@
 [package]
 name = "dino-park-fence"
 version = "0.2.0"
-authors = ["Florian Merz <flomerz@gmail.com>"]
+authors = ["Florian Merz <me@fiji-flo.de>"]
 edition = "2018"
 
 [features]
@@ -9,11 +9,11 @@ default = []
 localuserscope = ["dino_park_gate/localuserscope"]
 
 [dependencies]
-cis_client = { git = "https://github.com/mozilla-iam/cis_client-rust", tag = "0.6.2", version = "0.6.2", features = ["sync"] }
-cis_profile = { git = "https://github.com/mozilla-iam/cis_profile-rust", tag = "0.4.1", version = "0.4.1", features = ["aws", "vendored", "graphql"] }
-dino_park_gate = { git = "https://github.com/mozilla-iam/dino-park-gate", tag = "0.7.0", version = "0.7.0" }
-dino_park_trust = { git = "https://github.com/mozilla-iam/dino-park-trust", tag = "0.0.6", version = "0.0.6" }
-dino_park_guard = { git = "https://github.com/mozilla-iam/dino-park-guard", tag = "0.2.1", version = "0.2.1" }
+cis_client = { git = "https://github.com/mozilla-iam/cis_client-rust", tag = "0.6.3", version = "0.6.3", features = ["sync"] }
+cis_profile = { git = "https://github.com/mozilla-iam/cis_profile-rust", tag = "0.4.2", version = "0.4.2", features = ["aws", "vendored", "graphql"] }
+dino_park_gate = { git = "https://github.com/mozilla-iam/dino-park-gate", tag = "0.7.2", version = "0.7.2" }
+dino_park_trust = { git = "https://github.com/mozilla-iam/dino-park-trust", tag = "0.0.7", version = "0.0.7" }
+dino_park_guard = { git = "https://github.com/mozilla-iam/dino-park-guard", tag = "0.2.3", version = "0.2.3" }
 actix-web = "2.0"
 actix-rt = "1.0"
 actix-http= "1.0"
@@ -31,4 +31,4 @@ percent-encoding = "2.1"
 config = "0.10"
 failure = "0.1"
 url = "2.1"
-prometheus = { version = "0.8", default-features = false }
+prometheus = { version = "0.9", default-features = false }
