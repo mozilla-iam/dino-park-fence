@@ -81,6 +81,15 @@ fn update_profile(
                     "This username already exists!",
                 ));
             }
+            if cis_client
+                .get_inactive_user_by(updated_username, &GetBy::PrimaryUsername, None)
+                .is_ok()
+            {
+                return Err(field_error(
+                    "username_exists",
+                    "This username already exists!",
+                ));
+            }
         }
     }
 
