@@ -19,6 +19,10 @@ use log::warn;
 use reqwest::blocking::Client;
 use std::sync::Arc;
 
+const INVALID_USERNAME_MESSAGE: &str = "\
+Length of username must be between 2 and 64. \
+And only contain lowercase letters from a-z, digits from 0-9, underscore or hyphen.";
+
 pub struct Query<T: CisClientTrait> {
     pub cis_client: T,
     pub dinopark_settings: DinoParkServices,
@@ -57,10 +61,7 @@ fn update_profile(
         if Some(updated_username) != profile.primary_username.value.as_ref() {
             let num_chars = updated_username.chars().count();
             if num_chars < 2 || num_chars > 64 {
-                return Err(field_error(
-                    "username_length",
-                    "Length of username must be between 2 and 64. And only contain letters from a-z, digits from 0-9, underscore or hyphen.",
-                ));
+                return Err(field_error("username_length", INVALID_USERNAME_MESSAGE));
             }
             let only_valid_chars = updated_username
                 .chars()
@@ -68,21 +69,12 @@ fn update_profile(
             if !only_valid_chars {
                 return Err(field_error(
                     "username_invalid_chars",
-                    "Length of username must be between 2 and 64. And only contain lowercase letters from a-z, digits from 0-9, underscore or hyphen.",
+                    INVALID_USERNAME_MESSAGE,
                 ));
             }
             // the primary_username changed check if it already exists
             if cis_client
-                .get_user_by(updated_username, &GetBy::PrimaryUsername, None)
-                .is_ok()
-            {
-                return Err(field_error(
-                    "username_exists",
-                    "This username already exists!",
-                ));
-            }
-            if cis_client
-                .get_inactive_user_by(updated_username, &GetBy::PrimaryUsername, None)
+                .get_any_user_by(updated_username, &GetBy::PrimaryUsername, None)
                 .is_ok()
             {
                 return Err(field_error(

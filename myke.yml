@@ -7,7 +7,7 @@ tasks:
   run-dev:
     cmd: cargo run
   compile-release:
-    cmd: cargo build --target x86_64-unknown-linux-musl --release
+    cmd: cargo build --target x86_64-unknown-linux-gnu --release
   package-local:
     cmd: |
       $myke compile-release
