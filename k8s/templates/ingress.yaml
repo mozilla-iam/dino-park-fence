@@ -26,54 +26,16 @@ spec:
   - host: {{ .Values.domain_name }}
     http:
       paths:
-      {{ if .Values.public -}}
       - path: /
         backend:
           serviceName: public-splitter
           servicePort: 80
-      {{- else -}}
-      - path: /(logbackin.html$|favicon.ico$|reload.html$|opensearch.xml$|webapp|)
-        backend:
-          serviceName: dino-park-front-end-service
-          servicePort: 80
-      - path: /_/
-        backend:
-          serviceName: dino-park-fence-service
-          servicePort: 80
-      - path: /events/update
-        backend:
-          serviceName: dino-park-lookout-service
-          servicePort: 80
-      - path: /
-        backend:
-          serviceName: gatekeeper
-          servicePort: 80
-      {{- end }}
   {{- with .Values.secondary_domain_name }}
   - host: {{ . }}
     http:
       paths:
-      {{ if $.Values.public -}}
       - path: /
         backend:
           serviceName: public-splitter
           servicePort: 80
-      {{- else -}}
-      - path: /(logbackin.html$|favicon.ico$|reload.html$|opensearch.xml$|webapp|)
-        backend:
-          serviceName: dino-park-front-end-service
-          servicePort: 80
-      - path: /_/
-        backend:
-          serviceName: dino-park-fence-service
-          servicePort: 80
-      - path: /events/update
-        backend:
-          serviceName: dino-park-lookout-service
-          servicePort: 80
-      - path: /
-        backend:
-          serviceName: gatekeeper
-          servicePort: 80
-      {{- end }}
   {{- end }}
