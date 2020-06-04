@@ -58,7 +58,7 @@ data:
           return 404;
         }
 
-        location /(contribute.json$|logbackin.html$|favicon.ico$|reload.html$|opensearch.xml$|webapp/|) {
+        location ~ /(contribute.json$|logbackin.html$|favicon.ico$|reload.html$|opensearch.xml$|webapp/) {
           {{ if eq .Values.env "test" -}}
           auth_basic "Authenticate yourself!";
           auth_basic_user_file /lock/auth;
