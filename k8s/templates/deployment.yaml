@@ -37,7 +37,6 @@ spec:
             - name: FORCE_UPDATE
               value: "{{ .Values.force_update | default 0 }}"
             - name: DPF_SETTINGS
-              value: "/data/.settings.json"
               value: "/data/.settings-{{ .Values.env }}.json"
             - name: AWS_DEFAULT_REGION
               value: "{{ .Values.aws_region | default "us-west-2" }}"
