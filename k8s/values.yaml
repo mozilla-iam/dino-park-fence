@@ -7,11 +7,13 @@ ingress_replicas: 1
 oidc_replicas: 1
 router_replicas: 1
 gatekeeper_replicas: 1
-env_dino_park__orgchart__related_endpoint: "http://dino-park-tree-service:80/orgchart/related/"
-env_dino_park__orgchart__trace_endpoint: "http://dino-park-tree-service:80/orgchart/trace/"
-env_dino_park__orgchart__full_endpoint: "http://dino-park-tree-service:80/orgchart"
-env_dino_park__search__simple_endpoint: "http://dino-park-search-service:80/search/simple/"
-env_dino_park__fossil__upload_endpoint: "http://dino-park-fossil-service:80/internal/"
-env_dino_park__lookout__internal_update_enabled: "true"
-env_dino_park__lookout__internal_update_endpoint: "http://dino-park-lookout-service:80/internal/update"
 public: false
+settings:
+  auth: https://auth.mozilla.auth0.com/
+  dino_park__orgchart__related_endpoint: "http://dino-park-tree-service:80/orgchart/related/"
+  dino_park__orgchart__trace_endpoint: "http://dino-park-tree-service:80/orgchart/trace/"
+  dino_park__orgchart__full_endpoint: "http://dino-park-tree-service:80/orgchart"
+  dino_park__search__simple_endpoint: "http://dino-park-search-service:80/search/simple/"
+  dino_park__fossil__upload_endpoint: "http://dino-park-fossil-service:80/internal/"
+  dino_park__lookout__internal_update_enabled: "true"
+  dino_park__lookout__internal_update_endpoint: "http://dino-park-lookout-service:80/internal/update"

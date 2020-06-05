@@ -47,9 +47,7 @@ async fn main() -> std::io::Result<()> {
     let s = settings::Settings::new().map_err(map_io_err)?;
     let cis_client = CisClient::from_settings(&s.cis).await.map_err(map_io_err)?;
     let dino_park_settings = s.dino_park;
-    let provider = Provider::from_issuer("https://auth.mozilla.auth0.com/")
-        .await
-        .map_err(map_io_err)?;
+    let provider = Provider::from_issuer(&s.auth).await.map_err(map_io_err)?;
     // Start http server
     HttpServer::new(move || {
         let scope_middleware = ScopeAndUserAuth::new(provider.clone()).public();

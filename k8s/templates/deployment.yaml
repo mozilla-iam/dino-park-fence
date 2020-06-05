@@ -38,12 +38,13 @@ spec:
               value: "{{ .Values.force_update | default 0 }}"
             - name: DPF_SETTINGS
               value: "/data/.settings.json"
+              value: "/data/.settings-{{ .Values.env }}.json"
             - name: AWS_DEFAULT_REGION
               value: "{{ .Values.aws_region | default "us-west-2" }}"
-            {{- range $key, $value := .Values }}{{ if hasPrefix "env_" $key }}
-            - name: {{ $key | trimPrefix "env_" }}
+            {{- range $key, $value := .Values.settings }}
+            - name: DP_{{ $key | upper }}
               value: "{{ $value }}"
-            {{- end }}{{- end }}
+            {{- end }}
           volumeMounts:
             - name: settings-secrets
               mountPath: "/data"
@@ -51,4 +52,4 @@ spec:
       volumes:
         - name: settings-secrets
           secret:
-            secretName: dino-park-fence
+            secretName: dino-park-fence-v2
