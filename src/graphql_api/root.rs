@@ -42,6 +42,23 @@ pub struct Mutation<T: CisClientTrait> {
     pub dinopark_settings: DinoParkServices,
 }
 
+fn valid_username(username: &str) -> Result<(), FieldError> {
+    let num_chars = username.chars().count();
+    if num_chars < 2 || num_chars > 64 {
+        return Err(field_error("username_length", INVALID_USERNAME_MESSAGE));
+    }
+    let only_valid_chars = username
+        .chars()
+        .all(|c| (c.is_ascii_lowercase() || c.is_ascii_digit()) || c == '-' || c == '_');
+    if !only_valid_chars {
+        return Err(field_error(
+            "username_invalid_chars",
+            INVALID_USERNAME_MESSAGE,
+        ));
+    }
+    Ok(())
+}
+
 fn update_profile(
     update: InputProfile,
     cis_client: &impl CisClientTrait,
@@ -59,19 +76,7 @@ fn update_profile(
         .and_then(|s| s.value.as_ref())
     {
         if Some(updated_username) != profile.primary_username.value.as_ref() {
-            let num_chars = updated_username.chars().count();
-            if num_chars < 2 || num_chars > 64 {
-                return Err(field_error("username_length", INVALID_USERNAME_MESSAGE));
-            }
-            let only_valid_chars = updated_username
-                .chars()
-                .all(|c| (c.is_lowercase() && c.is_ascii_alphanumeric()) || c == '-' || c == '_');
-            if !only_valid_chars {
-                return Err(field_error(
-                    "username_invalid_chars",
-                    INVALID_USERNAME_MESSAGE,
-                ));
-            }
+            valid_username(&updated_username)?;
             // the primary_username changed check if it already exists
             if cis_client
                 .get_any_user_by(updated_username, &GetBy::PrimaryUsername, None)
@@ -323,5 +328,16 @@ mod root_test {
         assert_eq!(params.id, "user1");
         assert_eq!(params.filter, Display::Staff);
         Ok(())
+    }
+
+    #[test]
+    fn test_username() {
+        assert!(valid_username("r--lwqkc13jeqw314").is_ok());
+        assert!(valid_username("--__--").is_ok());
+        assert!(valid_username("r--A").is_err());
+        assert!(valid_username("r--🦊").is_err());
+        assert!(valid_username("").is_err());
+        assert!(valid_username("a").is_err());
+        assert!(valid_username("a".repeat(65).as_str()).is_err());
     }
 }
