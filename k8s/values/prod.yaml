@@ -8,4 +8,3 @@ dinopark_fence_replicas: 3
 ingress_replicas: 5
 router_replicas: 3
 gatekeeper_replicas: 1
-public: true
