@@ -1,13 +1,11 @@
 name: dino-park-fence
 rev: latest
 aws_region: us-west-2
-internal_updates: false
 dinopark_fence_replicas: 1
 ingress_replicas: 1
-oidc_replicas: 1
 router_replicas: 1
 gatekeeper_replicas: 1
-public: false
+public: true
 settings:
   auth: https://auth.mozilla.auth0.com/
   dino_park__orgchart__related_endpoint: "http://dino-park-tree-service:80/orgchart/related/"
