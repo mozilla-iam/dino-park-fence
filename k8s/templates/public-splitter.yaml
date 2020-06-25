@@ -59,30 +59,15 @@ data:
         }
 
         location ~ /(contribute.json$|logbackin.html$|favicon.ico$|reload.html$|opensearch.xml$|webapp/) {
-          {{ if eq .Values.env "test" -}}
-          auth_basic "Authenticate yourself!";
-          auth_basic_user_file /lock/auth;
-          {{ end -}}
-
           proxy_pass http://dino-park-front-end-service.{{ .Values.namespace }}.svc.cluster.local:80;
 
         }
 
         location /_/ {
-          {{ if eq .Values.env "test" -}}
-          auth_basic "Authenticate yourself!";
-          auth_basic_user_file /lock/auth;
-          {{ end -}}
-
           proxy_pass http://dino-park-fence-service.{{ .Values.namespace }}.svc.cluster.local:80;
         }
 
         location /oauth/logout {
-          {{ if eq .Values.env "test" -}}
-          auth_basic "Authenticate yourself!";
-          auth_basic_user_file /lock/auth;
-          {{ end -}}
-
           {{ if .Values.public -}}
           proxy_pass http://gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80$uri?redirect=/;
           {{- else -}}
@@ -91,38 +76,18 @@ data:
         }
 
         location /oauth {
-          {{ if eq .Values.env "test" -}}
-          auth_basic "Authenticate yourself!";
-          auth_basic_user_file /lock/auth;
-          {{ end -}}
-
           proxy_pass http://gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80;
         }
 
         location /api/v4/ {
-          {{ if eq .Values.env "test" -}}
-          auth_basic "Authenticate yourself!";
-          auth_basic_user_file /lock/auth;
-          {{ end -}}
-
           proxy_pass http://$api;
         }
 
         location  /whoami/github/username/ {
-          {{ if eq .Values.env "test" -}}
-          auth_basic "Authenticate yourself!";
-          auth_basic_user_file /lock/auth;
-          {{ end -}}
-
           proxy_pass http://$github;
         }
 
         location /avatar/get/ {
-          {{ if eq .Values.env "test" -}}
-          auth_basic "Authenticate yourself!";
-          auth_basic_user_file /lock/auth;
-          {{ end -}}
-
           proxy_pass http://$pictures;
         }
 
@@ -131,11 +96,6 @@ data:
         }
 
         location / {
-          {{ if eq .Values.env "test" -}}
-          auth_basic "Authenticate yourself!";
-          auth_basic_user_file /lock/auth;
-          {{ end -}}
-
           proxy_pass http://$target;
         }
       }
