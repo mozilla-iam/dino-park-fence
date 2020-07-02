@@ -132,21 +132,10 @@ spec:
         - name: public-splitter
           mountPath: /etc/nginx/
           readOnly: true
-        {{- if eq .Values.env "test" }}
-        - name: basicauth-secret
-          mountPath: "/lock"
-          readOnly: true
-        {{- end }}
       volumes:
       - name: public-splitter
         configMap:
           name: public-splitter
-      {{ if eq .Values.env "test" -}}
-      - name: basicauth-secret
-        secret:
-          secretName: basicauth-secret
-      {{- end }}
-
 ---
 apiVersion: v1
 kind: Service

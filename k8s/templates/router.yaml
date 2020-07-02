@@ -48,11 +48,9 @@ data:
           proxy_pass http://dino-park-front-end-preview-service:80;
         }
         {{ end -}}
-        {{ if or (eq .Values.env "test") (eq .Values.env "dev") -}}
         location /groups/ {
           proxy_pass http://dino-park-packs-service:80;
         }
-        {{ end -}}
         location / {
           proxy_pass http://dino-park-front-end-service:80;
         }
