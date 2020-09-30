@@ -2,13 +2,12 @@ version: 0.2
 
 phases:
   install:
-    runtime-versions:
-      docker: 18
     commands:
       - ". ci/install_deps.sh"
   pre_build:
     commands:
       - export COMMIT_SHA=$CODEBUILD_RESOLVED_SOURCE_VERSION
+      - export REV=$COMMIT_SHA
       - export CODEBUILD_WEBHOOK_TRIGGER=${CODEBUILD_WEBHOOK_TRIGGER:-branch/master}
       - export DEPLOY_ENV=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e 's/tag\/.*-\(.*\)/\1/' | sed -e 's/branch\/master/dev/')
       - export PR=$(if case $CODEBUILD_WEBHOOK_TRIGGER in pr/*) ;; *) false;; esac; then echo 1; fi)
@@ -19,12 +18,12 @@ phases:
       - aws ecr get-login --region us-west-2 --no-include-email | bash
   build:
     commands:
-      - if [ "$PR" = 1 ]; then myke package-local; fi
-      - if [ "$MASTER" = 1 ]; then myke package-local --rev=$COMMIT_SHA push-image --rev=$COMMIT_SHA; fi
+      - if [ "$PR" = 1 ]; then ./do.sh package_local; fi
+      - if [ "$MASTER" = 1 ]; then ./do.sh package_local && ./do.sh push_image; fi
   post_build:
     commands:
       - echo "Environment is ${DEPLOY_ENV}"
-      - if [ "$PR" = "" ]; then myke deploy --deploy_env=$DEPLOY_ENV --rev=$COMMIT_SHA; fi
+      - if [ "$PR" = "" ]; then ./do.sh deploy; fi
 cache:
   paths:
     - $HOME/.cargo
