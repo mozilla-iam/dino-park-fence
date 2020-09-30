@@ -5,12 +5,13 @@ use actix_web::http::Cookie;
 use actix_web::web;
 use actix_web::HttpResponse;
 use actix_web::Responder;
+use time::Duration;
 
 const KEEP_LOGGED_IN_COOKIE_NAME: &str = "pmo-kli";
 const LOGIN_PATH: &str = "/";
 const LOGOUT_PATH: &str = "/oauth/logout?redirect=/";
 
-const FIVE_YEARS_IN_SECS: i64 = 5 * 365 * 24 * 60 * 60;
+const FIVE_YEARS_IN_SECS: Duration = Duration::new(5 * 365 * 24 * 60 * 60, 0);
 
 enum KeepLoggedIn {
     No,
