@@ -4,5 +4,5 @@ secret-*.yaml
 .git/
 .vscode/
 target/
-!target/x86_64-unknown-linux-gnu/release/dino-park-fence
+!target/release/dino-park-fence
 **/.terraform/
