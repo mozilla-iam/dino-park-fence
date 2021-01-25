@@ -25,7 +25,7 @@ env_logger = "0.8"
 serde = "1.0.80"
 serde_json = "1.0.32"
 serde_derive = "1.0.80"
-reqwest = { version = "0.11" }
+reqwest = { version = "0.10", features = ["json"] }
 chrono = "0.4"
 biscuit = "0.5"
 percent-encoding = "2.1"
@@ -38,4 +38,4 @@ time = "0.2"
 syn = "= 1.0.59"
 
 [dev-dependencies]
-tokio = "1"
+tokio = { version = "0.3", features = ["full"] }
