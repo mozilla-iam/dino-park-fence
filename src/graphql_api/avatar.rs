@@ -1,7 +1,7 @@
 use crate::error::ApiError;
 use cis_profile::schema::Display;
 use failure::Error;
-use reqwest::blocking::Client;
+use reqwest::Client;
 
 #[derive(Serialize)]
 struct UploadRequest<'a> {
@@ -28,7 +28,7 @@ struct UploadResponse {
     url: String,
 }
 
-pub fn save_picture(
+pub async fn save_picture(
     update: &str,
     uuid: &str,
     display: &Display,
@@ -44,16 +44,18 @@ pub fn save_picture(
         let UploadResponse { url } = Client::new()
             .post(&format!("{}save/{}", fossil_send_endpoint, uuid))
             .json(&payload)
-            .send()?
+            .send()
+            .await?
             .error_for_status()?
-            .json()?;
+            .json()
+            .await?;
         Ok(url)
     } else {
         Err(ApiError::Unknown.into())
     }
 }
 
-pub fn change_picture_display(
+pub async fn change_picture_display(
     uuid: &str,
     display: &Display,
     old_url: Option<&str>,
@@ -63,8 +65,10 @@ pub fn change_picture_display(
     let UploadResponse { url } = Client::new()
         .post(&format!("{}display/{}", fossil_send_endpoint, uuid))
         .json(&payload)
-        .send()?
+        .send()
+        .await?
         .error_for_status()?
-        .json()?;
+        .json()
+        .await?;
     Ok(url)
 }

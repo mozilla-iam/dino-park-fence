@@ -843,6 +843,7 @@ dependencies = [
  "serde_json",
  "syn",
  "time 0.2.25",
+ "tokio 1.1.0",
  "url",
 ]
 

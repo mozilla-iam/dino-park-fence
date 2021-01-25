@@ -25,7 +25,7 @@ env_logger = "0.8"
 serde = "1.0.80"
 serde_json = "1.0.32"
 serde_derive = "1.0.80"
-reqwest = { version = "0.11", features = ["blocking"] }
+reqwest = { version = "0.11" }
 chrono = "0.4"
 biscuit = "0.5"
 percent-encoding = "2.1"
@@ -36,3 +36,6 @@ prometheus = { version = "0.11", default-features = false }
 time = "0.2"
 # juniper_codegen breaks with syn 1.0.60 :/
 syn = "= 1.0.59"
+
+[dev-dependencies]
+tokio = "1"

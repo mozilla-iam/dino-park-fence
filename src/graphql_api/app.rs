@@ -44,7 +44,9 @@ async fn graphql<T: AsyncCisClientTrait + Send + Sync>(
         &scope_and_user.user_id, &scope_and_user.scope
     );
     let schema = Arc::clone(&state.schema);
-    graphql_handler(&schema, &(scope_and_user, (*metrics).clone()), req, payload).await.map_err(|_| ApiError::Unknown)
+    graphql_handler(&schema, &(scope_and_user, (*metrics).clone()), req, payload)
+        .await
+        .map_err(|_| ApiError::Unknown)
 }
 
 pub fn graphql_app<T: AsyncCisClientTrait + Clone + Send + Sync + 'static>(

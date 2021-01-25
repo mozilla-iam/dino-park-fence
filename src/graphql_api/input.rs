@@ -67,7 +67,7 @@ fn update_access_information_display(
     Ok(false)
 }
 
-fn update_picture(
+async fn update_picture(
     s: &Option<StringWithDisplay>,
     p: &mut StandardAttributeString,
     uuid: &StandardAttributeString,
@@ -103,7 +103,8 @@ fn update_picture(
                         &display,
                         p.value.as_deref(),
                         &fossil_settings.upload_endpoint,
-                    )?;
+                    )
+                    .await?;
                     p.value = Some(url);
                     changed = true;
                 }
@@ -120,7 +121,8 @@ fn update_picture(
                     &display,
                     p.value.as_deref(),
                     &fossil_settings.upload_endpoint,
-                )?;
+                )
+                .await?;
                 p.value = Some(url);
                 changed = true;
             }
@@ -564,7 +566,7 @@ pub struct InputProfile {
 }
 
 impl InputProfile {
-    pub fn update_profile(
+    pub async fn update_profile(
         &self,
         p: &mut Profile,
         scope: &Trust,
@@ -657,7 +659,8 @@ impl InputProfile {
             now,
             secret_store,
             &fossil_settings,
-        )?;
+        )
+        .await?;
         changed |= update_display_for_string(
             &self.primary_email_display,
             &mut p.primary_email,
@@ -816,8 +819,8 @@ mod test {
             .unwrap()
     }
 
-    #[test]
-    fn test_simple_update() -> Result<(), Error> {
+    #[tokio::test]
+    async fn test_simple_update() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
         let fossil_settings = Fossil {
             upload_endpoint: String::default(),
@@ -829,13 +832,15 @@ mod test {
             display: None,
         });
         assert_eq!(p.fun_title.value, None);
-        update.update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)?;
+        update
+            .update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)
+            .await?;
         assert_eq!(p.fun_title.value, update.fun_title.unwrap().value);
         Ok(())
     }
 
-    #[test]
-    fn test_update_with_invalid_display_fails() -> Result<(), Error> {
+    #[tokio::test]
+    async fn test_update_with_invalid_display_fails() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
         let fossil_settings = Fossil {
             upload_endpoint: String::default(),
@@ -851,12 +856,13 @@ mod test {
         assert_ne!(p.fun_title.metadata.display, Some(Display::Private));
         assert!(update
             .update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)
+            .await
             .is_err());
         Ok(())
     }
 
-    #[test]
-    fn test_update_display_only_with_null_value_string() -> Result<(), Error> {
+    #[tokio::test]
+    async fn test_update_display_only_with_null_value_string() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
         let fossil_settings = Fossil {
             upload_endpoint: String::default(),
@@ -870,15 +876,17 @@ mod test {
         assert_eq!(p.pronouns.value, None);
         assert_eq!(p.fun_title.value, None);
         assert_ne!(p.fun_title.metadata.display, Some(Display::Vouched));
-        update.update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)?;
+        update
+            .update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)
+            .await?;
         assert_eq!(p.pronouns.value, None);
         assert_eq!(p.fun_title.value, Some(String::default()));
         assert_eq!(p.fun_title.metadata.display, Some(Display::Vouched));
         Ok(())
     }
 
-    #[test]
-    fn test_update_display_only_with_null_value_kv() -> Result<(), Error> {
+    #[tokio::test]
+    async fn test_update_display_only_with_null_value_kv() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
         let fossil_settings = Fossil {
             upload_endpoint: String::default(),
@@ -892,15 +900,17 @@ mod test {
         assert_eq!(p.tags.values, None);
         assert_eq!(p.languages.values, None);
         assert_ne!(p.languages.metadata.display, Some(Display::Vouched));
-        update.update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)?;
+        update
+            .update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)
+            .await?;
         assert_eq!(p.tags.values, None);
         assert_eq!(p.languages.values, Some(Default::default()));
         assert_eq!(p.languages.metadata.display, Some(Display::Vouched));
         Ok(())
     }
 
-    #[test]
-    fn test_update_access_information_display_initializes_groups() -> Result<(), Error> {
+    #[tokio::test]
+    async fn test_update_access_information_display_initializes_groups() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
         let fossil_settings = Fossil {
             upload_endpoint: String::default(),
@@ -915,7 +925,9 @@ mod test {
             p.access_information.mozilliansorg.metadata.display,
             Some(Display::Ndaed)
         );
-        update.update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)?;
+        update
+            .update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)
+            .await?;
         assert_eq!(
             p.access_information.mozilliansorg.values,
             Some(KeyValue(BTreeMap::default()))
@@ -927,8 +939,8 @@ mod test {
         Ok(())
     }
 
-    #[test]
-    fn test_update_access_information_display_keeps_groups() -> Result<(), Error> {
+    #[tokio::test]
+    async fn test_update_access_information_display_keeps_groups() -> Result<(), Error> {
         let secret_store = get_fake_secret_store();
         let fossil_settings = Fossil {
             upload_endpoint: String::default(),
@@ -945,7 +957,9 @@ mod test {
             access_information_mozilliansorg_display: Some(Display::Ndaed),
             ..Default::default()
         };
-        update.update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)?;
+        update
+            .update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)
+            .await?;
         assert_eq!(
             p.access_information.mozilliansorg.values,
             Some(KeyValue(groups))

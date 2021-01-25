@@ -16,7 +16,7 @@ use juniper::RootNode;
 use log::error;
 use log::info;
 use log::warn;
-use reqwest::blocking::Client;
+use reqwest::Client;
 use std::sync::Arc;
 
 const INVALID_USERNAME_MESSAGE: &str = "\
@@ -100,6 +100,7 @@ async fn update_profile(
             cis_client.get_secret_store(),
             &dinopark_settings.fossil,
         )
+        .await
         .map_err(|e| field_error("unable update/sign profile", e))?;
     if changed {
         let ret = cis_client.update_user(&user_id, profile).await?;
@@ -112,6 +113,7 @@ async fn update_profile(
                 .post(&dinopark_settings.lookout.internal_update_endpoint)
                 .json(&updated_profile)
                 .send()
+                .await
             {
                 error!("unable to post to lookout: {}", e);
             }
@@ -141,7 +143,9 @@ impl<T: AsyncCisClientTrait + Send + Sync> Query<T> {
             &self.cis_client,
             &params.by,
             params.filter.as_str(),
-        ).await {
+        )
+        .await
+        {
             Ok(p) => Ok(p),
             Err(e) if self_query => match e.downcast::<ProfileError>() {
                 Ok(ProfileError::ProfileDoesNotExist) => Err(FieldError::new(
@@ -171,7 +175,9 @@ impl<T: AsyncCisClientTrait + Send + Sync> Mutation<T> {
             &self.dinopark_settings,
             &Some(executor.context().0.user_id.clone()),
             executor.context().0.scope.clone(),
-        ).await {
+        )
+        .await
+        {
             Ok((profile, true)) => {
                 executor.context().1.counters.field_any_changed.inc();
                 Ok(profile)
@@ -182,7 +188,12 @@ impl<T: AsyncCisClientTrait + Send + Sync> Mutation<T> {
     }
 }
 
-pub type Schema<T> = RootNode<'static, Query<T>, Mutation<T>, juniper::EmptySubscription<(ScopeAndUser, Arc<Metrics>)>>;
+pub type Schema<T> = RootNode<
+    'static,
+    Query<T>,
+    Mutation<T>,
+    juniper::EmptySubscription<(ScopeAndUser, Arc<Metrics>)>,
+>;
 
 struct GetProfileParams {
     id: String,
