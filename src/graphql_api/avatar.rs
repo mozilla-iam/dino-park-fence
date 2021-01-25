@@ -35,9 +35,9 @@ pub fn save_picture(
     old_url: Option<&str>,
     fossil_send_endpoint: &str,
 ) -> Result<String, Error> {
-    if update.starts_with("intermediate:") {
+    if let Some(intermediate) = update.strip_prefix("intermediate:") {
         let payload = SaveRequest {
-            intermediate: &update[13..],
+            intermediate,
             display,
             old_url,
         };

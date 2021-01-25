@@ -4,7 +4,7 @@ use crate::metrics::Metrics;
 use crate::settings::DinoParkServices;
 use cis_client::error::ProfileError;
 use cis_client::getby::GetBy;
-use cis_client::sync::client::CisClientTrait;
+use cis_client::AsyncCisClientTrait;
 use cis_profile::schema::Display;
 use cis_profile::schema::Profile;
 use dino_park_gate::scope::ScopeAndUser;
@@ -23,28 +23,28 @@ const INVALID_USERNAME_MESSAGE: &str = "\
 Length of username must be between 2 and 64. \
 And only contain lowercase letters from a-z, digits from 0-9, underscore or hyphen.";
 
-pub struct Query<T: CisClientTrait> {
+pub struct Query<T: AsyncCisClientTrait> {
     pub cis_client: T,
     pub dinopark_settings: DinoParkServices,
 }
 
-fn get_profile(
+async fn get_profile(
     id: String,
-    cis_client: &impl CisClientTrait,
+    cis_client: &impl AsyncCisClientTrait,
     by: &GetBy,
     filter: &str,
 ) -> Result<Profile, Error> {
-    cis_client.get_user_by(&id, by, Some(&filter))
+    cis_client.get_user_by(&id, by, Some(&filter)).await
 }
 
-pub struct Mutation<T: CisClientTrait> {
+pub struct Mutation<T: AsyncCisClientTrait> {
     pub cis_client: T,
     pub dinopark_settings: DinoParkServices,
 }
 
 fn valid_username(username: &str) -> Result<(), FieldError> {
     let num_chars = username.chars().count();
-    if num_chars < 2 || num_chars > 64 {
+    if !(2..=64).contains(&num_chars) {
         return Err(field_error("username_length", INVALID_USERNAME_MESSAGE));
     }
     let only_valid_chars = username
@@ -59,9 +59,9 @@ fn valid_username(username: &str) -> Result<(), FieldError> {
     Ok(())
 }
 
-fn update_profile(
+async fn update_profile(
     update: InputProfile,
-    cis_client: &impl CisClientTrait,
+    cis_client: &impl AsyncCisClientTrait,
     dinopark_settings: &DinoParkServices,
     user: &Option<String>,
     scope: Trust,
@@ -69,7 +69,9 @@ fn update_profile(
     let user_id = user
         .clone()
         .ok_or_else(|| field_error("no username in query or scope", "?!"))?;
-    let mut profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
+    let mut profile = cis_client
+        .get_user_by(&user_id, &GetBy::UserId, None)
+        .await?;
     if let Some(updated_username) = update
         .primary_username
         .as_ref()
@@ -80,6 +82,7 @@ fn update_profile(
             // the primary_username changed check if it already exists
             if cis_client
                 .get_any_user_by(updated_username, &GetBy::PrimaryUsername, None)
+                .await
                 .is_ok()
             {
                 return Err(field_error(
@@ -99,9 +102,11 @@ fn update_profile(
         )
         .map_err(|e| field_error("unable update/sign profile", e))?;
     if changed {
-        let ret = cis_client.update_user(&user_id, profile)?;
+        let ret = cis_client.update_user(&user_id, profile).await?;
         info!("update returned: {}", ret);
-        let updated_profile = cis_client.get_user_by(&user_id, &GetBy::UserId, None)?;
+        let updated_profile = cis_client
+            .get_user_by(&user_id, &GetBy::UserId, None)
+            .await?;
         if dinopark_settings.lookout.internal_update_enabled {
             if let Err(e) = Client::new()
                 .post(&dinopark_settings.lookout.internal_update_endpoint)
@@ -117,11 +122,11 @@ fn update_profile(
     }
 }
 
-#[juniper::object{
+#[juniper::graphql_object{
     Context = (ScopeAndUser, Arc<Metrics>)
 }]
-impl<T: CisClientTrait> Query<T> {
-    fn profile(username: Option<String>, view_as: Option<Display>) -> FieldResult<Profile> {
+impl<T: AsyncCisClientTrait + Send + Sync> Query<T> {
+    async fn profile(username: Option<String>, view_as: Option<Display>) -> FieldResult<Profile> {
         let self_query = username.is_none();
         let executor = &executor;
         let scope_and_user = &executor.context().0;
@@ -136,7 +141,7 @@ impl<T: CisClientTrait> Query<T> {
             &self.cis_client,
             &params.by,
             params.filter.as_str(),
-        ) {
+        ).await {
             Ok(p) => Ok(p),
             Err(e) if self_query => match e.downcast::<ProfileError>() {
                 Ok(ProfileError::ProfileDoesNotExist) => Err(FieldError::new(
@@ -150,11 +155,11 @@ impl<T: CisClientTrait> Query<T> {
     }
 }
 
-#[juniper::object{
+#[juniper::graphql_object{
     Context = (ScopeAndUser, Arc<Metrics>)
 }]
-impl<T: CisClientTrait> Mutation<T> {
-    fn profile(update: InputProfile) -> FieldResult<Profile> {
+impl<T: AsyncCisClientTrait + Send + Sync> Mutation<T> {
+    async fn profile(update: InputProfile) -> FieldResult<Profile> {
         let executor = &executor;
         let scope_and_user = &executor.context().0;
         if scope_and_user.scope == Trust::Public {
@@ -166,7 +171,7 @@ impl<T: CisClientTrait> Mutation<T> {
             &self.dinopark_settings,
             &Some(executor.context().0.user_id.clone()),
             executor.context().0.scope.clone(),
-        ) {
+        ).await {
             Ok((profile, true)) => {
                 executor.context().1.counters.field_any_changed.inc();
                 Ok(profile)
@@ -177,7 +182,7 @@ impl<T: CisClientTrait> Mutation<T> {
     }
 }
 
-pub type Schema<T> = RootNode<'static, Query<T>, Mutation<T>>;
+pub type Schema<T> = RootNode<'static, Query<T>, Mutation<T>, juniper::EmptySubscription<(ScopeAndUser, Arc<Metrics>)>>;
 
 struct GetProfileParams {
     id: String,
@@ -226,7 +231,7 @@ fn get_profile_params(
         GetProfileParams {
             id: scope_and_user.user_id.clone(),
             by: GetBy::UserId,
-            filter: view_as.unwrap_or_else(|| Display::Private),
+            filter: view_as.unwrap_or(Display::Private),
         }
     };
     Ok(params)

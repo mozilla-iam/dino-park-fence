@@ -5,18 +5,18 @@ use crate::settings::DinoParkServices;
 use actix_web::dev::HttpServiceFactory;
 use actix_web::web;
 use actix_web::web::Data;
-use actix_web::web::Json;
 use actix_web::HttpResponse;
-use cis_client::sync::client::CisClientTrait;
+use cis_client::AsyncCisClientTrait;
 use dino_park_gate::scope::ScopeAndUser;
 use dino_park_guard::guard;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
+use juniper_actix::graphql_handler;
 use log::info;
 use std::sync::Arc;
 
 #[derive(Clone)]
-pub struct GraphQlState<T: CisClientTrait + 'static> {
+pub struct GraphQlState<T: AsyncCisClientTrait + Send + Sync + 'static> {
     schema: Arc<Schema<T>>,
 }
 
@@ -25,15 +25,16 @@ pub struct GraphQlData(GraphQLRequest);
 
 #[guard(Staff)]
 async fn graphiql() -> Result<HttpResponse, ApiError> {
-    let html = graphiql_source("/api/v4/graphql");
+    let html = graphiql_source("/api/v4/graphql", None);
     Ok(HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(html))
 }
 
 #[guard(Public)]
-async fn graphql<T: CisClientTrait + Send + Sync>(
-    data: Json<GraphQLRequest>,
+async fn graphql<T: AsyncCisClientTrait + Send + Sync>(
+    req: actix_web::HttpRequest,
+    payload: actix_web::web::Payload,
     state: Data<GraphQlState<T>>,
     scope_and_user: ScopeAndUser,
     metrics: Data<Metrics>,
@@ -43,16 +44,10 @@ async fn graphql<T: CisClientTrait + Send + Sync>(
         &scope_and_user.user_id, &scope_and_user.scope
     );
     let schema = Arc::clone(&state.schema);
-    let res = web::block(move || {
-        let res = data.execute(&schema, &(scope_and_user, (*metrics).clone()));
-        serde_json::to_value(&res)
-    })
-    .await
-    .map_err(|_| ApiError::Unknown)?;
-    Ok(HttpResponse::Ok().json(res))
+    graphql_handler(&schema, &(scope_and_user, (*metrics).clone()), req, payload).await.map_err(|_| ApiError::Unknown)
 }
 
-pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
+pub fn graphql_app<T: AsyncCisClientTrait + Clone + Send + Sync + 'static>(
     cis_client: T,
     dinopark_settings: &DinoParkServices,
 ) -> impl HttpServiceFactory {
@@ -65,6 +60,7 @@ pub fn graphql_app<T: CisClientTrait + Clone + Send + Sync + 'static>(
             cis_client,
             dinopark_settings: dinopark_settings.clone(),
         },
+        juniper::EmptySubscription::default(),
     );
 
     web::scope("/graphql")
