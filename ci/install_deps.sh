@@ -26,5 +26,5 @@ rustc --version
 
 rustup target add x86_64-unknown-linux-gnu
 HELM_INSTALL_DIR=/bin
-curl https://raw.githubusercontent.com/helm/helm/master/scripts/get | bash
+curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
 
