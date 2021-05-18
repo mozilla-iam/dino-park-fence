@@ -18,7 +18,7 @@ struct SearchQuery {
     a: Option<String>,
 }
 
-#[guard(Public)]
+#[guard(Authenticated)]
 async fn handle_simple(
     client: Data<Client>,
     search: Data<Search>,

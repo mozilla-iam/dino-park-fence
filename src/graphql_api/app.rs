@@ -31,7 +31,7 @@ async fn graphiql() -> Result<HttpResponse, ApiError> {
         .body(html))
 }
 
-#[guard(Public)]
+#[guard(Authenticated)]
 async fn graphql<T: AsyncCisClientTrait + Send + Sync>(
     req: actix_web::HttpRequest,
     payload: actix_web::web::Payload,
