@@ -26,6 +26,18 @@ resource "aws_codebuild_project" "build" {
     privileged_mode = "true"
 
     environment_variable {
+      name  = "DOCKERHUB_USERNAME"
+      type  = "PARAMETER_STORE"
+      value = " /iam/dino-park-front-end/mozilla/DOCKERHUB_USERNAME"
+    }
+
+    environment_variable {
+      name  = "DOCKERHUB_PASSWORD"
+      type  = "PARAMETER_STORE"
+      value = "/iam/dino-park-front-end/mozilla/DOCKERHUB_PASSWORD"
+    }
+
+    environment_variable {
       name  = "DOCKER_REPO"
       value = aws_ecr_repository.registry.repository_url
     }
