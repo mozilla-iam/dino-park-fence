@@ -884,8 +884,8 @@ dependencies = [
 
 [[package]]
 name = "dino_park_gate"
-version = "0.8.1"
-source = "git+https://github.com/mozilla-iam/dino-park-gate?branch=0.8#912ccd4198753b124283543781bb81157520f730"
+version = "0.8.2"
+source = "git+https://github.com/mozilla-iam/dino-park-gate?branch=0.8.2#13e3c4052eff178720fc7589c867fba8e4332aff"
 dependencies = [
  "actix-service",
  "actix-web",
