@@ -34,7 +34,7 @@ async fn get_profile(
     by: &GetBy,
     filter: &str,
 ) -> Result<Profile, Error> {
-    cis_client.get_user_by(&id, by, Some(&filter)).await
+    cis_client.get_user_by(&id, by, Some(filter)).await
 }
 
 pub struct Mutation<T: AsyncCisClientTrait> {
@@ -78,7 +78,7 @@ async fn update_profile(
         .and_then(|s| s.value.as_ref())
     {
         if Some(updated_username) != profile.primary_username.value.as_ref() {
-            valid_username(&updated_username)?;
+            valid_username(updated_username)?;
             // the primary_username changed check if it already exists
             if cis_client
                 .get_any_user_by(updated_username, &GetBy::PrimaryUsername, None)
