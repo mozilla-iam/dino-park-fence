@@ -29,13 +29,13 @@ async fn handle_simple(
     url.path_segments_mut()
         .map_err(|_| ApiError::Unknown)?
         .pop_if_empty()
-        .push(&scope_and_user.scope.as_str())
+        .push(scope_and_user.scope.as_str())
         .push("");
     url.query_pairs_mut()
         .append_pair("q", &query.q)
         .append_pair("w", &query.w);
     if let Some(a) = &query.a {
-        url.query_pairs_mut().append_pair("a", &a);
+        url.query_pairs_mut().append_pair("a", a);
     }
     proxy(&*client, url.as_str()).await
 }

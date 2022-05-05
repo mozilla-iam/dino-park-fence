@@ -98,9 +98,9 @@ async fn update_picture(
                         .as_ref()
                         .ok_or_else(|| failure::err_msg("no uuid in profile"))?;
                     let url = save_picture(
-                        &value,
+                        value,
                         uuid,
-                        &display,
+                        display,
                         p.value.as_deref(),
                         &fossil_settings.upload_endpoint,
                     )
@@ -118,7 +118,7 @@ async fn update_picture(
                     .ok_or_else(|| failure::err_msg("no uuid in profile"))?;
                 let url = change_picture_display(
                     uuid,
-                    &display,
+                    display,
                     p.value.as_deref(),
                     &fossil_settings.upload_endpoint,
                 )
@@ -658,7 +658,7 @@ impl InputProfile {
             &p.uuid,
             now,
             secret_store,
-            &fossil_settings,
+            fossil_settings,
         )
         .await?;
         changed |= update_display_for_string(
