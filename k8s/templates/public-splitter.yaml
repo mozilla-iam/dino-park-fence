@@ -121,7 +121,7 @@ spec:
     spec:
       containers:
       - name: public-splitter
-        image: nginx:1.17
+        image: nginx:1.20
         ports:
         - name: http
           containerPort: 80
