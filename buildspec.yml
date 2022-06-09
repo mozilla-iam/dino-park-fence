@@ -16,6 +16,7 @@ phases:
       - echo "running for ${COMMIT_SHA} in ${DEPLOY_ENV}"
       - aws eks update-kubeconfig --name $CLUSTER
       - aws ecr get-login --region us-west-2 --no-include-email | bash
+      - echo "${DOCKERHUB_PASSWORD}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
   build:
     commands:
       - if [ "$PR" = 1 ]; then ./do.sh package_local; fi
