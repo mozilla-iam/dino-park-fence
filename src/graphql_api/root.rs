@@ -2,7 +2,7 @@ use crate::graphql_api::error::field_error;
 use crate::graphql_api::input::InputProfile;
 use crate::metrics::Metrics;
 use crate::settings::DinoParkServices;
-use cis_client::error::{ProfileError, CisClientError};
+use cis_client::error::{CisClientError, ProfileError};
 use cis_client::getby::GetBy;
 use cis_client::AsyncCisClientTrait;
 use cis_profile::schema::Display;
@@ -149,10 +149,12 @@ impl<T: AsyncCisClientTrait + Send + Sync> Query<T> {
             // if there was an error and self_query is none
             // enter nested match on enum error type CisClientError
             Err(e) if self_query => match e {
-                CisClientError::ProfileError(ProfileError::ProfileDoesNotExist) =>  Err(FieldError::new(
-                    "wait_for_profile",                                         
-                    graphql_value!({"warning": "profile does not exist yet"}),  
-                )),                                                             
+                CisClientError::ProfileError(ProfileError::ProfileDoesNotExist) => {
+                    Err(FieldError::new(
+                        "wait_for_profile",
+                        graphql_value!({"warning": "profile does not exist yet"}),
+                    ))
+                }
                 e => Err(e.into()),
             },
             Err(e) => Err(e.into()),

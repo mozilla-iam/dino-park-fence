@@ -10,7 +10,8 @@ const KEEP_LOGGED_IN_COOKIE_NAME: &str = "pmo-kli";
 const LOGIN_PATH: &str = "/";
 const LOGOUT_PATH: &str = "/oauth/logout?redirect=/";
 
-const FIVE_YEARS_IN_SECS: cookie::time::Duration = cookie::time::Duration::new(5 * 365 * 24 * 60 * 60, 0);
+const FIVE_YEARS_IN_SECS: cookie::time::Duration =
+    cookie::time::Duration::new(5 * 365 * 24 * 60 * 60, 0);
 
 enum KeepLoggedIn {
     No,
