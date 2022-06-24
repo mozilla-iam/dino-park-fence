@@ -38,4 +38,4 @@ time = "0.2"
 syn = "= 1.0.98"
 
 [dev-dependencies]
-tokio = { version = "0.3", features = ["full"] }
+tokio = { version = "1", features = ["full"] }
