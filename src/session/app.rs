@@ -1,17 +1,16 @@
-use actix_http::cookie::SameSite;
 use actix_web::dev::HttpServiceFactory;
 use actix_web::http;
-use actix_web::http::Cookie;
 use actix_web::web;
 use actix_web::HttpResponse;
 use actix_web::Responder;
-use time::Duration;
+use cookie::Cookie;
+use cookie::SameSite;
 
 const KEEP_LOGGED_IN_COOKIE_NAME: &str = "pmo-kli";
 const LOGIN_PATH: &str = "/";
 const LOGOUT_PATH: &str = "/oauth/logout?redirect=/";
 
-const FIVE_YEARS_IN_SECS: Duration = Duration::new(5 * 365 * 24 * 60 * 60, 0);
+const FIVE_YEARS_IN_SECS: cookie::time::Duration = cookie::time::Duration::new(5 * 365 * 24 * 60 * 60, 0);
 
 enum KeepLoggedIn {
     No,
@@ -42,7 +41,7 @@ fn set_cookie_and_redirect(
                 .max_age(FIVE_YEARS_IN_SECS)
                 .finish(),
         )
-        .header(http::header::LOCATION, location)
+        .append_header((http::header::LOCATION, location.to_string()))
         .finish()
 }
 

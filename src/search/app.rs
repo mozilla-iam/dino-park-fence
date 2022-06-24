@@ -1,12 +1,12 @@
 use crate::error::ApiError;
 use crate::proxy::proxy;
 use crate::settings::Search;
-use actix_web::client::Client;
 use actix_web::dev::HttpServiceFactory;
 use actix_web::web;
 use actix_web::web::Data;
 use actix_web::web::Query;
 use actix_web::HttpResponse;
+use awc::Client;
 use dino_park_gate::scope::ScopeAndUser;
 use dino_park_guard::guard;
 use url::Url;
@@ -43,7 +43,7 @@ async fn handle_simple(
 pub fn search_app(settings: &Search) -> impl HttpServiceFactory {
     let client = Client::default();
     web::scope("/search")
-        .data(client)
-        .data(settings.clone())
+        .app_data(client)
+        .app_data(settings.clone())
         .service(web::resource("/simple/").route(web::get().to(handle_simple)))
 }
