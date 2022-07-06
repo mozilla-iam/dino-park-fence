@@ -842,7 +842,7 @@ dependencies = [
  "cis_client",
  "cis_profile",
  "config",
- "dino_park_gate 0.8.1 (git+https://github.com/mozilla-iam/dino-park-gate?branch=0.8.1)",
+ "dino_park_gate 0.8.2",
  "dino_park_guard",
  "dino_park_trust",
  "env_logger 0.8.4",
@@ -884,8 +884,8 @@ dependencies = [
 
 [[package]]
 name = "dino_park_gate"
-version = "0.8.2"
-source = "git+https://github.com/mozilla-iam/dino-park-gate?branch=0.8.2#13e3c4052eff178720fc7589c867fba8e4332aff"
+version = "0.8.1"
+source = "git+https://github.com/mozilla-iam/dino-park-gate?branch=0.8#912ccd4198753b124283543781bb81157520f730"
 dependencies = [
  "actix-service",
  "actix-web",
@@ -909,8 +909,8 @@ dependencies = [
 
 [[package]]
 name = "dino_park_gate"
-version = "0.8.1"
-source = "git+https://github.com/mozilla-iam/dino-park-gate?branch=0.8.1#73edc12016b4546b9cbfae7bb7de3d4735db8c6c"
+version = "0.8.2"
+source = "git+https://github.com/mozilla-iam/dino-park-gate?branch=0.8.2#13e3c4052eff178720fc7589c867fba8e4332aff"
 dependencies = [
  "actix-service",
  "actix-web",
@@ -937,7 +937,7 @@ name = "dino_park_guard"
 version = "0.3.0"
 source = "git+https://github.com/mozilla-iam/dino-park-guard?branch=0.3#7de37401a3c2fa2b6423a13534c5a3f152f35b25"
 dependencies = [
- "dino_park_gate 0.8.1 (git+https://github.com/mozilla-iam/dino-park-gate?branch=0.8)",
+ "dino_park_gate 0.8.1",
  "dino_park_trust",
  "failure",
  "quote",
@@ -2026,9 +2026,9 @@ checksum = "ff011a302c396a5197692431fc1948019154afc178baf7d8e37367442a4601cf"
 
 [[package]]
 name = "openssl-src"
-version = "111.18.0+1.1.1n"
+version = "111.22.0+1.1.1q"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7897a926e1e8d00219127dc020130eca4292e5ca666dd592480d72c3eca2ff6c"
+checksum = "8f31f0d509d1c1ae9cada2f9539ff8f37933831fd5098879e482aa687d659853"
 dependencies = [
  "cc",
 ]
