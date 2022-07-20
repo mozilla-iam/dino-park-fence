@@ -1,5 +1,5 @@
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: pictures-ingress
@@ -22,6 +22,9 @@ spec:
     http:
       paths:
       - path: /avatar/get/id/
+        pathType: ImplementationSpecific
         backend:
-          serviceName: dino-park-fossil-service
-          servicePort: 80
+          service:
+            name: dino-park-fossil-service
+            port:
+              number: 80

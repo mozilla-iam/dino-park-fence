@@ -1,5 +1,5 @@
 ---
-apiVersion: extensions/v1beta1
+apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: dino-park-nginx-ingress
@@ -27,19 +27,28 @@ spec:
     http:
       paths:
       - path: /
+        pathType: ImplementationSpecific
         backend:
-          serviceName: public-splitter
-          servicePort: 80
+          service:
+            name: public-splitter
+            port:
+              number: 80
       - path: /oauth/callback
+        pathType: ImplementationSpecific
         backend:
-          serviceName: gatekeeper
-          servicePort: 80
+          service:
+            name: gatekeeper
+            port:
+              number: 80
   {{- with .Values.secondary_domain_name }}
   - host: {{ . }}
     http:
       paths:
       - path: /
+        pathType: ImplementationSpecific
         backend:
-          serviceName: public-splitter
-          servicePort: 80
+          service:
+            name: public-splitter
+            port:
+              number: 80
   {{- end }}
