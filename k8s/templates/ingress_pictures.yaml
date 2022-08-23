@@ -7,7 +7,7 @@ metadata:
   annotations:
     kubernetes.io/ingress.class: "nginx-{{ .Values.namespace }}"
     ingress.kubernetes.io/limit-rps: "100"
-    certmanager.k8s.io/cluster-issuer: letsencrypt-production
+    cert-manager.io/issuer: letsencrypt-production
     nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/enable-modsecurity: "true"
