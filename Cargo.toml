@@ -1,6 +1,6 @@
 [package]
 name = "dino-park-fence"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Florian Merz <me@fiji-flo.de>"]
 edition = "2018"
 
@@ -11,8 +11,8 @@ localuserscope = ["dino_park_gate/localuserscope"]
 [dependencies]
 cis_client = { git = "https://github.com/mozilla-iam/cis_client-rust", branch = "0.8", version = "0.8", features = ["sync"]}
 cis_profile = { git = "https://github.com/mozilla-iam/cis_profile-rust", branch = "0.5", version = "0.5", features = ["aws", "vendored", "graphql"] }
-dino_park_gate = { git = "https://github.com/mozilla-iam/dino-park-gate", branch = "0.8.2", version = "0.8.2" }
-dino_park_guard = { git = "https://github.com/mozilla-iam/dino-park-guard", branch = "0.3", version = "0.3" }
+dino_park_gate = { git = "https://github.com/mozilla-iam/dino-park-gate", tag = "0.8.3", version = "0.8.3" }
+dino_park_guard = { git = "https://github.com/mozilla-iam/dino-park-guard", tag = "0.3.1", version = "0.3.1" }
 dino_park_trust = { git = "https://github.com/mozilla-iam/dino-park-trust", tag = "0.0.7", version = "0.0.7" }
 actix-web = "3"
 actix-rt = "1"
