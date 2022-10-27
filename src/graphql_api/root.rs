@@ -2,14 +2,13 @@ use crate::graphql_api::error::field_error;
 use crate::graphql_api::input::InputProfile;
 use crate::metrics::Metrics;
 use crate::settings::DinoParkServices;
-use cis_client::error::ProfileError;
+use cis_client::error::{CisClientError, ProfileError};
 use cis_client::getby::GetBy;
 use cis_client::AsyncCisClientTrait;
 use cis_profile::schema::Display;
 use cis_profile::schema::Profile;
 use dino_park_gate::scope::ScopeAndUser;
 use dino_park_trust::Trust;
-use failure::Error;
 use juniper::FieldError;
 use juniper::FieldResult;
 use juniper::RootNode;
@@ -33,7 +32,7 @@ async fn get_profile(
     cis_client: &impl AsyncCisClientTrait,
     by: &GetBy,
     filter: &str,
-) -> Result<Profile, Error> {
+) -> Result<Profile, CisClientError> {
     cis_client.get_user_by(&id, by, Some(filter)).await
 }
 
@@ -147,12 +146,16 @@ impl<T: AsyncCisClientTrait + Send + Sync> Query<T> {
         .await
         {
             Ok(p) => Ok(p),
-            Err(e) if self_query => match e.downcast::<ProfileError>() {
-                Ok(ProfileError::ProfileDoesNotExist) => Err(FieldError::new(
-                    "wait_for_profile",
-                    graphql_value!({"warning": "profile does not exist yet"}),
-                )),
-                Err(e) => Err(e.into()),
+            // if there was an error and self_query is none
+            // enter nested match on enum error type CisClientError
+            Err(e) if self_query => match e {
+                CisClientError::ProfileError(ProfileError::ProfileDoesNotExist) => {
+                    Err(FieldError::new(
+                        "wait_for_profile",
+                        graphql_value!({"warning": "profile does not exist yet"}),
+                    ))
+                }
+                e => Err(e.into()),
             },
             Err(e) => Err(e.into()),
         }

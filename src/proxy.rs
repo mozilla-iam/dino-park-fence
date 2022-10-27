@@ -1,6 +1,6 @@
 use crate::error::ApiError;
-use actix_web::client::Client;
 use actix_web::HttpResponse;
+use awc::Client;
 use log::error;
 use log::info;
 use serde_json::Value;
