@@ -826,11 +826,13 @@ mod test {
             upload_endpoint: String::default(),
         };
         let mut p = Profile::default();
-        let mut update = InputProfile::default();
-        update.fun_title = Some(StringWithDisplay {
-            value: Some(String::from("Pope")),
-            display: None,
-        });
+        let update = InputProfile {
+            fun_title: Some(StringWithDisplay {
+                value: Some(String::from("Pope")),
+                display: None,
+            }),
+            .. InputProfile::default()
+        };
         assert_eq!(p.fun_title.value, None);
         update
             .update_profile(&mut p, &Trust::Staff, &secret_store, &fossil_settings)
@@ -846,11 +848,13 @@ mod test {
             upload_endpoint: String::default(),
         };
         let mut p = Profile::default();
-        let mut update = InputProfile::default();
-        update.fun_title = Some(StringWithDisplay {
-            value: None,
-            display: Some(Display::Private),
-        });
+        let update = InputProfile {
+            fun_title: Some(StringWithDisplay {
+                value: None,
+                display: Some(Display::Private),
+            }),
+            .. InputProfile::default()
+        };
         assert_eq!(p.pronouns.value, None);
         assert_eq!(p.fun_title.value, None);
         assert_ne!(p.fun_title.metadata.display, Some(Display::Private));
@@ -868,11 +872,13 @@ mod test {
             upload_endpoint: String::default(),
         };
         let mut p = Profile::default();
-        let mut update = InputProfile::default();
-        update.fun_title = Some(StringWithDisplay {
-            value: None,
-            display: Some(Display::Vouched),
-        });
+        let update = InputProfile {
+            fun_title: Some(StringWithDisplay {
+                value: None,
+                display: Some(Display::Vouched),
+            }),
+            .. InputProfile::default()
+        };
         assert_eq!(p.pronouns.value, None);
         assert_eq!(p.fun_title.value, None);
         assert_ne!(p.fun_title.metadata.display, Some(Display::Vouched));
@@ -892,11 +898,13 @@ mod test {
             upload_endpoint: String::default(),
         };
         let mut p = Profile::default();
-        let mut update = InputProfile::default();
-        update.languages = Some(KeyValuesWithDisplay {
-            values: None,
-            display: Some(Display::Vouched),
-        });
+        let update = InputProfile {
+            languages: Some(KeyValuesWithDisplay {
+                values: None,
+                display: Some(Display::Vouched),
+            }),
+            .. InputProfile::default()
+        };
         assert_eq!(p.tags.values, None);
         assert_eq!(p.languages.values, None);
         assert_ne!(p.languages.metadata.display, Some(Display::Vouched));
