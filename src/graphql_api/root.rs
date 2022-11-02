@@ -265,10 +265,7 @@ mod root_test {
             aa_level: AALevel::Low,
         };
         let params = get_profile_params(username, &scope_and_user, None)?;
-        assert!(match params.by {
-            GetBy::PrimaryUsername => true,
-            _ => false,
-        });
+        assert!(matches!(params.by, GetBy::PrimaryUsername));
         assert_eq!(params.id, "user1");
         assert_eq!(params.filter, Display::Staff);
         Ok(())
@@ -285,10 +282,7 @@ mod root_test {
             aa_level: AALevel::Low,
         };
         let params = get_profile_params(username, &scope_and_user, view_as)?;
-        assert!(match params.by {
-            GetBy::PrimaryUsername => true,
-            _ => false,
-        });
+        assert!(matches!(params.by, GetBy::PrimaryUsername));
         assert_eq!(params.id, "user1");
         assert_eq!(params.filter, Display::Ndaed);
         Ok(())
@@ -318,10 +312,7 @@ mod root_test {
             aa_level: AALevel::Low,
         };
         let params = get_profile_params(None, &scope_and_user, None)?;
-        assert!(match params.by {
-            GetBy::UserId => true,
-            _ => false,
-        });
+        assert!(matches!(params.by, GetBy::UserId));
         assert_eq!(params.id, "user1");
         assert_eq!(params.filter, Display::Private);
         Ok(())
@@ -337,10 +328,7 @@ mod root_test {
             aa_level: AALevel::Low,
         };
         let params = get_profile_params(None, &scope_and_user, view_as)?;
-        assert!(match params.by {
-            GetBy::UserId => true,
-            _ => false,
-        });
+        assert!(matches!(params.by, GetBy::UserId));
         assert_eq!(params.id, "user1");
         assert_eq!(params.filter, Display::Staff);
         Ok(())
