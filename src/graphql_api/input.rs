@@ -831,7 +831,7 @@ mod test {
                 value: Some(String::from("Pope")),
                 display: None,
             }),
-            .. InputProfile::default()
+            ..InputProfile::default()
         };
         assert_eq!(p.fun_title.value, None);
         update
@@ -853,7 +853,7 @@ mod test {
                 value: None,
                 display: Some(Display::Private),
             }),
-            .. InputProfile::default()
+            ..InputProfile::default()
         };
         assert_eq!(p.pronouns.value, None);
         assert_eq!(p.fun_title.value, None);
@@ -877,7 +877,7 @@ mod test {
                 value: None,
                 display: Some(Display::Vouched),
             }),
-            .. InputProfile::default()
+            ..InputProfile::default()
         };
         assert_eq!(p.pronouns.value, None);
         assert_eq!(p.fun_title.value, None);
@@ -903,7 +903,7 @@ mod test {
                 values: None,
                 display: Some(Display::Vouched),
             }),
-            .. InputProfile::default()
+            ..InputProfile::default()
         };
         assert_eq!(p.tags.values, None);
         assert_eq!(p.languages.values, None);
