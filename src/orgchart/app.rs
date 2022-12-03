@@ -38,7 +38,7 @@ async fn handle_full(
     client: Data<Client>,
     state: Data<Orgchart>,
 ) -> Result<HttpResponse, ApiError> {
-    proxy(&*client, &state.full_endpoint).await
+    proxy(&client, &state.full_endpoint).await
 }
 
 #[guard(Staff)]
@@ -49,7 +49,7 @@ async fn handle_trace(
 ) -> Result<HttpResponse, ApiError> {
     let safe_username = utf8_percent_encode(&username, USERINFO_ENCODE_SET);
     proxy(
-        &*client,
+        &client,
         &format!("{}{}", state.trace_endpoint, safe_username),
     )
     .await
@@ -63,7 +63,7 @@ async fn handle_related(
 ) -> Result<HttpResponse, ApiError> {
     let safe_username = utf8_percent_encode(&username, USERINFO_ENCODE_SET);
     proxy(
-        &*client,
+        &client,
         &format!("{}{}", state.related_endpoint, safe_username),
     )
     .await

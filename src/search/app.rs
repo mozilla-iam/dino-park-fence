@@ -37,7 +37,7 @@ async fn handle_simple(
     if let Some(a) = &query.a {
         url.query_pairs_mut().append_pair("a", a);
     }
-    proxy(&*client, url.as_str()).await
+    proxy(&client, url.as_str()).await
 }
 
 pub fn search_app(settings: &Search) -> impl HttpServiceFactory {
