@@ -1,6 +1,6 @@
 [package]
 name = "dino-park-fence"
-version = "0.2.5"
+version = "0.2.6"
 authors = ["Florian Merz <me@fiji-flo.de>"]
 edition = "2018"
 
