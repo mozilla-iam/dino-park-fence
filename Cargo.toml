@@ -11,7 +11,7 @@ localuserscope = ["dino_park_gate/localuserscope"]
 [dependencies]
 cis_client = { git = "https://github.com/mozilla-iam/cis_client-rust", tag = "0.8.1", version = "0.8.1", features = ["sync"]}
 cis_profile = { git = "https://github.com/mozilla-iam/cis_profile-rust", tag = "0.5.1", version = "0.5.1", features = ["aws", "vendored", "graphql"] }
-dino_park_gate = { git = "https://github.com/mozilla-iam/dino-park-gate", tag = "0.8.4", version = "0.8.4" }
+dino_park_gate = { git = "https://github.com/mozilla-iam/dino-park-gate", tag = "0.8.5", version = "0.8.5" }
 dino_park_guard = { git = "https://github.com/mozilla-iam/dino-park-guard", tag = "0.3.1", version = "0.3.1" }
 dino_park_trust = { git = "https://github.com/mozilla-iam/dino-park-trust", tag = "0.0.8", version = "0.0.8" }
 actix-web = "3"
