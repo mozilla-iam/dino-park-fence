@@ -843,7 +843,7 @@ dependencies = [
 
 [[package]]
 name = "dino-park-fence"
-version = "0.2.6"
+version = "0.2.7"
 dependencies = [
  "actix-http",
  "actix-rt",
