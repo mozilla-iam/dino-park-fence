@@ -38,7 +38,7 @@ const DISPLAY_NOT_PRIVATE: &[Display; 5] = &[
 const DISPLAY_PRIVATE_STAFF: &[Display; 2] = &[Display::Private, Display::Staff];
 
 fn create_usernames_key(typ: &str) -> String {
-    format!("HACK#{}", typ)
+    format!("HACK#{typ}")
 }
 
 fn update_access_information_display(

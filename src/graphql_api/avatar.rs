@@ -42,7 +42,7 @@ pub async fn save_picture(
             old_url,
         };
         let UploadResponse { url } = Client::new()
-            .post(&format!("{}save/{}", fossil_send_endpoint, uuid))
+            .post(&format!("{fossil_send_endpoint}save/{uuid}"))
             .json(&payload)
             .send()
             .await?
@@ -63,7 +63,7 @@ pub async fn change_picture_display(
 ) -> Result<String, Error> {
     let payload = ChangeDisplayRequest { display, old_url };
     let UploadResponse { url } = Client::new()
-        .post(&format!("{}display/{}", fossil_send_endpoint, uuid))
+        .post(&format!("{fossil_send_endpoint}display/{uuid}"))
         .json(&payload)
         .send()
         .await?
