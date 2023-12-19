@@ -60,9 +60,17 @@ rules:
     verbs:
       - create
   - apiGroups:
-      - "extensions"
+      - extensions
+      - networking.k8s.io
     resources:
       - ingresses
+    verbs:
+      - list
+      - watch
+  - apiGroups:
+      - discovery.k8s.io
+    resources:
+      - endpointslices
     verbs:
       - list
       - watch
@@ -105,7 +113,7 @@ spec:
       serviceAccountName: nginx-ingress-serviceaccount
       containers:
         - name: nginx-ingress-controller
-          image: quay.io/kubernetes-ingress-controller/nginx-ingress-controller:0.24.1
+          image: registry.k8s.io/ingress-nginx/controller:v1.9.4
           args:
             - /nginx-ingress-controller
             - --ingress-class=nginx-{{ .Values.namespace }}
@@ -120,7 +128,7 @@ spec:
                 add:
                 - NET_BIND_SERVICE
             # www-data -> 33
-            runAsUser: 33
+            runAsUser: 101
           env:
             - name: POD_NAME
               valueFrom:
