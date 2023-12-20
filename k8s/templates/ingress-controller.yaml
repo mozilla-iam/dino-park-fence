@@ -128,13 +128,15 @@ spec:
             - --configmap=$(POD_NAMESPACE)/nginx-configuration
             - --publish-service=$(POD_NAMESPACE)/ingress-nginx
             - --annotations-prefix=nginx.ingress.kubernetes.io
+            - --validating-webhook=:8443
+            - --validating-webhook-certificate=/usr/local/certificates/cert
+            - --validating-webhook-key=/usr/local/certificates/key
           securityContext:
             capabilities:
                 drop:
                 - ALL
                 add:
                 - NET_BIND_SERVICE
-            # www-data -> 33
             runAsUser: 101
           env:
             - name: POD_NAME
