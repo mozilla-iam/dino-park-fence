@@ -843,7 +843,7 @@ dependencies = [
 
 [[package]]
 name = "dino-park-fence"
-version = "0.2.7"
+version = "0.2.8"
 dependencies = [
  "actix-http",
  "actix-rt",
@@ -895,8 +895,8 @@ dependencies = [
 
 [[package]]
 name = "dino_park_gate"
-version = "0.8.5"
-source = "git+https://github.com/mozilla-iam/dino-park-gate?tag=0.8.5#5b4a64f7a42b0de956f55ccc9ab384ca38556c80"
+version = "0.8.6"
+source = "git+https://github.com/mozilla-iam/dino-park-gate?tag=0.8.6#aa3d0c264dcf4f8967ebe384c194a67af3942346"
 dependencies = [
  "actix-service",
  "actix-web",
@@ -920,8 +920,8 @@ dependencies = [
 
 [[package]]
 name = "dino_park_guard"
-version = "0.3.3"
-source = "git+https://github.com/mozilla-iam/dino-park-guard?tag=0.3.3#bda3e391803dc86bbe84199f4b66b48291551b7c"
+version = "0.3.4"
+source = "git+https://github.com/mozilla-iam/dino-park-guard?tag=0.3.4#4cbe70d29258a3e2afee8195444df84fbfdbe82d"
 dependencies = [
  "dino_park_gate",
  "dino_park_trust",
@@ -2009,9 +2009,9 @@ checksum = "624a8340c38c1b80fd549087862da4ba43e08858af025b236e509b6649fc13d5"
 
 [[package]]
 name = "openssl"
-version = "0.10.43"
+version = "0.10.55"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "020433887e44c27ff16365eaa2d380547a94544ad509aff6eb5b6e3e0b27b376"
+checksum = "345df152bc43501c5eb9e4654ff05f794effb78d4efe3d53abc158baddc0703d"
 dependencies = [
  "bitflags",
  "cfg-if 1.0.0",
@@ -2050,11 +2050,10 @@ dependencies = [
 
 [[package]]
 name = "openssl-sys"
-version = "0.9.78"
+version = "0.9.90"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "07d5c8cb6e57b3a3612064d7b18b117912b4ce70955c2504d4b741c9e244b132"
+checksum = "374533b0e45f3a7ced10fcaeccca020e66656bc03dac384f852e4e5a7a8104a6"
 dependencies = [
- "autocfg",
  "cc",
  "libc",
  "openssl-src",
