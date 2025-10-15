@@ -25,7 +25,10 @@ data:
       proxy_buffers           32 4k;
 
       server {
+
         listen 80;
+        add_header Content-Security-Policy "default-src 'self'; frame-ancestors 'none'; font-src 'self' fonts.googleapis.com fonts.gstatic.com; img-src 'self' data:" always;
+
         {{- if not .Values.public }}
         location /~ {
           return 404;
