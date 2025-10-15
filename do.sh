@@ -10,17 +10,8 @@ compile_release() {
   cargo build --release
 }
 
-docker_build_local() {
-  docker build -t ${DOCKER_REGISTRY}/${NAME}:${REV} -f Dockerfile.local .
-}
-
 docker_build() {
   docker build -t ${DOCKER_REGISTRY}/${NAME}:${REV} -f Dockerfile .
-}
-
-package_local() {
-  compile_release
-  docker_build_local
 }
 
 push_image() {
