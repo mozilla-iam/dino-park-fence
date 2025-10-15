@@ -1,7 +1,7 @@
 export RUSTUP_HOME=/usr/local/rustup
 export CARGO_HOME=/usr/local/cargo
 export PATH=/usr/local/cargo/bin:$PATH
-export RUST_VERSION=1.69
+export RUST_VERSION=1.69.0
 export DESIRED_VERSION="v3.5.4"
 
 set -eux
@@ -14,14 +14,13 @@ url="https://static.rust-lang.org/rustup/archive/1.22.1/${rustArch}/rustup-init"
 wget --no-verbose "$url"
 echo "${rustupSha256} *rustup-init" | sha256sum -c -
 chmod +x rustup-init
-./rustup-init -y --no-modify-path --default-toolchain $RUST_VERSION
+./rustup-init -y --no-modify-path --default-toolchain "$RUST_VERSION"
 rm rustup-init
 chmod -R a+w $RUSTUP_HOME $CARGO_HOME
 rustup --version
 cargo --version
 rustc --version
 
-rustup target add x86_64-unknown-linux-gnu
+rustup target add "$rustArch"
 HELM_INSTALL_DIR=/bin
 curl https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3 | bash
-
