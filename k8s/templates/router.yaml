@@ -23,11 +23,11 @@ data:
       proxy_send_timeout      90;
       proxy_read_timeout      90;
       proxy_buffers           32 4k;
+      add_header              Content-Security-Policy "default-src 'self'; frame-ancestors 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:" always;
 
       server {
 
         listen 80;
-        add_header Content-Security-Policy "default-src 'self'; frame-ancestors 'none'; font-src 'self' fonts.googleapis.com fonts.gstatic.com; img-src 'self' data:" always;
 
         {{- if not .Values.public }}
         location /~ {
