@@ -13,9 +13,12 @@ phases:
       - export PR=$(if case $CODEBUILD_WEBHOOK_TRIGGER in pr/*) ;; *) false;; esac; then echo 1; fi)
       - export MASTER=$(if [ "$CODEBUILD_WEBHOOK_TRIGGER" = "branch/master" ]; then echo 1; fi)
       - export CLUSTER=$(if [ "$DEPLOY_ENV" = "dev" ]; then echo "kubernetes-stage-us-west-2"; else echo "kubernetes-prod-us-west-2"; fi)
+      - export AWS_ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
+      - export AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-west-2}
       - echo "running for ${COMMIT_SHA} in ${DEPLOY_ENV}"
       - aws eks update-kubeconfig --name $CLUSTER
-      - aws ecr get-login --region us-west-2 --no-include-email | bash
+      - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | \
+            docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
   build:
     commands:
       - if [ "$PR" = 1 ]; then ./do.sh package_local; fi
