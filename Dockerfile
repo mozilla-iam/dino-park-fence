@@ -1,10 +1,10 @@
-FROM rust:latest
+FROM rust:1.69-bullseye
 
 WORKDIR /usr/src/app
 COPY . .
 RUN cargo build --release
 
-FROM debian:11-slim
+FROM debian:bullseye-slim
 
 RUN apt-get update && apt-get install -y \
     ca-certificates \
