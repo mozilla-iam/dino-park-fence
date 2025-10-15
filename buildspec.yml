@@ -8,7 +8,7 @@ phases:
     commands:
       - export COMMIT_SHA=$CODEBUILD_RESOLVED_SOURCE_VERSION
       - export REV=$COMMIT_SHA
-      - export CODEBUILD_WEBHOOK_TRIGGER=${CODEBUILD_WEBHOOK_TRIGGER:-branch/master}
+      - export CODEBUILD_WEBHOOK_TRIGGER=${CODEBUILD_WEBHOOK_TRIGGER:-${MANUAL_DEPLOY_TRIGGER:-branch/master}}
       - export DEPLOY_ENV=$(echo $CODEBUILD_WEBHOOK_TRIGGER | sed -e 's/tag\/.*-\(.*\)/\1/' | sed -e 's/branch\/master/dev/')
       - export PR=$(if case $CODEBUILD_WEBHOOK_TRIGGER in pr/*) ;; *) false;; esac; then echo 1; fi)
       - export MASTER=$(if [ "$CODEBUILD_WEBHOOK_TRIGGER" = "branch/master" ]; then echo 1; fi)
@@ -16,7 +16,6 @@ phases:
       - echo "running for ${COMMIT_SHA} in ${DEPLOY_ENV}"
       - aws eks update-kubeconfig --name $CLUSTER
       - aws ecr get-login --region us-west-2 --no-include-email | bash
-      - echo "${DOCKERHUB_PASSWORD}" | docker login -u "${DOCKERHUB_USERNAME}" --password-stdin
   build:
     commands:
       - if [ "$PR" = 1 ]; then ./do.sh package_local; fi
