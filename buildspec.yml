@@ -19,6 +19,7 @@ phases:
       - aws eks update-kubeconfig --name $CLUSTER
       - aws ecr get-login-password --region "$AWS_DEFAULT_REGION" | \
             docker login --username AWS --password-stdin "$AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com"
+      - echo "$DOCKERHUB_PASSWORD" | docker login --username "$DOCKERHUB_USERNAME" --password-stdin
   build:
     commands:
       - if [ "$PR" = 1 ]; then ./do.sh package_local; fi
