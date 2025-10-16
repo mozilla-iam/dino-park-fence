@@ -10,6 +10,7 @@ data:
   use-proxy-protocol: "true"
   enable-vts-status: "true"
   proxy-buffer-size: "16k"
+  allow-snippet-annotations: "true"
 ---
 
 apiVersion: v1
