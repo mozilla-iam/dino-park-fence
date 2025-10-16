@@ -58,7 +58,7 @@ data:
           return 404;
         }
 
-        location ~ /(contribute.json$|logbackin.html$|favicon.ico$|reload.html$|opensearch.xml$|webapp/) {
+        location ~ /(contribute.json$|favicon.ico$|reload.html$|reload.js$|opensearch.xml$|webapp/) {
           proxy_pass http://dino-park-front-end-service.{{ .Values.namespace }}.svc.cluster.local:80;
 
         }
