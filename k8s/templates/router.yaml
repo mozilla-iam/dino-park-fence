@@ -28,11 +28,6 @@ data:
 
         listen 80;
 
-        {{- if not .Values.public }}
-        location /~ {
-          return 404;
-        }
-        {{- end }}
         location /api/v4/ {
           proxy_pass http://dino-park-fence-service:80;
         }

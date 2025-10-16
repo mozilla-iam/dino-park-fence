@@ -69,11 +69,7 @@ data:
         }
 
         location /oauth/logout {
-          {{ if .Values.public -}}
           proxy_pass http://gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80$uri?redirect=/;
-          {{- else -}}
-          proxy_pass http://gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80$uri?redirect=/logbackin.html;
-          {{- end }}
         }
 
         location /oauth {
