@@ -30,3 +30,31 @@ Read the [DinoPark Introduction] and [Rust usage] for more information.
 [DinoPark Tree]: https://github.com/mozilla-iam/dino-park-tree
 [DinoPark Introduction]: https://github.com/mozilla-iam/dino-park/blob/master/Introduction.md
 [Rust usage]: https://github.com/mozilla-iam/dino-park/blob/master/Rust.md
+
+## Deploying
+
+This application must be manually deployed, until we migrate our builds to
+GitHub Actions.
+
+To deploy to the development and staging clusters, run:
+
+```
+AWS_PROFILE=iam-admin aws codebuild start-build \
+    --project-name dino-park-fence \
+    --environment-variables-override 'name=MANUAL_DEPLOY_TRIGGER,value=branch/master'
+```
+
+To deploy to the production environment, first cut a release (or tag) in the
+form:
+
+```
+<MAJOR>.<MINOR>.<PATCH>-prod
+```
+
+Then run:
+
+```
+AWS_PROFILE=iam-admin aws codebuild start-build \
+    --project-name dino-park-fence \
+    --environment-variables-override 'name=MANUAL_DEPLOY_TRIGGER,value=tag/<MAJOR>.<MINOR>.<PATCH>-prod'
+```
