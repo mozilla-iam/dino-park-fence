@@ -17,7 +17,7 @@ metadata:
       more_set_headers "X-XSS-Protection: 1";
       more_set_headers "X-Content-Type-Options: nosniff";
       more_set_headers "Strict-Transport-Security: max-age=63072000";
-      more_set_headers "Content-Security-Policy: default-src 'none'; connect-src 'self'; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; script-src 'self' 'sha256-4qKuKHlhZHVtOHkzV6IoRxvJyftFsU9Bzug8piLac2s=' 'sha256-wFlxiON/IU9ZZ5PD6RqOAhUMQtTTYSO6Fh/5V470Tdo='; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; manifest-src 'self'; prefetch-src 'self'";
+      more_set_headers "Content-Security-Policy: default-src 'none'; connect-src 'self'; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; script-src 'self' 'sha256-4qKuKHlhZHVtOHkzV6IoRxvJyftFsU9Bzug8piLac2s=' 'sha256-wFlxiON/IU9ZZ5PD6RqOAhUMQtTTYSO6Fh/5V470Tdo='; style-src 'self' https://fonts.googleapis.com 'unsafe-inline'; frame-ancestors 'none'; base-uri 'none'; form-action 'self'; manifest-src 'self'";
 spec:
   tls:
   - hosts:
