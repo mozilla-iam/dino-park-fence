@@ -843,7 +843,7 @@ dependencies = [
 
 [[package]]
 name = "dino-park-fence"
-version = "0.2.7"
+version = "0.2.8"
 dependencies = [
  "actix-http",
  "actix-rt",
@@ -895,8 +895,8 @@ dependencies = [
 
 [[package]]
 name = "dino_park_gate"
-version = "0.8.5"
-source = "git+https://github.com/mozilla-iam/dino-park-gate?tag=0.8.5#5b4a64f7a42b0de956f55ccc9ab384ca38556c80"
+version = "0.8.6"
+source = "git+https://github.com/mozilla-iam/dino-park-gate?tag=0.8.6#aa3d0c264dcf4f8967ebe384c194a67af3942346"
 dependencies = [
  "actix-service",
  "actix-web",
@@ -920,8 +920,8 @@ dependencies = [
 
 [[package]]
 name = "dino_park_guard"
-version = "0.3.3"
-source = "git+https://github.com/mozilla-iam/dino-park-guard?tag=0.3.3#bda3e391803dc86bbe84199f4b66b48291551b7c"
+version = "0.3.4"
+source = "git+https://github.com/mozilla-iam/dino-park-guard?tag=0.3.4#4cbe70d29258a3e2afee8195444df84fbfdbe82d"
 dependencies = [
  "dino_park_gate",
  "dino_park_trust",
@@ -3456,9 +3456,9 @@ dependencies = [
 
 [[package]]
 name = "xml-rs"
-version = "0.8.4"
+version = "0.8.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d2d7d3948613f75c98fd9328cfdcc45acc4d360655289d0a7d4ec931392200a3"
+checksum = "52839dc911083a8ef63efa4d039d1f58b5e409f923e44c80828f206f66e5541c"
 
 [[package]]
 name = "yaml-rust"
