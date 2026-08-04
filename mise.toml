@@ -1,3 +1,6 @@
+[tools]
+rust = "1.97.1"
+
 [env]
 DP_AUTH = "https://idp-dev.iam.mozilla.com/"
 DP_DINO_PARK__FOSSIL__UPLOAD_ENDPOINT = ""
