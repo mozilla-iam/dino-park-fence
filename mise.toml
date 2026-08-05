@@ -1,5 +1,8 @@
+[tools]
+rust = "1.97.1"
+
 [env]
-DP_AUTH = "https://dev.mozilla-dev.auth0.com/"
+DP_AUTH = "https://idp-dev.iam.mozilla.com/"
 DP_DINO_PARK__FOSSIL__UPLOAD_ENDPOINT = ""
 DP_DINO_PARK__LOOKOUT__INTERNAL_UPDATE_ENABLED = "false"
 DP_DINO_PARK__LOOKOUT__INTERNAL_UPDATE_ENDPOINT = ""

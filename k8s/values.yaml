@@ -6,7 +6,7 @@ ingress_replicas: 1
 router_replicas: 1
 gatekeeper_replicas: 1
 settings:
-  auth: https://auth.mozilla.auth0.com/
+  auth: https://idp.iam.mozilla.com/
   dino_park__orgchart__related_endpoint: "http://dino-park-tree-service:80/orgchart/related/"
   dino_park__orgchart__trace_endpoint: "http://dino-park-tree-service:80/orgchart/trace/"
   dino_park__orgchart__full_endpoint: "http://dino-park-tree-service:80/orgchart"

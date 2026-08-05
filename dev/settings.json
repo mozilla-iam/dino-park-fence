@@ -7,13 +7,13 @@
     "* src/settings.rs;",
     "* the `config` dependency."
   ],
-  "auth": "https://dev.mozilla-dev.auth0.com/",
+  "auth": "https://idp-dev.iam.mozilla.com/",
   "cis": {
     "client_config": {
       "client_id": "",
       "client_secret": "",
       "audience": "",
-      "token_endpoint": "https://dev.mozilla-dev.auth0.com",
+      "token_endpoint": "https://idp-dev.iam.mozilla.com",
       "scopes": ""
     },
     "sign_keys": {
