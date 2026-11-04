@@ -51,6 +51,11 @@ data:
         "yes" "gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80";
       }
 
+      map $login $packs {
+        default "dino-park-packs-service.{{ .Values.namespace }}.svc.cluster.local:80";
+        "yes" "gatekeeper.{{ .Values.namespace }}.svc.cluster.local:80";
+      }
+
       server {
         listen 80;
 
@@ -85,6 +90,10 @@ data:
 
         location /avatar/get/ {
           proxy_pass http://$pictures;
+        }
+
+        location /groups/api/v1/ {
+          proxy_pass http://$packs;
         }
 
         location /events/update {
