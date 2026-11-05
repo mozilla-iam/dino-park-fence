@@ -796,7 +796,7 @@ dependencies = [
 
 [[package]]
 name = "dino-park-fence"
-version = "0.5.1-rc1"
+version = "0.5.1"
 dependencies = [
  "actix-http",
  "actix-rt",
@@ -846,8 +846,8 @@ dependencies = [
 
 [[package]]
 name = "dino_park_gate"
-version = "0.10.9-rc1"
-source = "git+https://github.com/mozilla-iam/dino-park-gate?tag=0.10.9-rc1#3f612193c764e76f4ae0ab67f7b4568f6ef6bd6c"
+version = "0.10.9"
+source = "git+https://github.com/mozilla-iam/dino-park-gate?tag=0.10.9#7f84208e0dcc0c2570d03509b60248201acefe9c"
 dependencies = [
  "actix-service",
  "actix-web",
@@ -870,8 +870,8 @@ dependencies = [
 
 [[package]]
 name = "dino_park_guard"
-version = "0.5.8-rc1"
-source = "git+https://github.com/mozilla-iam/dino-park-guard?tag=0.5.8-rc1#ca0041fe4c0fa06b24f9769560618451b30a328c"
+version = "0.5.8"
+source = "git+https://github.com/mozilla-iam/dino-park-guard?tag=0.5.8#3d8b34edc01a1aced868b523172889784b31e1fe"
 dependencies = [
  "dino_park_gate",
  "dino_park_trust",
